@@ -1,0 +1,7 @@
+{
+  "items": [
+    { "id": "ny_style_v1", "name": "NY Style", "summary": "Thin, foldable, balanced crisp/chew." },
+    { "id": "detroit_v1", "name": "Detroit", "summary": "Pan, higher hydration, frico edge." },
+    { "id": "neapolitan_v1", "name": "Neapolitan", "summary": "High temp, soft cornicione." }
+  ]
+}

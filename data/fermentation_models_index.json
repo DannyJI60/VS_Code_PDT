@@ -1,0 +1,6 @@
+{
+  "items": [
+    { "id": "txcraig_v1", "name": "TXCraig v1", "summary": "Table-driven yeast guidance (starter model)." },
+    { "id": "simple_v1", "name": "Simple v1", "summary": "Fallback math until tables are loaded." }
+  ]
+}

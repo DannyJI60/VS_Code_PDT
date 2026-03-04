@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProDoughType vNext</title>
+
+  <!-- 1a) CSS -->
+  <link rel="stylesheet" href="./app.css" />
+</head>
+
+<body>
+  <!-- 1b) App Shell -->
+  <div id="app" class="app">
+
+    <!-- 2a) Top Bar -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <div class="brand-text">
+          <div class="brand-title">ProDoughType</div>
+          <div class="brand-sub">vNext • Modular UI</div>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="btn ghost" id="btnQuickGuide" title="Guides">
+          <img class="ico" src="./icons/guides.svg" alt="" />
+          <span>Guides</span>
+        </button>
+
+        <button class="btn ghost" id="btnOpenKB" title="Knowledge Base">
+          <img class="ico" src="./icons/kb.svg" alt="" />
+          <span>KB</span>
+        </button>
+
+        <button class="btn primary" id="btnAuth" title="Login">
+          <img class="ico" src="./icons/login.svg" alt="" />
+          <span id="authLabel">Login</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 2b) Main Layout -->
+    <div class="layout">
+
+      <!-- 3a) Left Nav (icon buttons, compact) -->
+      <nav class="sidebar" aria-label="Primary">
+        <button class="navbtn active" data-route="dough" title="Dough">
+          <img class="ico" src="./icons/dough.svg" alt="" />
+          <div class="navtxt">Dough</div>
+        </button>
+
+        <button class="navbtn" data-route="templates" title="Templates">
+          <img class="ico" src="./icons/templates.svg" alt="" />
+          <div class="navtxt">Templates</div>
+        </button>
+
+        <button class="navbtn" data-route="databases" title="Databases">
+          <img class="ico" src="./icons/db.svg" alt="" />
+          <div class="navtxt">DB</div>
+        </button>
+
+        <button class="navbtn" data-route="fermentation" title="Fermentation">
+          <img class="ico" src="./icons/ferment.svg" alt="" />
+          <div class="navtxt">Ferment</div>
+        </button>
+
+        <button class="navbtn" data-route="preferences" title="Preferences">
+          <img class="ico" src="./icons/prefs.svg" alt="" />
+          <div class="navtxt">Prefs</div>
+        </button>
+
+        <button class="navbtn" data-route="glossary" title="Glossary">
+          <img class="ico" src="./icons/guides.svg" alt="" />
+          <div class="navtxt">Glossary</div>
+        </button>
+
+        <button class="navbtn" data-route="troubleshooting" title="Troubleshooting">
+          <img class="ico" src="./icons/kb.svg" alt="" />
+          <div class="navtxt">Fix</div>
+        </button>
+
+        <button class="navbtn" data-route="sauceSource" title="SauceSource (placeholder)">
+          <img class="ico" src="./icons/sauce.svg" alt="" />
+          <div class="navtxt">Sauce</div>
+        </button>
+      </nav>
+
+      <!-- 3b) Workspace -->
+      <main class="workspace" aria-label="Workspace">
+        <!-- 4a) Route Header -->
+        <div class="panelhead">
+          <div>
+            <div class="paneltitle" id="routeTitle">Dough</div>
+            <div class="panelsub" id="routeSub">Compute, preview, export.</div>
+          </div>
+
+          <div class="paneltools">
+            <div class="seg" id="uiModeSeg">
+              <button class="segbtn active" data-uimode="standard">Standard</button>
+              <button class="segbtn" data-uimode="compact">Compact</button>
+              <button class="segbtn" data-uimode="focus">Focus</button>
+			  <!-- E1) Add this button in paneltools -->
+              <button class="btn primary" id="btnReminderQR">
+             <span>Reminder QR</span>
+             </button>
+          </div>
+
+            <button class="btn ghost" id="btnExport">
+              <span>Export</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4b) Route Content Mount -->
+        <section id="routeMount" class="routemount"></section>
+      </main>
+
+      <!-- 3c) Right Panel: Live Preview + KB Drawer -->
+      <aside class="rightpanel" aria-label="Preview">
+        <!-- 5a) Live Preview Card -->
+        <div class="card" id="previewCard">
+          <!-- A1) Live Preview header tools -->
+<div class="cardhead">
+  <div class="cardtitle">Live Preview</div>
+
+  <div style="display:flex; gap:8px; align-items:center;">
+    <button class="btn ghost sm" id="btnPreviewQR" title="Reminder QR">
+      <span>QR</span>
+    </button>
+
+    <button class="btn ghost sm" id="btnSwapToKB">
+      <img class="ico" src="./icons/kb.svg" alt="" />
+      <span>KB</span>
+    </button>
+  </div>
+</div>
+          <div class="cardbody" id="previewBody">
+            <div class="muted">Preview will appear here.</div>
+          </div>
+        </div>
+
+        <!-- 5b) KB Drawer (replaces preview when open) -->
+        <div class="card hidden" id="kbCard">
+          <div class="cardhead">
+            <div class="cardtitle">Knowledge Base</div>
+            <button class="btn ghost sm" id="btnBackToPreview">
+              <span>Back</span>
+            </button>
+          </div>
+          <div class="cardbody">
+            <input id="kbQuery" class="input" placeholder="Search (sticky dough, slack, gummy, overproofed…)" />
+            <div class="list" id="kbResults"></div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- 6a) Login Modal -->
+  <div class="modal hidden" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="modalbox">
+      <div class="modalhead">
+        <div class="modaltitle" id="authTitle">Login</div>
+        <button class="btn ghost sm" id="btnCloseAuth">Close</button>
+      </div>
+
+      <div class="modalbody">
+        <div class="row">
+          <label class="lbl">Username</label>
+          <input id="authUser" class="input" placeholder="danny" />
+        </div>
+        <div class="row">
+          <label class="lbl">Password</label>
+          <input id="authPass" class="input" placeholder="••••••••" type="password" />
+        </div>
+
+        <div class="row split">
+          <button class="btn primary" id="btnDoLogin">Login</button>
+          <button class="btn ghost" id="btnDoLogout">Logout</button>
+        </div>
+
+        <div class="hint">
+          Placeholder auth: localStorage session token (swap later for real backend).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7a) App JS -->
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

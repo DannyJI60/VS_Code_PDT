@@ -1,0 +1,7 @@
+{
+  "items": [
+    { "id": "flours", "name": "Flour Database", "summary": "Protein/W-factor notes, brands, behavior." },
+    { "id": "yeasts", "name": "Yeast Database", "summary": "IDY/ADY/CY characteristics." },
+    { "id": "salts", "name": "Salt Database", "summary": "Fine vs kosher density, behavior." }
+  ]
+}

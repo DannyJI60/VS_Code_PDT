@@ -1,0 +1,6 @@
+{
+  "items": [
+    { "term": "DDT", "definition": "Desired Dough Temperature." },
+    { "term": "TF", "definition": "Thickness Factor: dough weight per unit area." }
+  ]
+}
