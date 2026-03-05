@@ -1,0 +1,596 @@
+{
+  "version": 1,
+  "schema": "prodoughtype.flours",
+  "items": [
+    {
+      "id": "stagioni_napoletana",
+      "brand": "5 Stagioni",
+      "name": "Napoletana",
+      "type": "00",
+      "malted": false,
+      "specs": {
+        "w": {
+          "min": 280.0,
+          "max": 320.0
+        },
+        "pl": {
+          "min": 0.6,
+          "max": 0.6
+        }
+      },
+      "notes": "AVPN-certified; slightly stronger than Caputo Blue (as commonly described)."
+    },
+    {
+      "id": "caputo_super_nuvola",
+      "brand": "Caputo",
+      "name": "Super Nuvola",
+      "type": "0",
+      "proteinPct": 13.5,
+      "specs": {
+        "w": {
+          "min": 320.0,
+          "max": 340.0
+        },
+        "pl": {
+          "min": 0.5,
+          "max": 0.6
+        }
+      },
+      "notes": "Article describes high absorption capacity (no numeric absorption given)."
+    },
+    {
+      "id": "cuoco_red",
+      "aliases": [
+        "caputo_cuoco"
+      ],
+      "brand": "Caputo",
+      "name": "Cuoco / Saccorosso (Red)",
+      "type": "00",
+      "proteinPct": 13.5,
+      "malted": false,
+      "absorption": {
+        "minPct": 62.0,
+        "maxPct": 65.0,
+        "basis": "bakers_pct"
+      },
+      "heat": {
+        "tempF": {
+          "min": 700.0,
+          "max": null
+        }
+      },
+      "specs": {
+        "w": {
+          "min": 300.0,
+          "max": 320.0
+        }
+      },
+      "notes": "Higher strength (often cited W ~300–320); commonly used for long cold ferments."
+    },
+    {
+      "id": "manitoba_oro",
+      "brand": "Caputo",
+      "name": "Manitoba Oro",
+      "type": "Manitoba",
+      "malted": false,
+      "specs": {
+        "w": {
+          "min": 370.0,
+          "max": 390.0
+        },
+        "pl": {
+          "min": 0.7,
+          "max": 0.8
+        }
+      },
+      "notes": "Very strong flour for very long fermentations (72h+), per W/P-L spec."
+    },
+    {
+      "id": "nuvola",
+      "aliases": [
+        "caputo_nuvola"
+      ],
+      "brand": "Caputo",
+      "name": "Nuvola",
+      "type": "00",
+      "proteinPct": 12.5,
+      "malted": false,
+      "absorption": {
+        "minPct": 65.0,
+        "maxPct": 70.0,
+        "basis": "bakers_pct"
+      },
+      "heat": {
+        "tempF": {
+          "min": 750.0,
+          "max": null
+        }
+      },
+      "notes": "Designed for \"Canotto\" / puffy crust styles; higher water tolerance."
+    },
+    {
+      "id": "pizzeria_blue",
+      "aliases": [
+        "caputo_pizzeria"
+      ],
+      "brand": "Caputo",
+      "name": "Pizzeria (Blue)",
+      "type": "00",
+      "proteinPct": 12.75,
+      "malted": false,
+      "absorption": {
+        "minPct": 58.0,
+        "maxPct": 62.0,
+        "basis": "bakers_pct"
+      },
+      "heat": {
+        "tempF": {
+          "min": 800.0,
+          "max": null
+        }
+      },
+      "notes": "Neapolitan standard; tends to brown less at typical home-oven temps."
+    },
+    {
+      "id": "00_normale",
+      "aliases": [
+        "central_milling_00_normale"
+      ],
+      "brand": "Central Milling",
+      "name": "Tipo 00 Normale",
+      "type": "00",
+      "proteinPct": 11.5,
+      "malted": false,
+      "absorption": {
+        "minPct": 58.0,
+        "maxPct": 62.0,
+        "basis": "bakers_pct"
+      },
+      "heat": {
+        "tempF": {
+          "min": 750.0,
+          "max": 900.0
+        }
+      },
+      "notes": "California-made Italian-style 00; clean flavor."
+    },
+    {
+      "id": "high_mountain",
+      "aliases": [
+        "central_milling_high_mountain"
+      ],
+      "brand": "Central Milling",
+      "name": "High Mountain",
+      "type": "Bread",
+      "proteinPct": 13.5,
+      "malted": false,
+      "absorption": {
+        "minPct": 65.0,
+        "maxPct": 70.0,
+        "basis": "bakers_pct"
+      },
+      "heat": {
+        "tempF": {
+          "min": 600.0,
+          "max": null
+        }
+      },
+      "specs": {
+        "w": {
+          "min": 330.0,
+          "max": 350.0
+        },
+        "pl": {
+          "min": 0.65,
+          "max": 0.65
+        }
+      },
+      "notes": "Organic high-protein flour; high water tolerance."
+    },
+    {
+      "id": "tony_gemignani",
+      "brand": "Central Milling",
+      "name": "Tony Gemignani Flour Blend",
+      "type": "00",
+      "malted": true,
+      "specs": {
+        "w": {
+          "min": 300.0,
+          "max": 320.0
+        },
+        "pl": {
+          "min": 0.6,
+          "max": 0.6
+        }
+      },
+      "notes": "Custom blend for high-heat artisan ovens."
+    },
+    {
+      "id": "heckers_ap",
+      "brand": "Ceresota",
+      "name": "Heckers AP",
+      "type": "AP/Bread",
+      "proteinPct": 11.5,
+      "malted": false,
+      "absorption": {
+        "minPct": 60.0,
+        "maxPct": 63.0,
+        "basis": "bakers_pct"
+      },
+      "heat": {
+        "tempF": {
+          "min": 550.0,
+          "max": 700.0
+        }
+      },
+      "specs": {
+        "w": {
+          "min": 220.0,
+          "max": 240.0
+        },
+        "pl": {
+          "min": 0.5,
+          "max": 0.5
+        }
+      },
+      "notes": "Unbleached/unmalted; often cited for Chicago thin / \"dead dough\" styles."
+    },
+    {
+      "id": "premium_hg",
+      "brand": "Ceresota",
+      "name": "Premium High Gluten",
+      "type": "High Gluten",
+      "proteinPct": 14.0,
+      "malted": false,
+      "absorption": {
+        "minPct": 63.0,
+        "maxPct": 67.0,
+        "basis": "bakers_pct"
+      },
+      "heat": {
+        "tempF": {
+          "min": 550.0,
+          "max": 700.0
+        }
+      },
+      "notes": "High protein but unmalted; notable in the US market."
+    },
+    {
+      "id": "divella_manitoba",
+      "brand": "Divella",
+      "name": "Manitoba",
+      "type": "Manitoba",
+      "proteinPct": 14.5,
+      "specs": {
+        "w": {
+          "min": 300.0,
+          "max": 300.0
+        },
+        "pl": {
+          "min": 0.6,
+          "max": 0.7
+        }
+      },
+      "notes": "Listed in Sicilian context."
+    },
+    {
+      "id": "gg_flexia_tipo_1",
+      "brand": "GG",
+      "name": "Flexia",
+      "type": "Tipo 1",
+      "proteinPct": 13.5,
+      "specs": {
+        "w": {
+          "min": 280.0,
+          "max": 280.0
+        },
+        "pl": {
+          "min": 0.5,
+          "max": 0.6
+        }
+      },
+      "notes": "Listed with holding note up to ~48h at ~3°C."
+    },
+    {
+      "id": "all_trumps",
+      "aliases": [
+        "general_mills_all_trump",
+        "general_mills_all_trumps"
+      ],
+      "brand": "General Mills",
+      "name": "All Trumps",
+      "type": "High Gluten",
+      "proteinPct": 14.2,
+      "malted": true,
+      "absorption": {
+        "minPct": 63.0,
+        "maxPct": 66.0,
+        "basis": "bakers_pct"
+      },
+      "heat": {
+        "tempF": {
+          "min": 500.0,
+          "max": 650.0
+        }
+      },
+      "notes": "Common NY benchmark. Often bromated in commercial channels (varies by product)."
+    },
+    {
+      "id": "full_strength",
+      "brand": "General Mills",
+      "name": "Full Strength",
+      "type": "Bread",
+      "proteinPct": 12.6,
+      "malted": true,
+      "absorption": {
+        "minPct": 61.0,
+        "maxPct": 64.0,
+        "basis": "bakers_pct"
+      },
+      "heat": {
+        "tempF": {
+          "min": 500.0,
+          "max": 600.0
+        }
+      },
+      "notes": "Reliable mid-tier strength for deck ovens."
+    },
+    {
+      "id": "ka_bread",
+      "aliases": [
+        "king_arthur_bread",
+        "king_arthur_bread_flour"
+      ],
+      "brand": "King Arthur",
+      "name": "Bread Flour",
+      "type": "Bread",
+      "proteinPct": 12.7,
+      "malted": true,
+      "absorption": {
+        "minPct": 62.0,
+        "maxPct": 66.0,
+        "basis": "bakers_pct"
+      },
+      "heat": {
+        "tempF": {
+          "min": 450.0,
+          "max": 600.0
+        }
+      },
+      "notes": "Very consistent; widely available retail."
+    },
+    {
+      "id": "sir_lancelot",
+      "aliases": [
+        "king_arthur_sir_lancelot"
+      ],
+      "brand": "King Arthur",
+      "name": "Sir Lancelot",
+      "type": "High Gluten",
+      "proteinPct": 14.2,
+      "malted": true,
+      "absorption": {
+        "minPct": 64.0,
+        "maxPct": 68.0,
+        "basis": "bakers_pct"
+      },
+      "heat": {
+        "tempF": {
+          "min": 500.0,
+          "max": 650.0
+        }
+      },
+      "specs": {
+        "w": {
+          "min": 340.0,
+          "max": 360.0
+        },
+        "pl": {
+          "min": 0.7,
+          "max": 0.8
+        }
+      },
+      "notes": "High-gluten flour used for strong NY-style structure."
+    },
+    {
+      "id": "mc_fiore_di_napoli_00",
+      "brand": "Molino Colombo",
+      "name": "Fiore di Napoli",
+      "type": "00",
+      "proteinPct": 14.0,
+      "specs": {
+        "w": {
+          "min": 310.0,
+          "max": 330.0
+        },
+        "pl": {
+          "min": 0.55,
+          "max": 0.7
+        }
+      },
+      "notes": "Article notes timing examples: ~24h at 25°C or up to ~96h at 4°C."
+    },
+    {
+      "id": "mc_rapid_00",
+      "brand": "Molino Colombo",
+      "name": "Rapid",
+      "type": "00",
+      "proteinPct": 12.5,
+      "specs": {
+        "w": {
+          "min": 280.0,
+          "max": 300.0
+        },
+        "pl": {
+          "min": 0.5,
+          "max": 0.6
+        }
+      },
+      "notes": "Listed for quick dough timing ~4–8 hours."
+    },
+    {
+      "id": "mv_costiera_amalfitana_oro_0",
+      "brand": "Molino Vigevano",
+      "name": "Costiera Amalfitana Oro",
+      "type": "0",
+      "proteinPct": 13.6,
+      "specs": {
+        "w": {
+          "min": 290.0,
+          "max": 330.0
+        },
+        "pl": {
+          "min": 0.65,
+          "max": 0.75
+        }
+      },
+      "notes": "Article notes medium leavening ~24–48h."
+    },
+    {
+      "id": "mv_moreschina_multigrain",
+      "brand": "Molino Vigevano",
+      "name": "Moreschina (Multigrain)",
+      "type": "Multigrain",
+      "proteinPct": 14.5,
+      "specs": {
+        "w": {
+          "min": 270.0,
+          "max": 290.0
+        },
+        "pl": {
+          "min": 0.5,
+          "max": 0.6
+        }
+      },
+      "notes": "Listed for Pan/Detroit context."
+    },
+    {
+      "id": "mv_ora_fibra_uno_1",
+      "brand": "Molino Vigevano",
+      "name": "Ora Fibra Uno",
+      "type": "1",
+      "proteinPct": 13.6,
+      "specs": {
+        "w": {
+          "min": 290.0,
+          "max": 310.0
+        },
+        "pl": {
+          "min": 0.55,
+          "max": 0.65
+        }
+      },
+      "notes": "Type 1; listed for Roman/calzone/extra-thin in the article."
+    },
+    {
+      "id": "mv_tramonti_oro_0",
+      "brand": "Molino Vigevano",
+      "name": "Tramonti Oro",
+      "type": "0",
+      "proteinPct": 14.5,
+      "specs": {
+        "w": {
+          "min": 330.0,
+          "max": 360.0
+        },
+        "pl": {
+          "min": 0.65,
+          "max": 0.75
+        }
+      },
+      "notes": "Listed for longer leavening (>48h) in Sicilian context."
+    },
+    {
+      "id": "mv_vera_napoli_0_semola",
+      "brand": "Molino Vigevano",
+      "name": "Vera Napoli (with Semola)",
+      "type": "0",
+      "proteinPct": 13.0,
+      "specs": {
+        "w": {
+          "min": 250.0,
+          "max": 270.0
+        },
+        "pl": {
+          "min": 0.65,
+          "max": 0.75
+        }
+      },
+      "notes": "Type 0 with semola; positioned for crispness/golden color."
+    },
+    {
+      "id": "mv_verace_napoletana_oro_0",
+      "brand": "Molino Vigevano",
+      "name": "Verace Napoletana Oro",
+      "type": "0",
+      "proteinPct": 13.6,
+      "specs": {
+        "w": {
+          "min": 200.0,
+          "max": 230.0
+        },
+        "pl": {
+          "min": 0.65,
+          "max": 0.75
+        }
+      },
+      "notes": "Listed for Neapolitan; article notes short leavening up to ~24h."
+    },
+    {
+      "id": "mv_vesuvio_0",
+      "brand": "Molino Vigevano",
+      "name": "Vesuvio",
+      "type": "0",
+      "proteinPct": 14.0,
+      "specs": {
+        "w": {
+          "min": 270.0,
+          "max": 290.0
+        },
+        "pl": {
+          "min": 0.5,
+          "max": 0.6
+        }
+      },
+      "notes": "Listed for Pan/Detroit context."
+    },
+    {
+      "id": "so_strong",
+      "brand": "Pillsbury",
+      "name": "So Strong",
+      "type": "High Gluten",
+      "proteinPct": 14.5,
+      "malted": true,
+      "absorption": {
+        "minPct": 64.0,
+        "maxPct": 68.0,
+        "basis": "bakers_pct"
+      },
+      "heat": {
+        "tempF": {
+          "min": 500.0,
+          "max": 650.0
+        }
+      },
+      "notes": "Hard red spring wheat; very elastic."
+    },
+    {
+      "id": "polselli_vivace",
+      "brand": "Polselli",
+      "name": "Vivace",
+      "type": "00",
+      "malted": false,
+      "specs": {
+        "w": {
+          "min": 290.0,
+          "max": 290.0
+        },
+        "pl": {
+          "min": 0.55,
+          "max": 0.55
+        }
+      },
+      "notes": "High stability for medium-long leavening."
+    }
+  ]
+}

@@ -16,6 +16,41 @@ import {
     mountOvenWidget
 } from "./ovenWidget.js";
 
+/* 2a) Toast helper (prevents "toast is not defined") */
+const toast = (msg, ms = 1600) => {
+  // If you later add a real toast somewhere else, this will use it.
+  if (typeof window.toast === "function" && window.toast !== toast) {
+    try { return window.toast(msg, ms); } catch (_) {}
+  }
+
+  // Minimal built-in toast (no CSS required)
+  let el = document.getElementById("pdtToast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "pdtToast";
+    el.style.position = "fixed";
+    el.style.left = "50%";
+    el.style.bottom = "18px";
+    el.style.transform = "translateX(-50%)";
+    el.style.padding = "10px 12px";
+    el.style.borderRadius = "12px";
+    el.style.background = "rgba(0,0,0,0.75)";
+    el.style.color = "#fff";
+    el.style.fontSize = "13px";
+    el.style.zIndex = "9999";
+    el.style.maxWidth = "80vw";
+    el.style.textAlign = "center";
+    el.style.opacity = "0";
+    el.style.transition = "opacity 120ms ease";
+    document.body.appendChild(el);
+  }
+
+  el.textContent = String(msg ?? "");
+  el.style.opacity = "1";
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = "0"; }, ms);
+};
+
 export function renderRoute({
     route,
     mount,
@@ -74,10 +109,264 @@ export function renderRoute({
 
 /* 3a) Panels (numbered, replaceable blocks) */
 
-function doughPanel({
-    onPreview,
-    onOpenKB
-}) {
+/* =========================================================
+   F0) STEP 2 • FLOUR (Full-page “template grid”)
+   - Lives in route: databases (for now)
+   - No real data wiring yet; uses placeholders
+   ========================================================= */
+
+function databasesPanel(store) {
+  // F1) Root
+  const root = div(`
+    <div class="flourPage">
+
+      <!-- F2) Header / Controls -->
+      <div class="flourTop">
+        <div>
+          <div class="steptitle">Step 2 • Flour</div>
+          <div class="stepsub">Pick flours fast, then blend. (Prototype UI)</div>
+        </div>
+
+        <div class="flourControls">
+          <!-- F2a) Search -->
+          <div class="flourSearch">
+            <input class="input" id="flourSearch" placeholder="Search flour… (brand, name, type)" />
+          </div>
+
+          <!-- F2b) Sort -->
+          <div class="flourSort">
+            <label class="muted" style="font-size:12px;">Sort</label>
+            <select class="input" id="flourSort">
+              <option value="pop">Popularity</option>
+              <option value="brand">Brand</option>
+              <option value="protein">Protein</option>
+              <option value="absorption">Absorption</option>
+              <option value="type">Type</option>
+            </select>
+          </div>
+
+          <!-- F2c) Bookmarked only -->
+          <button class="btn ghost" id="btnFlourBookmarkedOnly" type="button" aria-pressed="false">
+            ⭐ Bookmarked only
+          </button>
+        </div>
+      </div>
+
+      <!-- F3) Layout: grid + blend panel -->
+      <div class="flourLayout">
+
+        <!-- F4) Catalog -->
+        <div class="flourCatalog">
+
+          <!-- F4a) Section: Popular for style (placeholder) -->
+          <div class="flourSection">
+            <div class="flourSectionHead">
+              <div class="flourSectionTitle">Popular for this style</div>
+              <div class="muted" style="font-size:12px;">(placeholder list)</div>
+            </div>
+            <div class="flourGrid" id="flourGridPopular"></div>
+          </div>
+
+          <!-- F4b) Section: All flours (placeholder) -->
+          <div class="flourSection" style="margin-top:14px;">
+            <div class="flourSectionHead">
+              <div class="flourSectionTitle">All flours</div>
+              <div class="muted" style="font-size:12px;">Use search + sort</div>
+            </div>
+            <div class="flourGrid" id="flourGridAll"></div>
+          </div>
+
+          <!-- F4c) Community section (hidden until real data exists) -->
+          <div class="flourSection hidden" id="flourCommunitySection" style="margin-top:14px;">
+            <div class="flourSectionHead">
+              <div class="flourSectionTitle">Popular in the community</div>
+              <div class="muted" style="font-size:12px;">(auto-hides until enough data)</div>
+            </div>
+            <div class="flourGrid" id="flourGridCommunity"></div>
+          </div>
+
+        </div>
+
+        <!-- F5) Blend panel -->
+        <div class="flourBlend">
+          <div class="item">
+            <h4>Flour Blend</h4>
+            <p class="muted">Click cards to add. Percent + math comes next.</p>
+
+            <!-- F5a) Selected flours list -->
+            <div id="blendList" class="blendList"></div>
+
+            <!-- F5b) Add button -->
+            <div style="display:flex; gap:10px; margin-top:12px;">
+              <button class="btn primary" id="btnAddFlour" type="button">Add Flour</button>
+              <button class="btn ghost" id="btnClearBlend" type="button">Clear</button>
+            </div>
+
+            <!-- F5c) Calculated labels (placeholder) -->
+            <div class="blendStats">
+              <div class="stat">
+                <div class="k">Protein (blend)</div>
+                <div class="v" id="blendProtein">—</div>
+              </div>
+              <div class="stat">
+                <div class="k">Absorption (blend)</div>
+                <div class="v" id="blendAbsorb">—</div>
+              </div>
+            </div>
+
+            <div class="muted" style="font-size:11px; margin-top:10px;">
+              Later: traffic-light warnings + KB deep dives.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  `);
+
+  // F6) Placeholder flour data (UI only; replace with real DB later)
+  const FLOURS = [
+    { id: "caputo_nuvola", brand: "Caputo", name: "Nuvola", type: "00", protein: 12.5, absorption: 0.66, logo: "./icons/template-neapolitan.svg" },
+    { id: "ka_bread", brand: "King Arthur", name: "Bread Flour", type: "Bread", protein: 12.7, absorption: 0.64, logo: "./icons/template-ny.svg" },
+    { id: "all_trumps", brand: "General Mills", name: "All Trumps", type: "High Gluten", protein: 14.0, absorption: 0.68, logo: "./icons/template-ny.svg" },
+    { id: "semola", brand: "Durum", name: "Semola Rimacinata", type: "Semolina", protein: 13.0, absorption: 0.58, logo: "./icons/template-chicago.svg" },
+    { id: "ap_generic", brand: "Generic", name: "All Purpose", type: "AP", protein: 11.5, absorption: 0.62, logo: "./icons/template-detroit.svg" },
+  ];
+
+  // F7) State (minimal)
+  const state = {
+    bookmarkedOnly: false,
+    q: "",
+    sort: "pop",
+    selected: [], // array of flour objects
+  };
+
+  // F8) DOM
+  const $ = (sel) => root.querySelector(sel);
+  const elPopular = $("#flourGridPopular");
+  const elAll = $("#flourGridAll");
+  const elBlendList = $("#blendList");
+
+  // F9) Render helpers
+  function flourCard(f) {
+    const el = document.createElement("button");
+    el.type = "button";
+    el.className = "flourCard";
+    el.innerHTML = `
+      <div class="flourLogo">
+        <img src="${f.logo}" alt="" />
+      </div>
+      <div class="flourMeta">
+        <div class="flourName">${esc(f.brand)} • ${esc(f.name)}</div>
+        <div class="flourSub muted">${esc(f.type)} • Protein ${f.protein}% • Abs ${Math.round(f.absorption * 100)}%</div>
+      </div>
+      <div class="flourStar" title="Bookmark (later)">⭐</div>
+    `;
+    el.addEventListener("click", () => {
+      // F9a) Add to blend (placeholder behavior)
+      state.selected.push(f);
+      renderBlend();
+    });
+    return el;
+  }
+
+  function renderCatalog() {
+    const q = (state.q || "").trim().toLowerCase();
+
+    // F10) Simple filter
+    let list = FLOURS.filter(f => {
+      if (!q) return true;
+      const hay = `${f.brand} ${f.name} ${f.type}`.toLowerCase();
+      return hay.includes(q);
+    });
+
+    // F11) Simple sort (placeholder)
+    if (state.sort === "brand") list.sort((a,b) => (a.brand+a.name).localeCompare(b.brand+b.name));
+    if (state.sort === "protein") list.sort((a,b) => (b.protein - a.protein));
+    if (state.sort === "absorption") list.sort((a,b) => (b.absorption - a.absorption));
+    if (state.sort === "type") list.sort((a,b) => (a.type).localeCompare(b.type));
+
+    // F12) Popular row = first 3 for now
+    elPopular.innerHTML = "";
+    list.slice(0,3).forEach(f => elPopular.appendChild(flourCard(f)));
+
+    // F13) All row
+    elAll.innerHTML = "";
+    list.forEach(f => elAll.appendChild(flourCard(f)));
+  }
+
+  function renderBlend() {
+    // F14) Blend list
+    elBlendList.innerHTML = "";
+
+    if (!state.selected.length) {
+      elBlendList.innerHTML = `<div class="muted">No flour selected yet.</div>`;
+      $("#blendProtein").textContent = "—";
+      $("#blendAbsorb").textContent = "—";
+      return;
+    }
+
+    state.selected.forEach((f, idx) => {
+      const row = document.createElement("div");
+      row.className = "blendRow";
+      row.innerHTML = `
+        <div class="blendLeft">
+          <div class="blendTitle">${esc(f.brand)} • ${esc(f.name)}</div>
+          <div class="muted" style="font-size:12px;">${esc(f.type)} • P ${f.protein}% • Abs ${Math.round(f.absorption*100)}%</div>
+        </div>
+        <button class="btn ghost" type="button" data-rm="${idx}">Remove</button>
+      `;
+      row.querySelector("[data-rm]").addEventListener("click", () => {
+        state.selected.splice(idx, 1);
+        renderBlend();
+      });
+      elBlendList.appendChild(row);
+    });
+
+    // F15) Placeholder “blend stats”
+    // For now, show simple average; later we’ll weight by % and enforce totals.
+    const avgProtein = state.selected.reduce((s,f)=>s+f.protein,0) / state.selected.length;
+    const avgAbs = state.selected.reduce((s,f)=>s+f.absorption,0) / state.selected.length;
+
+    $("#blendProtein").textContent = `${avgProtein.toFixed(1)}%`;
+    $("#blendAbsorb").textContent = `${Math.round(avgAbs*100)}%`;
+  }
+
+  // F16) Wire controls
+  $("#flourSearch").addEventListener("input", (e) => {
+    state.q = e.target.value || "";
+    renderCatalog();
+  });
+
+  $("#flourSort").addEventListener("change", (e) => {
+    state.sort = e.target.value || "pop";
+    renderCatalog();
+  });
+
+  $("#btnFlourBookmarkedOnly").addEventListener("click", () => {
+    // Placeholder: UI toggle only. Real bookmarks later.
+    state.bookmarkedOnly = !state.bookmarkedOnly;
+    $("#btnFlourBookmarkedOnly").setAttribute("aria-pressed", String(state.bookmarkedOnly));
+    alert("Bookmarks not wired yet. This is the UI placeholder.");
+  });
+
+  $("#btnAddFlour").addEventListener("click", () => {
+    alert("Add Flour button placeholder. For now, click flour cards.");
+  });
+
+  $("#btnClearBlend").addEventListener("click", () => {
+    state.selected = [];
+    renderBlend();
+  });
+
+  // F17) Initial render
+  renderCatalog();
+  renderBlend();
+
+    return root;
+}
+
+function doughPanel({ onPreview, onOpenKB }) {
     // D1) Minimal session state (UI writes here; engine will later read this)
     const session = {
         units: "imperial",
@@ -497,7 +786,7 @@ function refresh(){
     onPreview?.(renderPreviewPlaceholder(session));
 
     return root;
-}
+  }
 
 // helpers for doughPanel
 /* =========================================================
@@ -567,52 +856,243 @@ function clamp(v, a, b) {
     return Math.max(a, Math.min(b, v));
 }
 
-function templatesPanel(store, onPreview) {
-    const idx = store.get("indexes", {});
-    const list = idx.templates?.items || [];
-    const el = div(`
-    <div class="item">
-      <h4>3b) Templates</h4>
-      <p class="muted">Externally loaded. Click one to apply (hook your auto-population here).</p>
-      <div class="list" id="tplList"></div>
-    </div>
-  `);
+/* =========================================================
+   T0) TEMPLATES PANEL (Comfy-style full page)
+   - Uses /assets/templates/*.svg
+   - Two-button switch: Styles | Tribute
+   - Left categories + Search + Sort
+   - Click card: selects template (wiring can be expanded)
+   ========================================================= */
 
-    const out = el.querySelector("#tplList");
-    out.innerHTML = list.map(t => `
-    <div class="item" data-id="${esc(t.id)}" style="cursor:pointer;">
-      <h4>${esc(t.name)}</h4>
-      <p>${esc(t.summary || "")}</p>
-    </div>
-  `).join("");
+function templatesPanel(store) {
+  // T1) Minimal template catalog (Styles V1)
+  // NOTE: paths match your folder: assets/templates/*.svg
+  const STYLE_TEMPLATES = [
+    { id: "ny_round",      name: "NY Round",       cat: "ny",        img: "./assets/templates/ny_round.svg",      desc: "Large foldable slice" },
+    { id: "neapolitan",    name: "Neapolitan",     cat: "neo",       img: "./assets/templates/neapolitan.svg",    desc: "Soft center, airy rim" },
+    { id: "detroit",       name: "Detroit",        cat: "pan",       img: "./assets/templates/detroit.svg",       desc: "Square pan, caramelized edge" },
+    { id: "sicilian",      name: "Sicilian",       cat: "pan",       img: "./assets/templates/sicilian.svg",      desc: "Thick square pan" },
+    { id: "bar_pie",       name: "Bar Pie",        cat: "thin",      img: "./assets/templates/bar_pie.svg",       desc: "Thin tavern-style" },
+    { id: "tomato_pie",    name: "Tomato Pie",     cat: "regional",  img: "./assets/templates/tomato_pie.svg",    desc: "Sauce-forward square" },
+    { id: "deep_dish",     name: "Deep Dish",      cat: "chicago",   img: "./assets/templates/deep_dish.svg",     desc: "Thick, layered pie" },
+    { id: "teglia_romana", name: "Teglia Romana",  cat: "roman",     img: "./assets/templates/teglia_romana.svg", desc: "Crispy bottom, airy crumb" },
+  ];
 
-    out.querySelectorAll("[data-id]").forEach(card => {
-        card.addEventListener("click", () => {
-            const id = card.getAttribute("data-id");
-            onPreview?.(`<div class="item"><h4>Template Applied</h4><p class="muted">${esc(id)}</p></div>`);
-        });
-    });
+  // T2) Tribute (empty for now; architecture in place)
+  const TRIBUTE_TEMPLATES = [
+    // Example later:
+    // { id:"joes", name:"Joe’s NY Slice", cat:"ny", img:"./assets/tributes/joes.svg", desc:"Community tribute" }
+  ];
 
-    return el;
-}
+  // T3) Categories (left rail)
+  const CATS = [
+    { id: "all",      label: "All" },
+    { id: "ny",       label: "NY Style" },
+    { id: "neo",      label: "Neapolitan" },
+    { id: "pan",      label: "Pan Pizza" },
+    { id: "thin",     label: "Thin / Tavern" },
+    { id: "roman",    label: "Roman" },
+    { id: "chicago",  label: "Chicago" },
+    { id: "regional", label: "Regional" },
+  ];
 
-function databasesPanel(store) {
-    const idx = store.get("indexes", {});
-    const list = idx.databases?.items || [];
-    return div(`
-    <div class="item">
-      <h4>3c) Databases</h4>
-      <p class="muted">This is the index of DB modules. Each can be its own JSON file later.</p>
-      <div class="list">
-        ${list.map(x => `
-          <div class="item">
-            <h4>${esc(x.name)}</h4>
-            <p>${esc(x.summary || "")}</p>
+  // T4) State
+  const state = {
+    mode: "styles",      // "styles" | "tribute"
+    cat: "all",
+    q: "",
+    sort: "name",        // "name" | "cat"
+    selectedId: null,
+  };
+
+  // T5) UI
+  const root = div(`
+    <div class="flourPage templatePage">
+      <div class="flourTop">
+        <div>
+          <div class="steptitle">Templates</div>
+          <div class="stepsub">Pick a style preset. Advanced users can change everything.</div>
+        </div>
+
+        <div class="flourControls">
+          <!-- T5a) Styles | Tribute switch -->
+          <div class="seg" role="tablist" aria-label="Template mode">
+            <button class="btn ghost segbtn" id="btnModeStyles" type="button" aria-selected="true">Styles</button>
+            <button class="btn ghost segbtn" id="btnModeTribute" type="button" aria-selected="false">Tribute</button>
           </div>
-        `).join("")}
+
+          <!-- T5b) Search -->
+          <div class="flourSearch">
+            <input class="input" id="tplSearch" placeholder="Search templates…" />
+          </div>
+
+          <!-- T5c) Sort -->
+          <div class="flourSort">
+            <select class="input" id="tplSort" title="Sort">
+              <option value="name">Sort: Name</option>
+              <option value="cat">Sort: Category</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- T6) Layout: left categories + grid -->
+      <div class="tplLayout">
+        <div class="tplRail">
+          <div class="tplRailHead muted">Categories</div>
+          <div class="tplCats" id="tplCats"></div>
+
+          <!-- T6a) Disclaimer (shown only in Tribute mode) -->
+          <div class="tplDisclaimer hidden" id="tplDisclaimer">
+            <div class="muted" style="font-size:12px; line-height:1.35;">
+              Tribute recipes are community interpretations, not official formulas, and not affiliated with restaurants referenced.
+            </div>
+          </div>
+        </div>
+
+        <div class="tplMain">
+          <div class="flourGrid" id="tplGrid"></div>
+          <div class="muted" style="font-size:12px; margin-top:10px;" id="tplEmpty"></div>
+        </div>
       </div>
     </div>
   `);
+
+  const $ = (sel) => root.querySelector(sel);
+
+  // T7) Render categories
+  function renderCats() {
+    const wrap = $("#tplCats");
+    wrap.innerHTML = "";
+    CATS.forEach(c => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn ghost tplCat";
+      b.textContent = c.label;
+      b.dataset.cat = c.id;
+      if (state.cat === c.id) b.classList.add("active");
+      b.addEventListener("click", () => {
+        state.cat = c.id;
+        renderCats();
+        renderGrid();
+      });
+      wrap.appendChild(b);
+    });
+  }
+
+  // T8) Data source
+  function currentList() {
+    return state.mode === "tribute" ? TRIBUTE_TEMPLATES : STYLE_TEMPLATES;
+  }
+
+  // T9) Card (Comfy style: image tile + caption below)
+  function cardTpl(t) {
+    const wrap = document.createElement("div");
+    wrap.className = "tplCardWrap";
+
+    const tile = document.createElement("button");
+    tile.type = "button";
+    tile.className = "tplTile";
+    tile.dataset.id = t.id;
+    tile.innerHTML = `
+      <div class="tplTileInner">
+        <img src="${t.img}" alt="" />
+      </div>
+      <div class="tplTileMark ${state.selectedId === t.id ? "on" : ""}"></div>
+    `;
+
+    // simple hover tooltip using title (V1)
+    tile.title = `${t.name} — ${t.desc || ""}`.trim();
+
+    tile.addEventListener("click", () => {
+      state.selectedId = t.id;
+      renderGrid();
+
+      // T9a) V1 behavior: show selection + (optional) push into session if store supports it
+      try {
+        const session = store?.get ? (store.get("session") || {}) : {};
+        // store a minimal template selection; you’ll wire real defaults later
+        const next = { ...session, templateId: t.id, templateName: t.name };
+        if (store?.set) store.set("session", next);
+      } catch (_) {}
+
+      // Visible confirmation without being bossy
+      toast(`${t.name} selected`);
+    });
+
+    const cap = document.createElement("div");
+    cap.className = "tplCap";
+    cap.innerHTML = `
+      <div class="tplName">${esc(t.name)}</div>
+      <div class="tplSub muted">${esc(t.desc || "")}</div>
+    `;
+
+    wrap.appendChild(tile);
+    wrap.appendChild(cap);
+    return wrap;
+  }
+
+  // T10) Render grid
+  function renderGrid() {
+    const list = currentList().slice();
+
+    // Tribute disclaimer visibility
+    $("#tplDisclaimer").classList.toggle("hidden", state.mode !== "tribute");
+
+    const q = (state.q || "").trim().toLowerCase();
+
+    let out = list.filter(t => {
+      if (state.cat !== "all" && t.cat !== state.cat) return false;
+      if (!q) return true;
+      return `${t.name} ${t.desc || ""}`.toLowerCase().includes(q);
+    });
+
+    if (state.sort === "name") out.sort((a,b) => a.name.localeCompare(b.name));
+    if (state.sort === "cat") out.sort((a,b) => (a.cat||"").localeCompare(b.cat||"") || a.name.localeCompare(b.name));
+
+    const grid = $("#tplGrid");
+    grid.innerHTML = "";
+    out.forEach(t => grid.appendChild(cardTpl(t)));
+
+    const empty = $("#tplEmpty");
+    if (!out.length) {
+      empty.textContent = state.mode === "tribute"
+        ? "No tribute templates yet. (Architecture is ready.)"
+        : "No templates match your search.";
+    } else {
+      empty.textContent = "";
+    }
+  }
+
+  // T11) Controls
+  $("#tplSearch").addEventListener("input", (e) => {
+    state.q = e.target.value || "";
+    renderGrid();
+  });
+
+  $("#tplSort").addEventListener("change", (e) => {
+    state.sort = e.target.value || "name";
+    renderGrid();
+  });
+
+  $("#btnModeStyles").addEventListener("click", () => {
+    state.mode = "styles";
+    $("#btnModeStyles").setAttribute("aria-selected", "true");
+    $("#btnModeTribute").setAttribute("aria-selected", "false");
+    renderGrid();
+  });
+
+  $("#btnModeTribute").addEventListener("click", () => {
+    state.mode = "tribute";
+    $("#btnModeStyles").setAttribute("aria-selected", "false");
+    $("#btnModeTribute").setAttribute("aria-selected", "true");
+    renderGrid();
+  });
+
+  // T12) Boot
+  renderCats();
+  renderGrid();
+  return root;
 }
 
 function fermentationPanel(store, onPreview) {
