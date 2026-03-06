@@ -1,0 +1,13 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="40" fill="#181a1b"/>
+  <g transform="translate(181 50)">
+    <path d="M0 10C0 4.47 4.47 0 10 0H140C145.5 0 150 4.47 150 10V180C150 185.5 145.5 190 140 190H10C4.47 190 0 185.5 0 180V10Z" fill="#F3F4F6"/>
+    <path d="M0 15H150V175H0V15Z" fill="#FFFFFF"/>
+    <rect width="150" height="15" rx="5" fill="#E5E7EB"/>
+    <path d="M75 35V95M60 55L90 75M90 55L60 75" stroke="#1a237e" stroke-width="3" stroke-linecap="round"/>
+    <text x="75" y="108" font-family="Arial" font-weight="600" font-size="14" fill="#1a237e" text-anchor="middle">FLOUR</text>
+  </g>
+  <text x="256" y="270" font-family="Arial" font-weight="900" font-size="28" fill="#1a237e" text-anchor="middle">KING ARTHUR</text>
+  <text x="256" y="300" font-family="Arial" font-size="18" fill="#fafafa" text-anchor="middle">Sir Lancelot</text>
+  <rect x="176" y="310" width="160" height="8" fill="#e11d48"/>
+</svg>
