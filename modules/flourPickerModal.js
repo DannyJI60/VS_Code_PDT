@@ -3,187 +3,271 @@ import { loadFloursForBrowser } from "./floursDb.js";
 
 export async function openFlourPickerModal(store, opts = {}) {
   const onUse = typeof opts.onUse === "function" ? opts.onUse : () => {};
-
   const flours = await loadFloursForBrowser(window.__PDT_STORE__ || store);
 
-  // Modal shell
+  let activeSort = "name";
+  let activeSearch = "";
+  let activeType = "all";
+  let detailPanel = null;
+  let selectedFlours = [];
+
   const overlay = document.createElement("div");
-  overlay.style.position = "fixed";
-  overlay.style.inset = "0";
-  overlay.style.background = "rgba(0,0,0,.55)";
-  overlay.style.zIndex = "9999";
-  overlay.style.display = "flex";
-  overlay.style.alignItems = "center";
-  overlay.style.justifyContent = "center";
+  overlay.className = "fpOverlay";
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) close();
   });
 
   const box = document.createElement("div");
-  box.style.width = "min(1000px, 92vw)";
-  box.style.maxHeight = "86vh";
-  box.style.overflow = "auto";
-  box.style.background = "var(--panel, #181a1d)";
-  box.style.border = "1px solid rgba(255,255,255,.08)";
-  box.style.borderRadius = "16px";
-  box.style.boxShadow = "0 20px 80px rgba(0,0,0,.6)";
-  box.style.padding = "16px";
+  box.className = "fpModal";
   overlay.appendChild(box);
 
   box.innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;">
+    <div class="fpHead">
       <div>
-        <div style="font-size:18px;font-weight:700;">Choose Flour</div>
-        <div style="opacity:.7;font-size:13px;">Click a flour to view details, then “Use Flour”.</div>
+        <div class="fpEyebrow">Flour Browser</div>
+        <h3 class="fpTitle">Choose Flour</h3>
+        <p class="fpSub">Pick a flour for your blend. Open the detail card for specs and notes.</p>
       </div>
-      <button id="fpClose" class="btn">Close</button>
+
+      <button type="button" class="btn ghost sm" id="fpClose">Close</button>
     </div>
 
-    <div style="display:flex;gap:10px;align-items:center;margin-top:12px;">
-      <input id="fpSearch" class="input" placeholder="Search flour…" style="flex:1;">
-      <select id="fpSort" class="input" style="width:180px;">
-        <option value="popular">Popular</option>
+    <div class="fpToolbar">
+      <label class="fpSearchWrap">
+        <input id="fpSearch" class="input fpSearch" placeholder="Search by brand, name, or type..." />
+      </label>
+
+      <select id="fpSort" class="input fpSelect">
+        <option value="name">Name</option>
         <option value="protein">Protein</option>
         <option value="absorption">Absorption</option>
-        <option value="name">Name</option>
       </select>
     </div>
 
-    <div id="fpGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:14px;"></div>
+    <div class="fpFilters" id="fpFilters">
+      <button type="button" class="fpChip active" data-type="all">All</button>
+      <button type="button" class="fpChip" data-type="00">00</button>
+      <button type="button" class="fpChip" data-type="0">0</button>
+      <button type="button" class="fpChip" data-type="Bread">Bread</button>
+      <button type="button" class="fpChip" data-type="High Gluten">High Gluten</button>
+      <button type="button" class="fpChip" data-type="AP/Bread">AP/Bread</button>
+      <button type="button" class="fpChip" data-type="Manitoba">Manitoba</button>
+    </div>
+
+    <div class="fpMeta" id="fpMeta"></div>
+
+    <div class="fpBody">
+      <div class="fpGrid" id="fpGrid"></div>
+
+      <aside class="fpDetailShell" id="fpDetailShell">
+        <div class="fpDetailEmpty">
+          <div class="fpDetailEmptyTitle">Flour details</div>
+          <div class="fpDetailEmptySub">Click a flour card to inspect specs and add it to the blend.</div>
+        </div>
+      </aside>
+    </div>
   `;
 
   const closeBtn = box.querySelector("#fpClose");
-  closeBtn.addEventListener("click", close);
-
   const searchEl = box.querySelector("#fpSearch");
   const sortEl = box.querySelector("#fpSort");
   const gridEl = box.querySelector("#fpGrid");
+  const metaEl = box.querySelector("#fpMeta");
+  const filtersEl = box.querySelector("#fpFilters");
+  const detailShellEl = box.querySelector("#fpDetailShell");
+
+  closeBtn.addEventListener("click", close);
+  searchEl.addEventListener("input", () => {
+    activeSearch = searchEl.value || "";
+    render();
+  });
+  sortEl.addEventListener("change", () => {
+    activeSort = sortEl.value || "name";
+    render();
+  });
+
+  filtersEl.querySelectorAll(".fpChip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeType = btn.dataset.type || "all";
+      filtersEl.querySelectorAll(".fpChip").forEach((x) => x.classList.remove("active"));
+      btn.classList.add("active");
+      render();
+    });
+  });
 
   function render() {
-    const q = (searchEl.value || "").trim().toLowerCase();
-    const sort = sortEl.value;
+    const q = activeSearch.trim().toLowerCase();
 
-    let list = flours.filter(f => {
+    let list = flours.filter((f) => {
       const hay = `${f.brand} ${f.name} ${f.type}`.toLowerCase();
-      return !q || hay.includes(q);
+      const typeOk = activeType === "all" ? true : String(f.type || "").toLowerCase() === activeType.toLowerCase();
+      const searchOk = !q || hay.includes(q);
+      return typeOk && searchOk;
     });
 
-    if (sort === "protein") list.sort((a,b) => (b.protein ?? 0) - (a.protein ?? 0));
-    else if (sort === "absorption") list.sort((a,b) => (b.absorption ?? 0) - (a.absorption ?? 0));
-    else if (sort === "name") list.sort((a,b) => `${a.brand} ${a.name}`.localeCompare(`${b.brand} ${b.name}`));
+    if (activeSort === "protein") {
+      list.sort((a, b) => (Number(b.protein) || 0) - (Number(a.protein) || 0));
+    } else if (activeSort === "absorption") {
+      list.sort((a, b) => (Number(b.absorption) || 0) - (Number(a.absorption) || 0));
+    } else {
+      list.sort((a, b) => `${a.brand} ${a.name}`.localeCompare(`${b.brand} ${b.name}`));
+    }
+
+    metaEl.textContent = `${list.length} flour${list.length === 1 ? "" : "s"} found`;
 
     gridEl.innerHTML = "";
-    for (const f of list) gridEl.appendChild(card(f));
+    list.forEach((f) => gridEl.appendChild(flourCard(f)));
+
+    if (!list.length) {
+      gridEl.innerHTML = `
+        <div class="fpZero">
+          <div class="fpZeroTitle">No flours found</div>
+          <div class="fpZeroSub">Try a different search or clear the type filter.</div>
+        </div>
+      `;
+    }
   }
 
-  function card(f) {
-    const el = document.createElement("div");
-    el.className = "card";
-    el.style.cursor = "pointer";
-    el.style.padding = "14px";
-    el.style.borderRadius = "14px";
-    el.style.border = "1px solid rgba(255,255,255,.08)";
-    el.style.background = "rgba(255,255,255,.02)";
+  function flourCard(f){
 
-    const absPct = (f.absorption != null) ? Math.round(f.absorption * 100) : null;
+  const el=document.createElement("div");
+  el.className="flourCard";
 
-    el.innerHTML = `
-      <div style="font-weight:700;">${escapeHtml(f.brand)} • ${escapeHtml(f.name)}</div>
-      <div style="opacity:.75;margin-top:6px;">
-        ${escapeHtml(f.type || "")}
-        ${f.protein != null ? ` • Protein ${Number(f.protein).toFixed(1)}%` : ""}
-        ${absPct != null ? ` • Abs ${absPct}%` : ""}
+  el.innerHTML=`
+    <button class="flourAdd">+</button>
+
+    <div class="flourLogo">
+      <img src="${f.logo || "./icons/flour.svg"}">
+    </div>
+
+    <div class="flourName">${f.brand} ${f.name}</div>
+    <div class="flourType">${f.type}</div>
+  `;
+
+  el.querySelector(".flourAdd").addEventListener("click",()=>{
+      selectedFlours.push(f);
+      updateSelectedIndicator(el);
+  });
+
+  return el;
+}
+
+  function openDetail(f, cardEl) {
+    gridEl.querySelectorAll(".fpCard").forEach((x) => x.classList.remove("active"));
+    cardEl.classList.add("active");
+
+    const abs = formatAbsRange(f);
+    const heat = formatHeat(f);
+    const w = formatW(f);
+    const pl = formatPL(f);
+    const protein = f.protein != null ? `${Number(f.protein).toFixed(2)}%` : "—";
+    const malted = f.malted === true ? "Yes" : f.malted === false ? "No" : "—";
+
+    detailShellEl.innerHTML = `
+      <div class="fpDetailCard">
+        <div class="fpDetailHead">
+          <div>
+            <div class="fpEyebrow">${escapeHtml(f.brand || "Unknown Brand")}</div>
+            <div class="fpDetailTitle">${escapeHtml(f.name || f.id || "Unnamed Flour")}</div>
+          </div>
+        </div>
+
+        <div class="fpDetailType">${escapeHtml(f.type || "—")}</div>
+
+        <div class="fpDetailGrid">
+          <div class="fpDetailStat">
+            <div class="fpDetailLabel">Protein</div>
+            <div class="fpDetailValue">${escapeHtml(protein)}</div>
+          </div>
+
+          <div class="fpDetailStat">
+            <div class="fpDetailLabel">Absorption</div>
+            <div class="fpDetailValue">${escapeHtml(abs)}</div>
+          </div>
+
+          <div class="fpDetailStat">
+            <div class="fpDetailLabel">W</div>
+            <div class="fpDetailValue">${escapeHtml(w)}</div>
+          </div>
+
+          <div class="fpDetailStat">
+            <div class="fpDetailLabel">P/L</div>
+            <div class="fpDetailValue">${escapeHtml(pl)}</div>
+          </div>
+
+          <div class="fpDetailStat">
+            <div class="fpDetailLabel">Malted</div>
+            <div class="fpDetailValue">${escapeHtml(malted)}</div>
+          </div>
+
+          <div class="fpDetailStat">
+            <div class="fpDetailLabel">Suggested heat</div>
+            <div class="fpDetailValue">${escapeHtml(heat)}</div>
+          </div>
+        </div>
+
+        <div class="fpNoteBlock">
+          <div class="fpDetailLabel">Notes</div>
+          <div class="fpDetailNote">${escapeHtml(f.notes || "No notes listed yet.")}</div>
+        </div>
+
+        <div class="fpDetailActions">
+          <button type="button" class="btn primary" id="fpUse">Add to Blend</button>
+        </div>
       </div>
     `;
 
-    el.addEventListener("click", () => openDetail(f));
-    return el;
-  }
-
-  function openDetail(f) {
-    // simple “detail popup” inside the modal
-    const abs = f.absorptionRange?.minPct != null
-      ? `${f.absorptionRange.minPct}–${f.absorptionRange.maxPct}%`
-      : "—";
-
-    const heat = f.heat?.tempF?.min != null
-      ? `${fmtNum(f.heat.tempF.min)}–${fmtNum(f.heat.tempF.max)}°F`
-      : "—";
-
-    const specs = f.specs || {};
-    const w = specs.w?.min != null ? `${specs.w.min}–${specs.w.max}` : "—";
-    const pl = specs.pl?.min != null ? `${specs.pl.min}–${specs.pl.max}` : "—";
-
-    const panel = document.createElement("div");
-    panel.style.position = "fixed";
-    panel.style.inset = "0";
-    panel.style.background = "rgba(0,0,0,.55)";
-    panel.style.zIndex = "10000";
-    panel.style.display = "flex";
-    panel.style.alignItems = "center";
-    panel.style.justifyContent = "center";
-    panel.addEventListener("click", (e) => { if (e.target === panel) panel.remove(); });
-
-    const inner = document.createElement("div");
-    inner.style.width = "min(560px, 92vw)";
-    inner.style.background = "var(--panel, #181a1d)";
-    inner.style.border = "1px solid rgba(255,255,255,.08)";
-    inner.style.borderRadius = "16px";
-    inner.style.boxShadow = "0 20px 80px rgba(0,0,0,.6)";
-    inner.style.padding = "16px";
-    panel.appendChild(inner);
-
-    inner.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div style="font-weight:800;font-size:18px;">${escapeHtml(f.brand)} • ${escapeHtml(f.name)}</div>
-        <button class="btn" id="fpDetailClose">Close</button>
-      </div>
-
-      <div style="opacity:.8;margin-top:8px;">
-        Type: ${escapeHtml(f.type || "—")}
-      </div>
-
-      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div><div style="opacity:.7;font-size:12px;">Protein</div><div style="font-weight:700;">${f.protein != null ? `${Number(f.protein).toFixed(2)}%` : "—"}</div></div>
-        <div><div style="opacity:.7;font-size:12px;">Absorption</div><div style="font-weight:700;">${abs}</div></div>
-        <div><div style="opacity:.7;font-size:12px;">W</div><div style="font-weight:700;">${w}</div></div>
-        <div><div style="opacity:.7;font-size:12px;">P/L</div><div style="font-weight:700;">${pl}</div></div>
-        <div><div style="opacity:.7;font-size:12px;">Malted</div><div style="font-weight:700;">${f.malted === true ? "Yes" : f.malted === false ? "No" : "—"}</div></div>
-        <div><div style="opacity:.7;font-size:12px;">Heat band</div><div style="font-weight:700;">${heat}</div></div>
-      </div>
-
-      <div style="opacity:.75;margin-top:10px;font-size:13px;">${escapeHtml(f.notes || "")}</div>
-
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
-        <button class="btn" id="fpUse">Use Flour</button>
-      </div>
-    `;
-
-    inner.querySelector("#fpDetailClose").addEventListener("click", () => panel.remove());
-    inner.querySelector("#fpUse").addEventListener("click", () => {
-      onUse(f._raw || f); // pass raw DB record if available
-      panel.remove();
+    detailPanel = detailShellEl.querySelector("#fpUse");
+    detailPanel?.addEventListener("click", () => {
+      onUse(f._raw || f);
       close();
     });
-
-    document.body.appendChild(panel);
   }
+  
+  function updateSelectedIndicator(card){
+  card.classList.add("selected");
+}
 
   function close() {
     overlay.remove();
   }
 
-  searchEl.addEventListener("input", render);
-  sortEl.addEventListener("change", render);
-
   document.body.appendChild(overlay);
   render();
 }
 
-function fmtNum(n) {
-  if (n == null) return "—";
-  const v = Number(n);
-  return Number.isFinite(v) ? String(Math.round(v)) : "—";
+function formatAbsRange(f) {
+  if (f?.absorptionRange?.minPct != null && f?.absorptionRange?.maxPct != null) {
+    return `${f.absorptionRange.minPct}–${f.absorptionRange.maxPct}% absorption`;
+  }
+  if (f?.absorption != null) {
+    return `${Math.round(Number(f.absorption) * 100)}% absorption`;
+  }
+  return "Absorption —";
+}
+
+function formatW(f) {
+  const min = f?.specs?.w?.min;
+  const max = f?.specs?.w?.max;
+  if (min != null && max != null) return min === max ? `W ${min}` : `W ${min}–${max}`;
+  if (min != null) return `W ${min}`;
+  return "W —";
+}
+
+function formatPL(f) {
+  const min = f?.specs?.pl?.min;
+  const max = f?.specs?.pl?.max;
+  if (min != null && max != null) return min === max ? `${min}` : `${min}–${max}`;
+  if (min != null) return `${min}`;
+  return "—";
+}
+
+function formatHeat(f) {
+  const min = f?.heat?.tempF?.min;
+  const max = f?.heat?.tempF?.max;
+  if (min != null && max != null) return `${Math.round(min)}–${Math.round(max)}°F`;
+  if (min != null) return `${Math.round(min)}°F+`;
+  return "—";
 }
 
 function escapeHtml(s) {
@@ -192,5 +276,5 @@ function escapeHtml(s) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll("'", "&#39;");
 }

@@ -132,257 +132,30 @@ export function renderRoute({
    ========================================================= */
 
 function databasesPanel(store) {
-    // F1) Root
-    const root = div(`
-    <div class="flourPage">
-
-      <!-- F2) Header / Controls -->
-      <div class="flourTop">
+  const root = div(`
+    <div class="card">
+      <div class="cardhead">
         <div>
-          <div class="steptitle">Step 2 • Flour</div>
-          <div class="stepsub">Pick flours fast, then blend. (Prototype UI)</div>
-        </div>
-
-        <div class="flourControls">
-          <!-- F2a) Search -->
-          <div class="flourSearch">
-            <input class="input" id="flourSearch" placeholder="Search flour… (brand, name, type)" />
-          </div>
-
-          <!-- F2b) Sort -->
-          <div class="flourSort">
-            <label class="muted" style="font-size:12px;">Sort</label>
-            <select class="input" id="flourSort">
-              <option value="pop">Popularity</option>
-              <option value="brand">Brand</option>
-              <option value="protein">Protein</option>
-              <option value="absorption">Absorption</option>
-              <option value="type">Type</option>
-            </select>
-          </div>
-
-          <!-- F2c) Bookmarked only -->
-          <button class="btn ghost" id="btnFlourBookmarkedOnly" type="button" aria-pressed="false">
-            ⭐ Bookmarked only
-          </button>
+          <div class="cardtitle">Databases</div>
+          <div class="muted">Reference library and future admin tools.</div>
         </div>
       </div>
 
-      <!-- F3) Layout: grid + blend panel -->
-      <div class="flourLayout">
-
-        <!-- F4) Catalog -->
-        <div class="flourCatalog">
-
-          <!-- F4a) Section: Popular for style (placeholder) -->
-          <div class="flourSection">
-            <div class="flourSectionHead">
-              <div class="flourSectionTitle">Popular for this style</div>
-              <div class="muted" style="font-size:12px;">(placeholder list)</div>
-            </div>
-            <div class="flourGrid" id="flourGridPopular"></div>
+      <div class="cardbody">
+        <div class="stack">
+          <div class="muted">
+            Flour selection now lives in <strong>Dough → Step 2 • Flour</strong>.
           </div>
 
-          <!-- F4b) Section: All flours (placeholder) -->
-          <div class="flourSection" style="margin-top:14px;">
-            <div class="flourSectionHead">
-              <div class="flourSectionTitle">All flours</div>
-              <div class="muted" style="font-size:12px;">Use search + sort</div>
-            </div>
-            <div class="flourGrid" id="flourGridAll"></div>
-          </div>
-
-          <!-- F4c) Community section (hidden until real data exists) -->
-          <div class="flourSection hidden" id="flourCommunitySection" style="margin-top:14px;">
-            <div class="flourSectionHead">
-              <div class="flourSectionTitle">Popular in the community</div>
-              <div class="muted" style="font-size:12px;">(auto-hides until enough data)</div>
-            </div>
-            <div class="flourGrid" id="flourGridCommunity"></div>
-          </div>
-
-        </div>
-
-        <!-- F5) Blend panel -->
-        <div class="flourBlend">
-          <div class="item">
-            <h4>Flour Blend</h4>
-            <p class="muted">Click cards to add. Percent + math comes next.</p>
-
-            <!-- F5a) Selected flours list -->
-            <div id="blendList" class="blendList"></div>
-
-            <!-- F5b) Add button -->
-            <div style="display:flex; gap:10px; margin-top:12px;">
-              <button class="btn primary" id="btnAddFlour" type="button">Add Flour</button>
-              <button class="btn ghost" id="btnClearBlend" type="button">Clear</button>
-            </div>
-
-            <!-- F5c) Calculated labels (placeholder) -->
-            <div class="blendStats">
-              <div class="stat">
-                <div class="k">Protein (blend)</div>
-                <div class="v" id="blendProtein">—</div>
-              </div>
-              <div class="stat">
-                <div class="k">Absorption (blend)</div>
-                <div class="v" id="blendAbsorb">—</div>
-              </div>
-            </div>
-
-            <div class="muted" style="font-size:11px; margin-top:10px;">
-              Later: traffic-light warnings + KB deep dives.
-            </div>
+          <div class="muted">
+            This route can later hold dataset browsing, import tools, schema checks, and maintenance utilities.
           </div>
         </div>
-
       </div>
     </div>
   `);
 
-    // F6) Placeholder flour data (UI only; replace with real DB later) DONE!!!
-    let FLOURS = [];
-
-    loadFloursForBrowser(store)
-        .then(list => {
-            FLOURS = list;
-            renderCatalog();
-        })
-        .catch(err => {
-            console.warn(err);
-        });
-
-    // F7) State (minimal)
-    const state = {
-        bookmarkedOnly: false,
-        q: "",
-        sort: "pop",
-        selected: [], // array of flour objects
-    };
-
-    // F8) DOM
-    const $ = (sel) => root.querySelector(sel);
-    const elPopular = $("#flourGridPopular");
-    const elAll = $("#flourGridAll");
-    const elBlendList = $("#blendList");
-
-    // F9) Render helpers
-    function flourCard(f) {
-        const el = document.createElement("button");
-        el.type = "button";
-        el.className = "flourCard";
-        el.innerHTML = `
-      <div class="flourLogo">
-        <img src="${f.logo}" alt="" />
-      </div>
-      <div class="flourMeta">
-        <div class="flourName">${esc(f.brand)} • ${esc(f.name)}</div>
-        <div class="flourSub muted">${esc(f.type)} • Protein ${f.protein}% • Abs ${Math.round(f.absorption * 100)}%</div>
-      </div>
-      <div class="flourStar" title="Bookmark (later)">⭐</div>
-    `;
-        el.addEventListener("click", () => {
-            // F9a) Add to blend (placeholder behavior)
-            state.selected.push(f);
-            renderBlend();
-        });
-        return el;
-    }
-
-    function renderCatalog() {
-        const q = (state.q || "").trim().toLowerCase();
-
-        // F10) Simple filter
-        let list = FLOURS.filter(f => {
-            if (!q) return true;
-            const hay = `${f.brand} ${f.name} ${f.type}`.toLowerCase();
-            return hay.includes(q);
-        });
-
-        // F11) Simple sort (placeholder)
-        if (state.sort === "brand") list.sort((a, b) => (a.brand + a.name).localeCompare(b.brand + b.name));
-        if (state.sort === "protein") list.sort((a, b) => (b.protein - a.protein));
-        if (state.sort === "absorption") list.sort((a, b) => (b.absorption - a.absorption));
-        if (state.sort === "type") list.sort((a, b) => (a.type).localeCompare(b.type));
-
-        // F12) Popular row = first 3 for now
-        elPopular.innerHTML = "";
-        list.slice(0, 3).forEach(f => elPopular.appendChild(flourCard(f)));
-
-        // F13) All row
-        elAll.innerHTML = "";
-        list.forEach(f => elAll.appendChild(flourCard(f)));
-    }
-
-    function renderBlend() {
-        // F14) Blend list
-        elBlendList.innerHTML = "";
-
-        if (!state.selected.length) {
-            elBlendList.innerHTML = `<div class="muted">No flour selected yet.</div>`;
-            $("#blendProtein").textContent = "—";
-            $("#blendAbsorb").textContent = "—";
-            return;
-        }
-
-        state.selected.forEach((f, idx) => {
-            const row = document.createElement("div");
-            row.className = "blendRow";
-            row.innerHTML = `
-        <div class="blendLeft">
-          <div class="blendTitle">${esc(f.brand)} • ${esc(f.name)}</div>
-          <div class="muted" style="font-size:12px;">${esc(f.type)} • P ${f.protein}% • Abs ${Math.round(f.absorption*100)}%</div>
-        </div>
-        <button class="btn ghost" type="button" data-rm="${idx}">Remove</button>
-      `;
-            row.querySelector("[data-rm]").addEventListener("click", () => {
-                state.selected.splice(idx, 1);
-                renderBlend();
-            });
-            elBlendList.appendChild(row);
-        });
-
-        // F15) Placeholder “blend stats”
-        // For now, show simple average; later we’ll weight by % and enforce totals.
-        const avgProtein = state.selected.reduce((s, f) => s + f.protein, 0) / state.selected.length;
-        const avgAbs = state.selected.reduce((s, f) => s + f.absorption, 0) / state.selected.length;
-
-        $("#blendProtein").textContent = `${avgProtein.toFixed(1)}%`;
-        $("#blendAbsorb").textContent = `${Math.round(avgAbs*100)}%`;
-    }
-
-    // F16) Wire controls
-    $("#flourSearch").addEventListener("input", (e) => {
-        state.q = e.target.value || "";
-        renderCatalog();
-    });
-
-    $("#flourSort").addEventListener("change", (e) => {
-        state.sort = e.target.value || "pop";
-        renderCatalog();
-    });
-
-    $("#btnFlourBookmarkedOnly").addEventListener("click", () => {
-        // Placeholder: UI toggle only. Real bookmarks later.
-        state.bookmarkedOnly = !state.bookmarkedOnly;
-        $("#btnFlourBookmarkedOnly").setAttribute("aria-pressed", String(state.bookmarkedOnly));
-        alert("Bookmarks not wired yet. This is the UI placeholder.");
-    });
-
-    $("#btnAddFlour").addEventListener("click", () => {
-        alert("Add Flour button placeholder. For now, click flour cards.");
-    });
-
-    $("#btnClearBlend").addEventListener("click", () => {
-        state.selected = [];
-        renderBlend();
-    });
-
-    // F17) Initial render
-    renderCatalog();
-    renderBlend();
-
-    return root;
+  return root;
 }
 
 function doughPanel({ onPreview, onOpenKB }) {
@@ -628,10 +401,10 @@ const session = defaults;
       <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
         <div class="item">
   <h4>Step 2 • Flour</h4>
-  <p class="muted">Choose flours and build a blend. This will drive Considerations and warnings.</p>
+  <p class="muted">Browse the flour library, inspect specs, and build your blend..</p>
 
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
-    <button class="btn" id="btnChooseFlours">Choose Flour(s)</button>
+    <button class="btn" id="btnChooseFlours">Browse Flour(s)</button>
     <button class="btn" id="btnClearFlours">Clear</button>
   </div>
 
