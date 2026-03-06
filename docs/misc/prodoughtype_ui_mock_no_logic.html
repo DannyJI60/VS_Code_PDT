@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ProDoughType – UI Mock (No Logic)</title>
+  <style>
+    :root{
+      --bg:#0b0c0f;
+      --bg2:#12131a;
+      --card:#151722;
+      --card2:#10121a;
+      --border:rgba(255,255,255,.08);
+      --text:#f2f2f2;
+      --text2:rgba(255,255,255,.72);
+      --muted:rgba(255,255,255,.55);
+
+      /* Brighter orange */
+      --accent:#ffb000;
+      --accent2:#ff8a00;
+      --accentGlow:rgba(255,176,0,.18);
+
+      --success:#37d67a;
+      --warn:#ffcc66;
+      --error:#ff5b5b;
+
+      --r12:12px;
+      --r16:16px;
+      --shadow:0 18px 60px rgba(0,0,0,.55);
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 20% 0%, rgba(255,176,0,.10), transparent 60%),
+        radial-gradient(900px 500px at 80% 10%, rgba(255,138,0,.08), transparent 60%),
+        radial-gradient(1200px 900px at 50% 110%, rgba(255,176,0,.06), transparent 60%),
+        var(--bg);
+    }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:28px 18px 40px;
+      display:grid;
+      grid-template-columns: 1fr 380px;
+      gap:18px;
+      align-items:start;
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      margin:4px 0 16px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .logo{
+      width:34px; height:34px; border-radius:10px;
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      display:grid; place-items:center;
+      box-shadow: 0 10px 26px rgba(255,176,0,.25);
+    }
+    .logo span{ filter:drop-shadow(0 2px 0 rgba(0,0,0,.35)); }
+    .brand small{ color:var(--muted); font-weight:600; }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      border:1px solid var(--border);
+      border-radius: var(--r16);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .stepHeader{
+      padding:18px 18px 14px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      background: rgba(255,255,255,.02);
+    }
+    .stepTitle{
+      display:flex; gap:12px; align-items:flex-start;
+    }
+    .stepNum{
+      width:28px; height:28px; border-radius:50%;
+      background: var(--accentGlow);
+      border:1px solid rgba(255,176,0,.55);
+      color:var(--accent);
+      display:grid; place-items:center;
+      font-weight:900;
+      margin-top:1px;
+    }
+    .stepTitle h2{ margin:0; font-size:18px; }
+    .stepTitle p{ margin:4px 0 0; color:var(--muted); font-size:13px; }
+    .status{ color:var(--muted); font-size:12px; margin-top:6px; }
+
+    .content{ padding:18px; }
+
+    .grid2{
+      display:grid; grid-template-columns: 1fr 1fr;
+      gap:14px;
+    }
+    .field label{
+      display:block;
+      font-size:12px;
+      letter-spacing:.2px;
+      color:var(--text2);
+      margin:0 0 8px;
+    }
+
+    .toggleRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .pill{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px 12px;
+      text-align:center;
+      background: rgba(0,0,0,.25);
+      color:var(--text2);
+      font-weight:700;
+      cursor:default;
+      user-select:none;
+    }
+    .pill.active{
+      background: linear-gradient(180deg, rgba(255,176,0,.22), rgba(255,176,0,.10));
+      border-color: rgba(255,176,0,.55);
+      color: var(--text);
+      box-shadow: 0 0 0 3px rgba(255,176,0,.10) inset;
+    }
+
+    .numRow{
+      display:grid;
+      grid-template-columns: 44px 1fr 44px;
+      gap:10px;
+      align-items:center;
+      height:44px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .btn{
+      height:44px;
+      border:none;
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      font-size:18px;
+      cursor:default;
+    }
+    .num{
+      font-family:var(--mono);
+      font-weight:800;
+      font-size:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+    }
+    .unit{
+      color:var(--muted);
+      font-weight:700;
+      font-family:var(--sans);
+      font-size:12px;
+    }
+
+    .shapeGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+      margin-top:4px;
+    }
+    .shapeCard{
+      height:150px;
+      border-radius: var(--r16);
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.22);
+      position:relative;
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+    }
+    .shapeCard.active{
+      border-color: rgba(255,176,0,.70);
+      box-shadow: 0 0 0 3px rgba(255,176,0,.10) inset;
+      background: rgba(255,176,0,.08);
+    }
+    .shapeMeta{
+      position:absolute;
+      left:14px; bottom:12px;
+      right:14px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:8px;
+      color:var(--text2);
+      font-weight:800;
+      font-size:13px;
+    }
+    .shapeMeta span{ color:var(--muted); font-weight:700; font-size:12px; }
+    .shapeIcon{
+      width:88px; height:88px;
+      filter: drop-shadow(0 10px 24px rgba(0,0,0,.35));
+      opacity:.95;
+    }
+
+    .surfaceRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    .surfaceCard{
+      height:72px;
+      border-radius: var(--r16);
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.22);
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 14px;
+    }
+    .surfaceCard.active{
+      border-color: rgba(255,176,0,.70);
+      box-shadow: 0 0 0 3px rgba(255,176,0,.10) inset;
+      background: rgba(255,176,0,.08);
+    }
+    .surfaceCard .miniIcon{
+      width:42px; height:42px;
+      border-radius:14px;
+      background: rgba(255,255,255,.04);
+      border:1px solid var(--border);
+      display:grid; place-items:center;
+    }
+    .surfaceCard b{ display:block; }
+    .surfaceCard small{ color:var(--muted); font-weight:600; }
+
+    .divider{ height:1px; background:var(--border); margin:18px 0; }
+
+    .hint{
+      margin-top:8px;
+      padding:10px 12px;
+      border-radius:12px;
+      background: rgba(255,176,0,.06);
+      border:1px dashed rgba(255,176,0,.35);
+      color: var(--text2);
+      font-size:12.5px;
+      line-height:1.35;
+    }
+    .hint b{ color:var(--text); }
+
+    .recipe{
+      position:sticky;
+      top:18px;
+    }
+    .recipeHead{
+      padding:18px;
+      border-bottom:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    .recipeHead .title{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      font-weight:900;
+      font-size:18px;
+      margin:0 0 6px;
+    }
+    .badge{
+      font-size:11px;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,176,0,.55);
+      background: var(--accentGlow);
+      color: var(--accent);
+      font-weight:800;
+    }
+    .subtitle{ color:var(--muted); font-size:13px; margin:0 0 12px; }
+    .metrics{
+      display:flex; gap:14px; flex-wrap:wrap;
+      color:var(--muted);
+      font-size:12.5px;
+    }
+    .metrics strong{ color:var(--text); font-family:var(--mono); }
+
+    .recipeBody{ padding:18px; }
+    .section{ margin-bottom:16px; }
+    .section h4{
+      margin:0 0 10px;
+      color:var(--muted);
+      font-size:11px;
+      letter-spacing:.6px;
+      text-transform:uppercase;
+      font-weight:900;
+    }
+    .row{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:9px 0;
+      border-bottom:1px solid var(--border);
+      font-size:13px;
+    }
+    .row:last-child{ border-bottom:none; }
+    .row .name{ display:flex; align-items:center; gap:8px; }
+    .pct{ color:var(--muted); font-family:var(--mono); font-size:12px; }
+    .w{ font-family:var(--mono); font-weight:900; }
+
+    .alert{
+      border-radius:12px;
+      border:1px solid rgba(255,204,102,.35);
+      background: rgba(255,204,102,.08);
+      padding:10px 12px;
+      font-size:12.5px;
+      color:var(--text2);
+      line-height:1.35;
+    }
+    .alert b{ color:var(--text); }
+
+    @media (max-width: 980px){
+      .wrap{ grid-template-columns: 1fr; }
+      .recipe{ position:static; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <div class="brand">
+        <div class="logo"><span>🍕</span></div>
+        <div>
+          ProDoughType <small>UI Mock • no logic</small>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="stepHeader">
+          <div class="stepTitle">
+            <div class="stepNum">1</div>
+            <div>
+              <h2>Foundation</h2>
+              <p>Template, units, geometry, and size</p>
+            </div>
+          </div>
+          <div class="status">In Progress</div>
+        </div>
+
+        <div class="content">
+          <div class="grid2">
+            <div class="field">
+              <label>Size Units</label>
+              <div class="toggleRow">
+                <div class="pill active">Inches</div>
+                <div class="pill">CM</div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Weight Units</label>
+              <div class="toggleRow">
+                <div class="pill active">Grams</div>
+                <div class="pill">Ounces</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Dough Balls</label>
+              <div class="numRow">
+                <button class="btn">−</button>
+                <div class="num">4</div>
+                <button class="btn">+</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Target Mode</label>
+              <div class="pill active" style="text-align:left; padding-left:14px;">Thickness Factor <span style="float:right; color:var(--muted); font-weight:700;">▼</span></div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="field">
+            <label>Shape</label>
+            <div class="shapeGrid">
+              <div class="shapeCard active">
+                <svg class="shapeIcon" viewBox="0 0 100 100" aria-hidden="true">
+                  <defs>
+                    <filter id="g">
+                      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity=".35"/>
+                      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#ffb000" flood-opacity=".25"/>
+                    </filter>
+                    <linearGradient id="o" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0" stop-color="#ffb000" stop-opacity=".95"/>
+                      <stop offset="1" stop-color="#ff8a00" stop-opacity=".85"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="50" cy="50" r="20" fill="none" stroke="url(#o)" stroke-width="5" filter="url(#g)"/>
+                  <circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="3"/>
+                </svg>
+                <div class="shapeMeta"><b>Round</b><span>NY / Neo</span></div>
+              </div>
+
+              <div class="shapeCard">
+                <svg class="shapeIcon" viewBox="0 0 100 100" aria-hidden="true">
+                  <defs>
+                    <filter id="g2">
+                      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity=".35"/>
+                      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#ffb000" flood-opacity=".18"/>
+                    </filter>
+                    <linearGradient id="o2" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0" stop-color="#ffb000" stop-opacity=".85"/>
+                      <stop offset="1" stop-color="#ff8a00" stop-opacity=".70"/>
+                    </linearGradient>
+                  </defs>
+                  <rect x="30" y="30" width="40" height="40" rx="6" fill="none" stroke="url(#o2)" stroke-width="5" filter="url(#g2)"/>
+                  <rect x="20" y="20" width="60" height="60" rx="10" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="3"/>
+                </svg>
+                <div class="shapeMeta"><b>Rectangular</b><span>Detroit / Sicilian</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="surfaceRow">
+            <div class="surfaceCard">
+              <div class="miniIcon">🧤</div>
+              <div>
+                <b>Free-form</b>
+                <small>Steel / stone</small>
+              </div>
+            </div>
+            <div class="surfaceCard active">
+              <div class="miniIcon">🍳</div>
+              <div>
+                <b>Pan</b>
+                <small>Height enabled</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="grid2">
+            <div class="field">
+              <label>Width</label>
+              <div class="numRow">
+                <button class="btn">−</button>
+                <div class="num">14 <span class="unit">in</span></div>
+                <button class="btn">+</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Length</label>
+              <div class="numRow">
+                <button class="btn">−</button>
+                <div class="num">14 <span class="unit">in</span></div>
+                <button class="btn">+</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Pan Height</label>
+              <div class="numRow">
+                <button class="btn">−</button>
+                <div class="num">1.5 <span class="unit">in</span></div>
+                <button class="btn">+</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Thickness Factor</label>
+              <div class="numRow">
+                <button class="btn">−</button>
+                <div class="num">0.100</div>
+                <button class="btn">+</button>
+              </div>
+              <div class="hint">
+                <b>Hover-tip idea:</b> TF guidance by style (e.g., NY 0.07–0.10, Detroit 0.12–0.16). Add a toggle to hide all “pro guidance”.
+              </div>
+            </div>
+          </div>
+
+          <div class="hint" style="margin-top:14px;">
+            <b>Doc framework (later):</b> each step gets a collapsible “Learn” drawer with: typical ranges, failure modes (too slack / too tight), and a “why it matters” mini-article. Same content can power warnings in the preview.
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px;">
+        <div class="stepHeader">
+          <div class="stepTitle">
+            <div class="stepNum">2</div>
+            <div>
+              <h2>Ingredients</h2>
+              <p>Hydration, salt, yeast, additions</p>
+            </div>
+          </div>
+          <div class="status">Optional (mock)</div>
+        </div>
+        <div class="content">
+          <div class="grid2">
+            <div class="field">
+              <label>Hydration</label>
+              <div class="numRow">
+                <button class="btn">−</button>
+                <div class="num">65.0 <span class="unit">%</span></div>
+                <button class="btn">+</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Salt</label>
+              <div class="numRow">
+                <button class="btn">−</button>
+                <div class="num">2.5 <span class="unit">%</span></div>
+                <button class="btn">+</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Oil</label>
+              <div class="numRow">
+                <button class="btn">−</button>
+                <div class="num">2.0 <span class="unit">%</span></div>
+                <button class="btn">+</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Conditioners</label>
+              <div class="pill" style="text-align:left; padding-left:14px;">
+                + Add (ascorbic, platinum yeast, relaxers) <span style="float:right; color:var(--muted); font-weight:700;">＋</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert" style="margin-top:14px;">
+            <b>Warning concept:</b> “TF high for NY” or “Hydration low for style” appears here, and the matching control can glow briefly.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel recipe">
+      <div class="recipeHead">
+        <div class="title">
+          NY Same Day <span class="badge">Modified</span>
+        </div>
+        <p class="subtitle">4 dough balls • 14×14&quot; rectangular • 556g each</p>
+        <div class="metrics">
+          <div>TF: <strong>0.100</strong></div>
+          <div>Height: <strong>1.5&quot; (3.8cm)</strong></div>
+          <div>Area: <strong>196 in²</strong></div>
+        </div>
+      </div>
+
+      <div class="recipeBody">
+        <div class="section">
+          <h4>Total Formula</h4>
+          <div class="row"><div class="name">🌾 Flour <span class="pct">100%</span></div><div class="w">1326g</div></div>
+          <div class="row"><div class="name">💧 Water <span class="pct">65.0%</span></div><div class="w">862g</div></div>
+          <div class="row"><div class="name">🧂 Salt <span class="pct">2.5%</span></div><div class="w">33g</div></div>
+          <div class="row"><div class="name">🫒 Oil <span class="pct">2.0%</span></div><div class="w">27g</div></div>
+          <div class="row"><div class="name">🧫 Yeast <span class="pct">0.08%</span></div><div class="w">1.06g</div></div>
+          <div class="row"><div class="name" style="font-weight:900;">Total Dough Weight</div><div class="w">2223g</div></div>
+        </div>
+
+        <div class="section">
+          <h4>Validation</h4>
+          <div class="alert" style="border-color:rgba(255,204,102,.28); background:rgba(255,204,102,.06);">
+            <div>⚠️ <b>TF is high for NY</b> (typical 0.07–0.10). Consider lowering TF or switching style to pan.</div>
+            <div style="margin-top:6px;">✓ Hydration in range</div>
+            <div>✓ Salt in range</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

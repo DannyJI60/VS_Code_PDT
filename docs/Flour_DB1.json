@@ -1,0 +1,79 @@
+[
+  {
+    "id": "caputo_pizzeria",
+    "name": "Antimo Caputo Pizzeria (Blue)",
+    "type": "00",
+    "protein": 12.75,
+    "absorption": { "min": 0.62, "max": 0.64 },
+    "heat": {
+      "tempF": { "min": 800, "max": 950 },
+      "notes": "The gold standard for Neapolitan; requires high heat to brown properly."
+    }
+  },
+  {
+    "id": "caputo_cuoco",
+    "name": "Antimo Caputo Cuoco/Saccorosso (Red)",
+    "type": "00",
+    "protein": 13.5,
+    "absorption": { "min": 0.65, "max": 0.70 },
+    "heat": {
+      "tempF": { "min": 700, "max": 900 },
+      "notes": "Higher protein/strength; ideal for long cold fermentation (48-72h)."
+    }
+  },
+  {
+    "id": "king_arthur_bread",
+    "name": "King Arthur Bread Flour",
+    "type": "Bread",
+    "protein": 12.7,
+    "absorption": { "min": 0.62, "max": 0.66 },
+    "heat": {
+      "tempF": { "min": 450, "max": 600 },
+      "notes": "Malted flour; browns beautifully in home ovens and on baking steels."
+    }
+  },
+  {
+    "id": "king_arthur_sir_lancelot",
+    "name": "King Arthur Sir Lancelot",
+    "type": "High-Gluten",
+    "protein": 14.2,
+    "absorption": { "min": 0.63, "max": 0.68 },
+    "heat": {
+      "tempF": { "min": 500, "max": 650 },
+      "notes": "High-octane gluten; the heavy hitter for classic NY Style 'foldable' slices."
+    }
+  },
+  {
+    "id": "central_milling_00_normale",
+    "name": "Central Milling Tipo 00 Normale",
+    "type": "00",
+    "protein": 11.5,
+    "absorption": { "min": 0.58, "max": 0.62 },
+    "heat": {
+      "tempF": { "min": 750, "max": 900 },
+      "notes": "Organic Italian-style flour; lower protein for a very tender, soft crumb."
+    }
+  },
+  {
+    "id": "general_mills_all_trump",
+    "name": "General Mills All Trumps (Bromated/Unbromated)",
+    "type": "High-Gluten",
+    "protein": 14.2,
+    "absorption": { "min": 0.63, "max": 0.66 },
+    "heat": {
+      "tempF": { "min": 500, "max": 650 },
+      "notes": "The NYC Pizzeria workhorse. Extremely tough and elastic."
+    }
+  },
+  {
+    "id": "gm_gold_medal_neapolitan",
+    "name": "General Mills Di Prim’Ordine Farina",
+    "type": "00",
+    "protein": 12.0,
+    "absorption": { "min": 0.60, "max": 0.63 },
+    "heat": {
+      "tempF": { "min": 650, "max": 850 },
+      "notes": "US-milled unmalted 00; bridges the gap between deck ovens and wood-fired."
+    }
+  }
+]

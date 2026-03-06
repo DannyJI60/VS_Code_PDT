@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ProDoughType — Unified Prototype (External DBs + Prefs + Templates)</title>
+<style>
+:root{
+  --bg0:#0a0a0b;
+  --bg1:#141416;
+  --bg2:#1c1c1f;
+  --bg3:#252528;
+  --line:#27272a;
+  --line2:#3f3f46;
+  --txt:#fafafa;
+  --muted:#a1a1aa;
+  --muted2:#71717a;
+  --accent:#f59e0b;
+  --accent2:#d97706;
+  --good:#22c55e;
+  --warn:#eab308;
+  --bad:#ef4444;
+  --r6:6px; --r10:10px; --r16:16px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; color:var(--txt); background:var(--bg0);
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  line-height:1.35;
+}
+button,input,select{font:inherit}
+.header{
+  height:64px; display:flex; align-items:center; justify-content:space-between;
+  padding:0 18px; background:var(--bg1); border-bottom:1px solid var(--line);
+  position:sticky; top:0; z-index:50;
+}
+.brand{display:flex; align-items:center; gap:10px;}
+.badge{
+  width:34px;height:34px;border-radius:10px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#0a0a0b;font-weight:800;
+}
+.brand .name{font-weight:800; letter-spacing:.2px;}
+.brand .name span{color:var(--accent)}
+.top-actions{display:flex; align-items:center; gap:8px;}
+.btn{
+  height:36px; padding:0 12px; border-radius:var(--r6);
+  border:1px solid var(--line); background:var(--bg2); color:var(--txt);
+  cursor:pointer;
+}
+.btn:hover{background:var(--bg3); border-color:var(--line2)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#0a0a0b; font-weight:700;}
+.btn.primary:hover{background:var(--accent2); border-color:var(--accent2)}
+.btn.icon{width:36px; padding:0; display:grid; place-items:center}
+
+.shell{
+  height:calc(100% - 64px);
+  display:grid;
+  grid-template-columns: 320px minmax(520px, 1fr) 420px;
+}
+@media (max-width:1100px){
+  .shell{grid-template-columns: 320px 1fr}
+  .right{display:none}
+}
+@media (max-width:840px){
+  .shell{grid-template-columns: 1fr}
+  .left{display:none}
+  .right{display:none}
+}
+.left,.mid,.right{min-height:0; border-right:1px solid var(--line);}
+.right{border-right:none; border-left:1px solid var(--line)}
+.panel{height:100%; display:flex; flex-direction:column; min-height:0;}
+.panel-h{padding:14px 14px 10px; border-bottom:1px solid var(--line); background:var(--bg1);}
+.panel-h .t{font-weight:800; font-size:13px; letter-spacing:.4px; text-transform:uppercase; color:var(--muted)}
+.panel-b{padding:12px 14px; overflow:auto; min-height:0}
+
+.search{display:flex; gap:8px; align-items:center; margin-top:10px;}
+.search input{
+  flex:1; height:38px; border-radius:var(--r6);
+  background:var(--bg2); border:1px solid var(--line);
+  color:var(--txt); padding:0 10px;
+}
+.search input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+.small{font-size:12px; color:var(--muted2)}
+.hr{height:1px;background:var(--line); margin:12px 0}
+
+.list{display:flex; flex-direction:column; gap:6px;}
+.item{
+  padding:10px; border-radius:var(--r10);
+  background:var(--bg2); border:1px solid var(--line);
+  cursor:pointer;
+}
+.item:hover{background:var(--bg3); border-color:var(--line2)}
+.item.active{border-color:var(--accent); box-shadow:0 0 0 3px rgba(245,158,11,.12)}
+.item .n{font-weight:700}
+.item .m{font-size:12px;color:var(--muted); margin-top:2px}
+.pillrow{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+.pill{font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted);}
+
+.step{background:var(--bg1); border:1px solid var(--line); border-radius:var(--r16); overflow:hidden; margin:12px 0;}
+.step-h{padding:14px; display:flex; gap:12px; align-items:center; cursor:pointer;}
+.step-h:hover{background:var(--bg3)}
+.num{
+  width:28px;height:28px;border-radius:999px; display:grid; place-items:center;
+  background:var(--bg2); border:2px solid var(--line);
+  font-weight:800; color:var(--muted);
+}
+.num.on{background:var(--accent); border-color:var(--accent); color:#0a0a0b}
+.num.ok{background:var(--good); border-color:var(--good); color:#0a0a0b}
+.step-h .title{flex:1}
+.step-h .title .a{font-weight:800}
+.step-h .title .b{font-size:12px; color:var(--muted)}
+.step-h .state{font-size:12px;color:var(--muted2)}
+.step-b{display:none; padding:0 14px 14px 54px}
+.step.open .step-b{display:block}
+.grid{display:grid; gap:12px; grid-template-columns: repeat(3, minmax(0, 1fr));}
+@media (max-width:1100px){ .grid{grid-template-columns: repeat(2, minmax(0, 1fr))} }
+@media (max-width:640px){ .grid{grid-template-columns: 1fr} }
+.fg{display:flex; flex-direction:column; gap:6px; min-width:0}
+label{font-size:12px; color:var(--muted); font-weight:700}
+select,input[type="number"],input[type="text"]{
+  height:40px; border-radius:var(--r6);
+  background:var(--bg2); border:1px solid var(--line);
+  color:var(--txt); padding:0 10px; min-width:0;
+}
+select:focus,input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+.mono{font-family:var(--mono)}
+.toggle{display:flex; gap:6px; background:var(--bg2); border:1px solid var(--line); border-radius:var(--r6); padding:4px;}
+.tbtn{padding:7px 10px; border-radius:var(--r6); cursor:pointer; color:var(--muted); font-weight:700; font-size:12px;}
+.tbtn.on{background:var(--accent); color:#0a0a0b}
+
+.card{background:var(--bg1); border:1px solid var(--line); border-radius:var(--r16); padding:14px;}
+.kpi{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px}
+.kv{padding:10px; background:var(--bg2); border:1px solid var(--line); border-radius:var(--r10)}
+.kv .k{font-size:11px; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.4px}
+.kv .v{margin-top:4px; font-weight:900; font-family:var(--mono)}
+.val{display:flex; flex-direction:column; gap:8px; margin-top:12px}
+.flag{padding:9px 10px; border-radius:var(--r10); border:1px solid var(--line); background:var(--bg2); font-size:12px; color:var(--muted);}
+.flag.good{border-color:rgba(34,197,94,.35); color:rgba(34,197,94,.95)}
+.flag.warn{border-color:rgba(234,179,8,.35); color:rgba(234,179,8,.95)}
+
+.drawer{
+  position:fixed; top:64px; right:-460px; width:460px; max-width:100vw;
+  height:calc(100% - 64px);
+  background:var(--bg1); border-left:1px solid var(--line);
+  transition:right .18s ease;
+  z-index:80;
+  display:flex; flex-direction:column; min-height:0;
+}
+.drawer.on{right:0}
+.drawer .dh{padding:14px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:10px;}
+.drawer .dh .t{font-weight:900}
+.drawer .db{padding:14px; overflow:auto; min-height:0}
+.kbq{display:flex; gap:8px; align-items:center;}
+.kbq input{flex:1}
+.kb-res{margin-top:12px; display:flex; flex-direction:column; gap:8px}
+.kb-hit{padding:10px; border:1px solid var(--line); background:var(--bg2); border-radius:var(--r10)}
+.kb-hit .a{font-weight:900}
+.kb-hit .b{font-size:12px; color:var(--muted); margin-top:4px}
+.kb-hit .c{font-size:12px; color:var(--muted2); margin-top:6px}
+.kb-hit .tags{margin-top:8px; display:flex; gap:6px; flex-wrap:wrap}
+.kb-hit .tag{font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <div class="badge">P</div>
+    <div class="name"><span>ProDough</span>Type</div>
+  </div>
+  <div class="top-actions">
+    <button class="btn" id="btnKB">KB</button>
+    <button class="btn" id="btnPrefs">Prefs</button>
+    <button class="btn primary" id="btnExport">Export</button>
+  </div>
+</div>
+
+<div class="shell">
+  <aside class="left panel">
+    <div class="panel-h">
+      <div class="t">Templates</div>
+      <div class="search">
+        <input id="tplSearch" type="text" placeholder="Search templates…" />
+        <button class="btn icon" id="btnReload" title="Reload external DBs">↻</button>
+      </div>
+      <div class="small" id="dbStatus">Loading external databases…</div>
+    </div>
+    <div class="panel-b">
+      <div class="list" id="tplList"></div>
+      <div class="hr"></div>
+      <div class="small">External DB paths (edit in code):</div>
+      <div class="pillrow">
+        <div class="pill" id="pillTpl">templates.json</div>
+        <div class="pill" id="pillFlour">flour_specs.json</div>
+        <div class="pill" id="pillYeast">yeast_tables.json</div>
+        <div class="pill" id="pillKB">kb_master_v2.json</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="mid panel">
+    <div class="panel-h">
+      <div class="t">Build</div>
+      <div class="small" id="recipeTitle">Custom</div>
+    </div>
+    <div class="panel-b">
+
+      <div class="step open">
+        <div class="step-h">
+          <div class="num on" id="s1n">1</div>
+          <div class="title"><div class="a">Basics</div><div class="b">Units, dough balls, and style</div></div>
+          <div class="state" id="s1s">In progress</div>
+        </div>
+        <div class="step-b">
+          <div class="grid">
+            <div class="fg">
+              <label>Units</label>
+              <div class="toggle">
+                <div class="tbtn on" data-unit="metric">Metric</div>
+                <div class="tbtn" data-unit="imperial">Imperial</div>
+              </div>
+            </div>
+            <div class="fg">
+              <label>Dough balls</label>
+              <input class="mono" id="balls" type="number" min="1" value="2" />
+            </div>
+            <div class="fg">
+              <label>Template</label>
+              <select id="templateSelect"></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open">
+        <div class="step-h">
+          <div class="num" id="s2n">2</div>
+          <div class="title"><div class="a">Geometry</div><div class="b">Shape and size</div></div>
+          <div class="state" id="s2s">In progress</div>
+        </div>
+        <div class="step-b">
+          <div class="grid">
+            <div class="fg">
+              <label>Shape</label>
+              <select id="shape">
+                <option value="round">Round</option>
+                <option value="rect">Rectangular</option>
+              </select>
+            </div>
+            <div class="fg" id="roundDims">
+              <label>Diameter (in)</label>
+              <input class="mono" id="diameter" type="number" min="6" step="0.5" value="14" />
+            </div>
+            <div class="fg" id="rectDimsA" style="display:none">
+              <label>Width (in)</label>
+              <input class="mono" id="width" type="number" min="6" step="0.5" value="12" />
+            </div>
+            <div class="fg" id="rectDimsB" style="display:none">
+              <label>Length (in)</label>
+              <input class="mono" id="length" type="number" min="6" step="0.5" value="16" />
+            </div>
+            <div class="fg">
+              <label>Thickness factor</label>
+              <input class="mono" id="tf" type="number" min="0.05" step="0.005" value="0.095" />
+            </div>
+            <div class="fg">
+              <label>Target ball weight (g)</label>
+              <input class="mono" id="ballWeight" type="number" min="80" step="1" value="280" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step open">
+        <div class="step-h">
+          <div class="num" id="s3n">3</div>
+          <div class="title"><div class="a">Formula</div><div class="b">Hydration, salt, oil, sugar</div></div>
+          <div class="state" id="s3s">In progress</div>
+        </div>
+        <div class="step-b">
+          <div class="grid">
+            <div class="fg"><label>Hydration (%)</label><input class="mono" id="hydration" type="number" min="45" max="90" step="0.1" value="62" /></div>
+            <div class="fg"><label>Salt (%)</label><input class="mono" id="salt" type="number" min="1" max="4" step="0.05" value="2.6" /></div>
+            <div class="fg"><label>Oil (%)</label><input class="mono" id="oil" type="number" min="0" max="12" step="0.1" value="2" /></div>
+            <div class="fg"><label>Sugar (%)</label><input class="mono" id="sugar" type="number" min="0" max="6" step="0.1" value="0" /></div>
+            <div class="fg">
+              <label>Preferment</label>
+              <select id="preferment">
+                <option value="direct">Direct</option>
+                <option value="poolish">Poolish</option>
+                <option value="biga">Biga</option>
+                <option value="sourdough">Sourdough</option>
+              </select>
+            </div>
+            <div class="fg"><label>Preferment flour (%)</label><input class="mono" id="prefPct" type="number" min="0" max="80" step="1" value="0" /></div>
+          </div>
+          <div class="small" style="margin-top:10px">One-file UI; external DBs loaded via fetch() with fallback defaults if missing.</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <aside class="right panel">
+    <div class="panel-h">
+      <div class="t">Live preview</div>
+      <div class="small" id="subtitle">—</div>
+    </div>
+    <div class="panel-b">
+      <div class="card">
+        <div class="kpi">
+          <div class="kv"><div class="k">Total dough</div><div class="v" id="kTotal">—</div></div>
+          <div class="kv"><div class="k">Ball weight</div><div class="v" id="kBall">—</div></div>
+          <div class="kv"><div class="k">Flour</div><div class="v" id="kFlour">—</div></div>
+          <div class="kv"><div class="k">Water</div><div class="v" id="kWater">—</div></div>
+          <div class="kv"><div class="k">Salt</div><div class="v" id="kSalt">—</div></div>
+          <div class="kv"><div class="k">Yeast (est.)</div><div class="v" id="kYeast">—</div></div>
+        </div>
+        <div class="val" id="validation"></div>
+      </div>
+      <div class="hr"></div>
+      <div class="small">Export writes: recipe + prefs + selected template + DB versions/paths.</div>
+    </div>
+  </aside>
+</div>
+
+<div class="drawer" id="kbDrawer" aria-hidden="true">
+  <div class="dh">
+    <div class="t">ProDoughDoc — Knowledge Base</div>
+    <button class="btn icon" id="btnKBClose">✕</button>
+  </div>
+  <div class="db">
+    <div class="kbq">
+      <input id="kbQuery" type="text" placeholder="Type to search troubleshooting…" />
+      <button class="btn" id="btnKBTag">Use recipe tags</button>
+    </div>
+    <div class="small" style="margin-top:8px">“Use recipe tags” narrows results using current hydration/preferment tags.</div>
+    <div class="kb-res" id="kbResults"></div>
+  </div>
+</div>
+
+<div id="prefsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:90; padding:72px 14px;">
+  <div style="max-width:560px; margin:0 auto; background:var(--bg1); border:1px solid var(--line); border-radius:var(--r16); overflow:hidden;">
+    <div style="padding:14px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between;">
+      <div style="font-weight:900">Preferences</div>
+      <button class="btn icon" id="btnPrefsClose">✕</button>
+    </div>
+    <div style="padding:14px;">
+      <div class="grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="fg"><label>Default units</label>
+          <select id="prefUnit"><option value="metric">Metric</option><option value="imperial">Imperial</option></select>
+        </div>
+        <div class="fg"><label>Theme</label>
+          <select id="prefTheme"><option value="default">Default</option><option value="italian">Italian</option></select>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px">
+        <button class="btn" id="btnPrefsReset">Reset</button>
+        <button class="btn primary" id="btnPrefsSave">Save</button>
+      </div>
+      <div class="small" style="margin-top:10px">Prefs stored in localStorage key <span class="mono">prodoughtype_prefs</span>.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DB_PATHS = {
+  templates: "data/recipes/templates/templates.json",
+  flourSpecs: "data/calc/flour_specs/flour_specs.json",
+  yeastTables: "data/calc/yeast_tables/yeast_tables.json",
+  kb: "data/kb/kb_master_v2.json"
+};
+
+const FALLBACK_TEMPLATES = {
+  custom: { name:"Custom", style:"all" },
+  ny: { name:"NY Style (basic)", style:"ny", balls:2, shape:"round", diameter:14, hydration:62, salt:2.6, oil:2, sugar:0, preferment:"direct", prefPct:0, ballWeight:280, tf:0.095 }
+};
+
+const DEFAULT_PREFS = { defaultUnit:"metric", theme:"default" };
+
+const state = {
+  prefs: {...DEFAULT_PREFS},
+  db: { templates:null, kb:null, versions:{} },
+  recipe: { templateKey:"custom", units:"metric", balls:2, shape:"round", diameter:14, width:12, length:16,
+            tf:0.095, ballWeight:280, hydration:62, salt:2.6, oil:2, sugar:0, preferment:"direct", prefPct:0 }
+};
+
+const el = (id)=>document.getElementById(id);
+
+function loadPrefs(){
+  try{
+    const raw = localStorage.getItem("prodoughtype_prefs");
+    if(raw){
+      const p = JSON.parse(raw);
+      state.prefs = { ...DEFAULT_PREFS, ...p };
+    }
+  }catch(e){}
+  el("prefUnit").value = state.prefs.defaultUnit;
+  el("prefTheme").value = state.prefs.theme;
+  setUnits(state.prefs.defaultUnit);
+}
+function savePrefs(){
+  state.prefs = { defaultUnit: el("prefUnit").value, theme: el("prefTheme").value };
+  localStorage.setItem("prodoughtype_prefs", JSON.stringify(state.prefs));
+  setUnits(state.prefs.defaultUnit);
+}
+function resetPrefs(){
+  localStorage.setItem("prodoughtype_prefs", JSON.stringify(DEFAULT_PREFS));
+  loadPrefs();
+}
+function setUnits(unit){
+  state.recipe.units = unit;
+  document.querySelectorAll("[data-unit]").forEach(b=>b.classList.toggle("on", b.dataset.unit===unit));
+  update();
+}
+
+async function fetchJson(path){
+  const res = await fetch(path, { cache:"no-store" });
+  if(!res.ok) throw new Error("HTTP " + res.status);
+  return res.json();
+}
+function setDbStatus(msg, ok=true){
+  el("dbStatus").textContent = msg;
+  el("dbStatus").style.color = ok ? "var(--muted2)" : "rgba(239,68,68,.95)";
+  el("pillTpl").textContent = DB_PATHS.templates.split("/").pop();
+  el("pillFlour").textContent = DB_PATHS.flourSpecs.split("/").pop();
+  el("pillYeast").textContent = DB_PATHS.yeastTables.split("/").pop();
+  el("pillKB").textContent = DB_PATHS.kb.split("/").pop();
+}
+async function loadExternalDBs(){
+  setDbStatus("Loading external databases…", true);
+  const errors = [];
+  try{
+    const t = await fetchJson(DB_PATHS.templates);
+    state.db.templates = t.templates || t;
+    state.db.versions.templates = t.version || "external";
+  }catch(e){
+    state.db.templates = FALLBACK_TEMPLATES;
+    state.db.versions.templates = "fallback";
+    errors.push("templates");
+  }
+  try{
+    const k = await fetchJson(DB_PATHS.kb);
+    state.db.kb = Array.isArray(k) ? k : (k.entries || []);
+    state.db.versions.kb = k.version || "external";
+  }catch(e){
+    state.db.kb = [];
+    state.db.versions.kb = "fallback";
+    errors.push("kb");
+  }
+  setDbStatus(errors.length ? ("DB loaded (fallback: " + errors.join(", ") + ")") : "DB loaded from project data/…", !errors.length);
+  renderTemplates();
+  syncTemplateSelect();
+  update();
+}
+
+function renderTemplates(){
+  const list = el("tplList");
+  list.innerHTML = "";
+  const q = el("tplSearch").value.trim().toLowerCase();
+  const entries = Object.entries(state.db.templates || {});
+  entries.filter(([k,v])=>{
+    if(!q) return true;
+    return (k + " " + (v.name||"")).toLowerCase().includes(q);
+  }).forEach(([k,v])=>{
+    const div = document.createElement("div");
+    div.className = "item" + (state.recipe.templateKey===k ? " active" : "");
+    div.innerHTML = `<div class="n">${v.name || k}</div><div class="m">${v.style||"—"} • ${(v.hydration??"—")}%</div>`;
+    div.addEventListener("click", ()=>applyTemplate(k));
+    list.appendChild(div);
+  });
+}
+function syncTemplateSelect(){
+  const sel = el("templateSelect");
+  sel.innerHTML = "";
+  Object.entries(state.db.templates || {}).forEach(([k,v])=>{
+    const opt = document.createElement("option");
+    opt.value = k; opt.textContent = v.name || k;
+    sel.appendChild(opt);
+  });
+  sel.value = state.recipe.templateKey;
+}
+function applyTemplate(key){
+  const t = (state.db.templates || FALLBACK_TEMPLATES)[key];
+  if(!t) return;
+  state.recipe.templateKey = key;
+  if(t.balls!=null) el("balls").value = t.balls;
+  if(t.shape) el("shape").value = t.shape;
+  if(t.diameter!=null) el("diameter").value = t.diameter;
+  if(t.width!=null) el("width").value = t.width;
+  if(t.length!=null) el("length").value = t.length;
+  if(t.tf!=null) el("tf").value = t.tf;
+  if(t.ballWeight!=null) el("ballWeight").value = t.ballWeight;
+  if(t.hydration!=null) el("hydration").value = t.hydration;
+  if(t.salt!=null) el("salt").value = t.salt;
+  if(t.oil!=null) el("oil").value = t.oil;
+  if(t.sugar!=null) el("sugar").value = t.sugar;
+  if(t.preferment) el("preferment").value = t.preferment;
+  if(t.prefPct!=null) el("prefPct").value = t.prefPct;
+  el("templateSelect").value = key;
+  renderTemplates();
+  update();
+}
+
+function readForm(){
+  state.recipe.balls = +el("balls").value || 2;
+  state.recipe.shape = el("shape").value;
+  state.recipe.diameter = +el("diameter").value || 14;
+  state.recipe.width = +el("width").value || 12;
+  state.recipe.length = +el("length").value || 16;
+  state.recipe.tf = +el("tf").value || 0.095;
+  state.recipe.ballWeight = +el("ballWeight").value || 280;
+  state.recipe.hydration = +el("hydration").value || 62;
+  state.recipe.salt = +el("salt").value || 2.6;
+  state.recipe.oil = +el("oil").value || 2;
+  state.recipe.sugar = +el("sugar").value || 0;
+  state.recipe.preferment = el("preferment").value;
+  state.recipe.prefPct = +el("prefPct").value || 0;
+  state.recipe.templateKey = el("templateSelect").value || state.recipe.templateKey;
+}
+function areaIn2(){
+  if(state.recipe.shape==="round"){
+    const r = state.recipe.diameter/2;
+    return Math.PI*r*r;
+  }
+  return state.recipe.width*state.recipe.length;
+}
+function estimateYeastPct(){ return 0.25; } // placeholder
+function update(){
+  readForm();
+  const isRound = state.recipe.shape==="round";
+  el("roundDims").style.display = isRound ? "" : "none";
+  el("rectDimsA").style.display = isRound ? "none" : "";
+  el("rectDimsB").style.display = isRound ? "none" : "";
+
+  const t = (state.db.templates || FALLBACK_TEMPLATES)[state.recipe.templateKey] || {name:"Custom", style:"all"};
+  el("recipeTitle").textContent = t.name || "Custom";
+
+  const totalDough = state.recipe.balls * state.recipe.ballWeight;
+
+  const yeastPct = estimateYeastPct();
+  const totalPct = 100 + state.recipe.hydration + state.recipe.salt + state.recipe.oil + state.recipe.sugar + yeastPct;
+  const flour = totalDough * (100/totalPct);
+  const water = flour*(state.recipe.hydration/100);
+  const saltW = flour*(state.recipe.salt/100);
+  const yeastW = flour*(yeastPct/100);
+
+  el("kTotal").textContent = Math.round(totalDough) + " g";
+  el("kBall").textContent = Math.round(state.recipe.ballWeight) + " g";
+  el("kFlour").textContent = Math.round(flour) + " g";
+  el("kWater").textContent = Math.round(water) + " g";
+  el("kSalt").textContent = Math.round(saltW) + " g";
+  el("kYeast").textContent = yeastW.toFixed(2) + " g";
+
+  el("subtitle").textContent = Math.round(areaIn2()) + " in²";
+
+  el("validation").innerHTML = `<div class="flag good">✓ UI overhaul wiring OK</div>`;
+}
+function kbOpen(on){
+  el("kbDrawer").classList.toggle("on", on);
+  if(on){ kbSearch(); el("kbQuery").focus(); }
+}
+function kbSearch(){
+  const q = el("kbQuery").value.trim().toLowerCase();
+  const entries = state.db.kb || [];
+  const hits = entries.filter(e=>{
+    const text = ((e.summary||"") + " " + (e.text||"")).toLowerCase();
+    return !q || text.includes(q);
+  }).slice(0, 12);
+  const host = el("kbResults");
+  host.innerHTML = hits.map(e=>{
+    const s = (e.summary||"").slice(0,140);
+    const sn = (e.text||"").slice(0,220).replace(/\s+/g," ").trim();
+    return `<div class="kb-hit"><div class="a">${escapeHtml(s||"KB entry")}</div><div class="c">${escapeHtml(sn)}</div></div>`;
+  }).join("") || `<div class="small">No hits yet.</div>`;
+}
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+function exportAll(){
+  const payload = { exported_at:new Date().toISOString(), recipe:state.recipe, prefs:state.prefs, db_paths:DB_PATHS, db_versions:state.db.versions };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "prodoughtype_export.json";
+  a.click();
+}
+function wire(){
+  document.querySelectorAll(".step").forEach(s=>s.querySelector(".step-h").addEventListener("click", ()=>s.classList.toggle("open")));
+  el("tplSearch").addEventListener("input", renderTemplates);
+  el("btnReload").addEventListener("click", loadExternalDBs);
+  document.querySelectorAll("[data-unit]").forEach(b=>b.addEventListener("click", ()=>setUnits(b.dataset.unit)));
+  ["balls","shape","diameter","width","length","tf","ballWeight","hydration","salt","oil","sugar","preferment","prefPct","templateSelect"]
+    .forEach(id=>{ el(id).addEventListener("input", update); el(id).addEventListener("change", update); });
+  el("templateSelect").addEventListener("change", ()=>applyTemplate(el("templateSelect").value));
+  el("btnKB").addEventListener("click", ()=>kbOpen(true));
+  el("btnKBClose").addEventListener("click", ()=>kbOpen(false));
+  el("kbQuery").addEventListener("input", kbSearch);
+  el("btnPrefs").addEventListener("click", ()=> el("prefsModal").style.display="block");
+  el("btnPrefsClose").addEventListener("click", ()=> el("prefsModal").style.display="none");
+  el("btnPrefsSave").addEventListener("click", ()=>{ savePrefs(); el("prefsModal").style.display="none"; });
+  el("btnPrefsReset").addEventListener("click", resetPrefs);
+  el("btnExport").addEventListener("click", exportAll);
+}
+(async function init(){
+  wire();
+  loadPrefs();
+  await loadExternalDBs();
+})();
+</script>
+</body>
+</html>
