@@ -1,0 +1,934 @@
+{
+  "schemaVersion": 1,
+  "kind": "portionGuide",
+  "guideMeta": {
+    "id": "toppings_portion_guide_round_v1",
+    "name": "Toppings Portion Guide (Round)",
+    "description": "Portion suggestions by pizza diameter, with Light/Regular/Extra levels. Supports alias items (same-as) to avoid duplicated tables.",
+    "defaultPortionLevel": "M",
+    "supportedShapes": [
+      "round"
+    ],
+    "supportedUnits": [
+      "oz",
+      "slices",
+      "pieces"
+    ],
+    "notes": [
+      "All weights are ounces unless otherwise noted.",
+      "Some items are defined as aliases of a base item (same-as)."
+    ]
+  },
+  "portionLevels": [
+    {
+      "key": "L",
+      "label": "Light"
+    },
+    {
+      "key": "M",
+      "label": "Regular"
+    },
+    {
+      "key": "H",
+      "label": "Extra"
+    }
+  ],
+  "sizes": [
+    {
+      "key": "6",
+      "shape": "round",
+      "diameter_in": 6,
+      "area_in2": 28
+    },
+    {
+      "key": "8",
+      "shape": "round",
+      "diameter_in": 8,
+      "area_in2": 50
+    },
+    {
+      "key": "10",
+      "shape": "round",
+      "diameter_in": 10,
+      "area_in2": 79
+    },
+    {
+      "key": "12",
+      "shape": "round",
+      "diameter_in": 12,
+      "area_in2": 113
+    },
+    {
+      "key": "14",
+      "shape": "round",
+      "diameter_in": 14,
+      "area_in2": 154
+    },
+    {
+      "key": "16",
+      "shape": "round",
+      "diameter_in": 16,
+      "area_in2": 201
+    },
+    {
+      "key": "18",
+      "shape": "round",
+      "diameter_in": 18,
+      "area_in2": 254
+    }
+  ],
+  "items": [
+    {
+      "key": "sauce",
+      "label": "Pizza Sauce",
+      "category": "sauce",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 0.75,
+          "M": 1.25,
+          "H": 1.75
+        },
+        "8": {
+          "L": 1.25,
+          "M": 2.0,
+          "H": 2.75
+        },
+        "10": {
+          "L": 2.0,
+          "M": 3.0,
+          "H": 3.5
+        },
+        "12": {
+          "L": 3.0,
+          "M": 4.0,
+          "H": 5.0
+        },
+        "14": {
+          "L": 3.75,
+          "M": 5.75,
+          "H": 7.5
+        },
+        "16": {
+          "L": 4.75,
+          "M": 7.0,
+          "H": 9.0
+        },
+        "18": {
+          "L": 6.0,
+          "M": 8.25,
+          "H": 10.25
+        }
+      }
+    },
+    {
+      "key": "cheese",
+      "label": "Cheese",
+      "category": "cheese",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 1.0,
+          "M": 1.25,
+          "H": 1.75
+        },
+        "8": {
+          "L": 1.5,
+          "M": 2.0,
+          "H": 2.75
+        },
+        "10": {
+          "L": 2.5,
+          "M": 3.25,
+          "H": 4.5
+        },
+        "12": {
+          "L": 4.0,
+          "M": 6.0,
+          "H": 7.5
+        },
+        "14": {
+          "L": 5.75,
+          "M": 7.0,
+          "H": 9.25
+        },
+        "16": {
+          "L": 7.25,
+          "M": 10.5,
+          "H": 14.0
+        },
+        "18": {
+          "L": 7.5,
+          "M": 12.0,
+          "H": 15.5
+        }
+      }
+    },
+    {
+      "key": "pepperoni_slices",
+      "label": "Pepperoni (slices)",
+      "category": "meat",
+      "unit": "slices",
+      "portionsBySize": {
+        "6": {
+          "L": 4,
+          "M": 5,
+          "H": 8
+        },
+        "8": {
+          "L": 5,
+          "M": 8,
+          "H": 12
+        },
+        "10": {
+          "L": 8,
+          "M": 16,
+          "H": 20
+        },
+        "12": {
+          "L": 16,
+          "M": 20,
+          "H": 28
+        },
+        "14": {
+          "L": 20,
+          "M": 28,
+          "H": 40
+        },
+        "16": {
+          "L": 24,
+          "M": 40,
+          "H": 48
+        },
+        "18": {
+          "L": 32,
+          "M": 48,
+          "H": 64
+        }
+      }
+    },
+    {
+      "key": "pepperoni_oz",
+      "label": "Pepperoni (oz)",
+      "category": "meat",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 0.25,
+          "M": 0.33,
+          "H": 0.5
+        },
+        "8": {
+          "L": 0.33,
+          "M": 0.5,
+          "H": 0.75
+        },
+        "10": {
+          "L": 0.5,
+          "M": 1.0,
+          "H": 1.25
+        },
+        "12": {
+          "L": 1.0,
+          "M": 1.25,
+          "H": 1.75
+        },
+        "14": {
+          "L": 1.25,
+          "M": 1.75,
+          "H": 2.5
+        },
+        "16": {
+          "L": 1.5,
+          "M": 2.5,
+          "H": 3.0
+        },
+        "18": {
+          "L": 2.0,
+          "M": 3.0,
+          "H": 4.0
+        }
+      }
+    },
+    {
+      "key": "sausage_cooked",
+      "label": "Cooked Sausage",
+      "category": "meat",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 0.75,
+          "M": 1.0,
+          "H": 1.5
+        },
+        "8": {
+          "L": 1.25,
+          "M": 2.0,
+          "H": 2.5
+        },
+        "10": {
+          "L": 2.0,
+          "M": 3.0,
+          "H": 4.0
+        },
+        "12": {
+          "L": 3.0,
+          "M": 4.5,
+          "H": 5.75
+        },
+        "14": {
+          "L": 4.0,
+          "M": 6.0,
+          "H": 8.0
+        },
+        "16": {
+          "L": 5.25,
+          "M": 7.75,
+          "H": 10.5
+        },
+        "18": {
+          "L": 6.5,
+          "M": 10.0,
+          "H": 13.25
+        }
+      }
+    },
+    {
+      "key": "sausage_raw",
+      "label": "Raw Sausage",
+      "category": "meat",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 1.0,
+          "M": 1.25,
+          "H": 2.0
+        },
+        "8": {
+          "L": 1.5,
+          "M": 2.5,
+          "H": 3.25
+        },
+        "10": {
+          "L": 2.5,
+          "M": 4.0,
+          "H": 5.25
+        },
+        "12": {
+          "L": 4.0,
+          "M": 6.0,
+          "H": 7.5
+        },
+        "14": {
+          "L": 2.25,
+          "M": 8.0,
+          "H": 10.5
+        },
+        "16": {
+          "L": 7.0,
+          "M": 10.5,
+          "H": 14.0
+        },
+        "18": {
+          "L": 8.5,
+          "M": 13.25,
+          "H": 17.5
+        }
+      }
+    },
+    {
+      "key": "beef_cooked",
+      "label": "Cooked Beef",
+      "category": "meat",
+      "unit": "oz",
+      "sameAs": "sausage_cooked"
+    },
+    {
+      "key": "beef_raw",
+      "label": "Raw Beef",
+      "category": "meat",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 1.0,
+          "M": 1.5,
+          "H": 2.0
+        },
+        "8": {
+          "L": 1.75,
+          "M": 2.75,
+          "H": 3.5
+        },
+        "10": {
+          "L": 2.75,
+          "M": 4.0,
+          "H": 5.5
+        },
+        "12": {
+          "L": 4.0,
+          "M": 6.0,
+          "H": 7.75
+        },
+        "14": {
+          "L": 5.5,
+          "M": 8.0,
+          "H": 10.5
+        },
+        "16": {
+          "L": 7.0,
+          "M": 10.5,
+          "H": 14.0
+        },
+        "18": {
+          "L": 8.75,
+          "M": 13.5,
+          "H": 17.75
+        }
+      }
+    },
+    {
+      "key": "bacon_topping",
+      "label": "Bacon Topping",
+      "category": "meat",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 0.25,
+          "M": 0.5,
+          "H": 1.0
+        },
+        "8": {
+          "L": 0.5,
+          "M": 1.0,
+          "H": 1.5
+        },
+        "10": {
+          "L": 1.0,
+          "M": 1.5,
+          "H": 2.25
+        },
+        "12": {
+          "L": 1.5,
+          "M": 2.5,
+          "H": 3.5
+        },
+        "14": {
+          "L": 1.75,
+          "M": 3.5,
+          "H": 4.25
+        },
+        "16": {
+          "L": 2.25,
+          "M": 4.25,
+          "H": 6.25
+        },
+        "18": {
+          "L": 3.25,
+          "M": 6.0,
+          "H": 7.5
+        }
+      }
+    },
+    {
+      "key": "canadian_bacon",
+      "label": "Canadian Bacon",
+      "category": "meat",
+      "unit": "oz",
+      "sameAs": "pepperoni_oz"
+    },
+    {
+      "key": "diced_ham",
+      "label": "Diced Ham",
+      "category": "meat",
+      "unit": "oz",
+      "sameAs": "sausage_cooked"
+    },
+    {
+      "key": "genoa_salami",
+      "label": "Genoa Salami",
+      "category": "meat",
+      "unit": "oz",
+      "sameAs": "pepperoni_oz"
+    },
+    {
+      "key": "chicken_strips",
+      "label": "Chicken Strips",
+      "category": "meat",
+      "unit": "oz",
+      "sameAs": "sausage_cooked"
+    },
+    {
+      "key": "meatballs",
+      "label": "Meatballs",
+      "category": "meat",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 0.75,
+          "M": 1.0,
+          "H": 1.25
+        },
+        "8": {
+          "L": 1.25,
+          "M": 2.0,
+          "H": 2.25
+        },
+        "10": {
+          "L": 2.0,
+          "M": 2.5,
+          "H": 3.5
+        },
+        "12": {
+          "L": 2.5,
+          "M": 3.75,
+          "H": 5.0
+        },
+        "14": {
+          "L": 3.5,
+          "M": 5.0,
+          "H": 6.75
+        },
+        "16": {
+          "L": 4.5,
+          "M": 6.75,
+          "H": 8.75
+        },
+        "18": {
+          "L": 5.5,
+          "M": 8.5,
+          "H": 11.0
+        }
+      }
+    },
+    {
+      "key": "taco_meat_crumbles",
+      "label": "Taco Meat Crumbles",
+      "category": "meat",
+      "unit": "oz",
+      "sameAs": "sausage_cooked"
+    },
+    {
+      "key": "chorizo_crumbles",
+      "label": "Chorizo Crumbles",
+      "category": "meat",
+      "unit": "oz",
+      "sameAs": "taco_meat_crumbles"
+    },
+    {
+      "key": "shredded_beef",
+      "label": "Shredded Beef",
+      "category": "meat",
+      "unit": "oz",
+      "sameAs": "taco_meat_crumbles"
+    },
+    {
+      "key": "andouille_slices",
+      "label": "Andouille (slices)",
+      "category": "meat",
+      "unit": "slices",
+      "portionsBySize": {
+        "6": {
+          "L": 3,
+          "M": 4,
+          "H": 5
+        },
+        "8": {
+          "L": 3,
+          "M": 5,
+          "H": 8
+        },
+        "10": {
+          "L": 5,
+          "M": 11,
+          "H": 13
+        },
+        "12": {
+          "L": 11,
+          "M": 13,
+          "H": 19
+        },
+        "14": {
+          "L": 13,
+          "M": 19,
+          "H": 27
+        },
+        "16": {
+          "L": 16,
+          "M": 27,
+          "H": 32
+        },
+        "18": {
+          "L": 21,
+          "M": 32,
+          "H": 43
+        }
+      }
+    },
+    {
+      "key": "anchovy_pieces",
+      "label": "Anchovy (pieces)",
+      "category": "seafood",
+      "unit": "pieces",
+      "portionsBySize": {
+        "6": {
+          "L": 2,
+          "M": 3,
+          "H": 4
+        },
+        "8": {
+          "L": 3,
+          "M": 4,
+          "H": 6
+        },
+        "10": {
+          "L": 4,
+          "M": 6,
+          "H": 8
+        },
+        "12": {
+          "L": 7,
+          "M": 8,
+          "H": 10
+        },
+        "14": {
+          "L": 9,
+          "M": 10,
+          "H": 12
+        },
+        "16": {
+          "L": 11,
+          "M": 13,
+          "H": 16
+        },
+        "18": {
+          "L": 13,
+          "M": 16,
+          "H": 18
+        }
+      }
+    },
+    {
+      "key": "peppers",
+      "label": "Peppers",
+      "category": "veg",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 0.5,
+          "M": 1.0,
+          "H": 1.5
+        },
+        "8": {
+          "L": 1.0,
+          "M": 1.5,
+          "H": 2.0
+        },
+        "10": {
+          "L": 1.5,
+          "M": 2.25,
+          "H": 3.0
+        },
+        "12": {
+          "L": 1.75,
+          "M": 2.75,
+          "H": 4.25
+        },
+        "14": {
+          "L": 2.5,
+          "M": 4.0,
+          "H": 5.25
+        },
+        "16": {
+          "L": 3.25,
+          "M": 5.75,
+          "H": 7.5
+        },
+        "18": {
+          "L": 4.75,
+          "M": 8.0,
+          "H": 11.5
+        }
+      }
+    },
+    {
+      "key": "onions",
+      "label": "Onions",
+      "category": "veg",
+      "unit": "oz",
+      "sameAs": "peppers"
+    },
+    {
+      "key": "mushrooms_canned",
+      "label": "Canned Mushrooms",
+      "category": "veg",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 0.75,
+          "M": 1.25,
+          "H": 1.75
+        },
+        "8": {
+          "L": 1.0,
+          "M": 1.75,
+          "H": 2.25
+        },
+        "10": {
+          "L": 1.25,
+          "M": 2.25,
+          "H": 3.5
+        },
+        "12": {
+          "L": 1.5,
+          "M": 3.0,
+          "H": 4.5
+        },
+        "14": {
+          "L": 2.25,
+          "M": 4.5,
+          "H": 7.25
+        },
+        "16": {
+          "L": 4.25,
+          "M": 6.0,
+          "H": 8.5
+        },
+        "18": {
+          "L": 4.75,
+          "M": 7.25,
+          "H": 11.0
+        }
+      }
+    },
+    {
+      "key": "mushrooms_fresh_sliced",
+      "label": "Fresh Sliced Mushrooms",
+      "category": "veg",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 0.25,
+          "M": 0.5,
+          "H": 0.75
+        },
+        "8": {
+          "L": 0.5,
+          "M": 0.75,
+          "H": 1.0
+        },
+        "10": {
+          "L": 0.75,
+          "M": 1.25,
+          "H": 2.0
+        },
+        "12": {
+          "L": 1.0,
+          "M": 1.75,
+          "H": 2.75
+        },
+        "14": {
+          "L": 1.5,
+          "M": 2.75,
+          "H": 3.75
+        },
+        "16": {
+          "L": 1.75,
+          "M": 2.75,
+          "H": 4.75
+        },
+        "18": {
+          "L": 2.75,
+          "M": 4.75,
+          "H": 7.5
+        }
+      }
+    },
+    {
+      "key": "tomatoes_diced",
+      "label": "Diced Tomatoes",
+      "category": "veg",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 0.75,
+          "M": 1.25,
+          "H": 1.5
+        },
+        "8": {
+          "L": 1.0,
+          "M": 1.75,
+          "H": 2.0
+        },
+        "10": {
+          "L": 1.5,
+          "M": 2.5,
+          "H": 3.5
+        },
+        "12": {
+          "L": 2.25,
+          "M": 3.5,
+          "H": 5.25
+        },
+        "14": {
+          "L": 2.75,
+          "M": 4.25,
+          "H": 6.0
+        },
+        "16": {
+          "L": 3.0,
+          "M": 5.5,
+          "H": 8.5
+        },
+        "18": {
+          "L": 3.25,
+          "M": 6.25,
+          "H": 10.0
+        }
+      }
+    },
+    {
+      "key": "olives_sliced",
+      "label": "Sliced Olives",
+      "category": "veg",
+      "unit": "oz",
+      "sameAs": "peppers"
+    },
+    {
+      "key": "pineapple",
+      "label": "Pineapple",
+      "category": "veg",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 0.5,
+          "M": 1.0,
+          "H": 1.25
+        },
+        "8": {
+          "L": 0.75,
+          "M": 1.25,
+          "H": 2.25
+        },
+        "10": {
+          "L": 1.5,
+          "M": 2.75,
+          "H": 3.5
+        },
+        "12": {
+          "L": 2.0,
+          "M": 3.5,
+          "H": 5.25
+        },
+        "14": {
+          "L": 2.5,
+          "M": 4.0,
+          "H": 6.0
+        },
+        "16": {
+          "L": 3.0,
+          "M": 5.5,
+          "H": 8.25
+        },
+        "18": {
+          "L": 3.5,
+          "M": 6.25,
+          "H": 10.5
+        }
+      }
+    },
+    {
+      "key": "banana_peppers",
+      "label": "Banana Peppers",
+      "category": "veg",
+      "unit": "oz",
+      "portionsBySize": {
+        "6": {
+          "L": 0.75,
+          "M": 1.0,
+          "H": 1.25
+        },
+        "8": {
+          "L": 1.0,
+          "M": 1.5,
+          "H": 1.75
+        },
+        "10": {
+          "L": 1.25,
+          "M": 2.25,
+          "H": 3.0
+        },
+        "12": {
+          "L": 2.0,
+          "M": 3.0,
+          "H": 4.5
+        },
+        "14": {
+          "L": 2.5,
+          "M": 3.5,
+          "H": 5.0
+        },
+        "16": {
+          "L": 2.5,
+          "M": 4.75,
+          "H": 7.0
+        },
+        "18": {
+          "L": 2.75,
+          "M": 5.25,
+          "H": 8.25
+        }
+      }
+    },
+    {
+      "key": "artichoke_hearts",
+      "label": "Artichoke Hearts",
+      "category": "veg",
+      "unit": "oz",
+      "sameAs": "pineapple"
+    },
+    {
+      "key": "corn",
+      "label": "Corn",
+      "category": "veg",
+      "unit": "oz",
+      "sameAs": "banana_peppers"
+    },
+    {
+      "key": "black_beans",
+      "label": "Black Beans",
+      "category": "veg",
+      "unit": "oz",
+      "sameAs": "banana_peppers"
+    }
+  ],
+  "validation": {
+    "requireSizes": [
+      "6",
+      "8",
+      "10",
+      "12",
+      "14",
+      "16",
+      "18"
+    ],
+    "requirePortionLevels": [
+      "L",
+      "M",
+      "H"
+    ],
+    "allowAliases": true,
+    "aliasMustReferenceExistingKey": true
+  },
+  "uiHints": {
+    "defaultSizeKey": "18",
+    "showUnitsToggle": true,
+    "showPortionLevelSelector": true,
+    "groupOrder": [
+      "sauce",
+      "cheese",
+      "meat",
+      "seafood",
+      "veg"
+    ]
+  }
+}

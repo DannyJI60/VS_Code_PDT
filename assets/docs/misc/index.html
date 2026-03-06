@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>ProDoughType</title>
+      <link rel="stylesheet" href="/static/css/prodoughtype.css">
+      <link rel="stylesheet" href="/static/css/italian-mode.css">
+   </head>
+   <body>
+      <header class="header">
+         <div class="logo">
+            <div class="logo-icon">🍕</div>
+            <span class="logo-text">ProDoughType</span>  <!-- Add logo-text class -->
+         </div>
+         <nav class="main-nav">
+            <button class="nav-btn active" data-nav="calculator">Calculator</button>
+            <button class="nav-btn" data-nav="gallery">Gallery</button>
+            <button class="nav-btn" data-nav="forum">Forum</button>
+            <button class="nav-btn" data-nav="kb">Knowledge Base</button>
+            <div class="template-dropdown">
+               <button class="nav-btn" onclick="toggleTemplateMenu()">Templates ▼</button>
+               <div class="template-menu" id="templateMenu">
+                  <div class="template-category">
+                     <div class="category-header">New York Style</div>
+                     <div class="template-item" data-template="ny" onclick="selectTemplate('ny')">
+                        <div class="template-item-icon icon-ny"></div>
+                        <div class="template-item-info">
+                           <div class="template-item-name">NY 48h Cold</div>
+                           <div class="template-item-meta">65% hydration • 48h ferment</div>
+                        </div>
+                     </div>
+                     <div class="template-item" data-template="nySameDay" onclick="selectTemplate('nySameDay')">
+                        <div class="template-item-icon icon-ny-sameday"></div>
+                        <div class="template-item-info">
+                           <div class="template-item-name">NY Same Day</div>
+                           <div class="template-item-meta">62% hydration • 4h ferment</div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="template-category">
+                     <div class="category-header">Neapolitan</div>
+                     <div class="template-item" data-template="neap" onclick="selectTemplate('neap')">
+                        <div class="template-item-icon icon-neap"></div>
+                        <div class="template-item-info">
+                           <div class="template-item-name">Neapolitan RT</div>
+                           <div class="template-item-meta">64% hydration • 24h room temp</div>
+                        </div>
+                     </div>
+                     <div class="template-item" data-template="neapCold" onclick="selectTemplate('neapCold')">
+                        <div class="template-item-icon icon-neap-cold"></div>
+                        <div class="template-item-info">
+                           <div class="template-item-name">Neo Cold Ferment</div>
+                           <div class="template-item-meta">65% hydration • 48h cold</div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="template-category">
+                     <div class="category-header">Pan Pizzas</div>
+                     <div class="template-item" data-template="detroit" onclick="selectTemplate('detroit')">
+                        <div class="template-item-icon icon-detroit"></div>
+                        <div class="template-item-info">
+                           <div class="template-item-name">Detroit Pan</div>
+                           <div class="template-item-meta">72% hydration • 24h ferment</div>
+                        </div>
+                     </div>
+                     <div class="template-item" data-template="sicilian" onclick="selectTemplate('sicilian')">
+                        <div class="template-item-icon icon-sicilian"></div>
+                        <div class="template-item-info">
+                           <div class="template-item-name">Sicilian</div>
+                           <div class="template-item-meta">75% hydration • 24h ferment</div>
+                        </div>
+                     </div>
+                     <div class="template-item" data-template="grandma" onclick="selectTemplate('grandma')">
+                        <div class="template-item-icon icon-grandma"></div>
+                        <div class="template-item-info">
+                           <div class="template-item-name">Grandma Pie</div>
+                           <div class="template-item-meta">70% hydration • 12h ferment</div>
+                        </div>
+                     </div>
+                     <div class="template-item" data-template="deepdish" onclick="selectTemplate('deepdish')">
+                        <div class="template-item-icon icon-deepdish"></div>
+                        <div class="template-item-info">
+                           <div class="template-item-name">Deep Dish</div>
+                           <div class="template-item-meta">60% hydration • 8h ferment</div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="template-category">
+                     <div class="category-header">Specialty</div>
+                     <div class="template-item" data-template="poolish" onclick="selectTemplate('poolish')">
+                        <div class="template-item-icon icon-poolish"></div>
+                        <div class="template-item-info">
+                           <div class="template-item-name">Modernist Thin</div>
+                           <div class="template-item-meta">Poolish • 71% hydration</div>
+                        </div>
+                     </div>
+                     <div class="template-item" data-template="sourdough" onclick="selectTemplate('sourdough')">
+                        <div class="template-item-icon icon-sourdough"></div>
+                        <div class="template-item-info">
+                           <div class="template-item-name">Sourdough 24h</div>
+                           <div class="template-item-meta">Sourdough • 68% hydration</div>
+                        </div>
+                     </div>
+                     <div class="template-item" data-template="roman" onclick="selectTemplate('roman')">
+                        <div class="template-item-icon icon-roman"></div>
+                        <div class="template-item-info">
+                           <div class="template-item-name">Roman Al Taglio</div>
+                           <div class="template-item-meta">80% hydration • 48h ferment</div>
+                        </div>
+                     </div>
+                     <div class="template-item" data-template="thin" onclick="selectTemplate('thin')">
+                        <div class="template-item-icon icon-thin"></div>
+                        <div class="template-item-info">
+                           <div class="template-item-name">Ultra Thin</div>
+                           <div class="template-item-meta">58% hydration • 4h ferment</div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </nav>
+         <div class="header-actions">
+            <button class="btn btn-ghost" onclick="openPreferences()">⚙️</button>
+            <button class="btn" onclick="openLogin()">Login</button>
+            <button class="btn btn-primary" onclick="openExportModal()">Export / Share</button>
+         </div>
+      </header>
+      <div class="main-container">
+         <div class="wizard">
+            <!-- Step 1: Foundation -->
+            <div class="step expanded" data-step="1">
+               <div class="step-header" onclick="toggleStep(1)">
+                  <div class="step-number active">1</div>
+                  <div class="step-title">
+                     <h3>Foundation</h3>
+                     <p>Template, units, geometry, and size</p>
+                  </div>
+                  <div class="step-status">In Progress</div>
+               </div>
+               <div class="step-content">
+                  <div class="form-grid">
+                     <!-- Size Units -->
+                     <div class="form-group">
+                        <label>Size Units</label>
+                        <div class="toggle-group">
+                           <div class="toggle-option active" data-size-unit="imperial" onclick="setSizeUnits('imperial')">Inches</div>
+                           <div class="toggle-option" data-size-unit="metric" onclick="setSizeUnits('metric')">CM</div>
+                        </div>
+                     </div>
+                     <!-- Weight Units -->
+                     <div class="form-group">
+                        <label>Weight Units</label>
+                        <div class="toggle-group">
+                           <div class="toggle-option active" data-weight-unit="metric" onclick="setWeightUnits('metric')">Grams</div>
+                           <div class="toggle-option" data-weight-unit="imperial" onclick="setWeightUnits('imperial')">Ounces</div>
+                        </div>
+                     </div>
+                     <div class="form-group">
+                        <label>Dough Balls <span class="required">*</span></label>
+                        <div class="comfy-input">
+                           <button class="comfy-btn" onclick="adjustValue('doughballs', -1)">−</button>
+                           <input type="number" id="doughballs" value="4" min="1" onchange="updateRecipe()">
+                           <button class="comfy-btn" onclick="adjustValue('doughballs', 1)">+</button>
+                        </div>
+                     </div>
+                     <div class="form-group full-width">
+                        <label>Shape <span class="required">*</span></label>
+                        <div class="geometry-grid">
+                           <div class="geometry-option active" data-shape="round" onclick="setShape('round')">
+                              <div class="geometry-icon icon-shape-round"></div>
+                              <div class="geometry-label">Round</div>
+                           </div>
+                           <div class="geometry-option" data-shape="rectangular" onclick="setShape('rectangular')">
+                              <div class="geometry-icon icon-shape-rect"></div>
+                              <div class="geometry-label">Rectangular</div>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="form-group full-width" id="baking-surface-group">
+                        <label>Baking Surface <span class="required">*</span></label>
+                        <div class="toggle-group">
+                           <div class="toggle-option active" data-surface="freeform" onclick="setBakingSurface('freeform')">Free-form</div>
+                           <div class="toggle-option" data-surface="pan" onclick="setBakingSurface('pan')">Pan</div>
+                        </div>
+                     </div>
+                     <div id="round-inputs" class="form-row">
+                        <div class="form-group">
+                           <label>Diameter <span class="required">*</span></label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('diameter', -0.5, 0.5)">−</button>
+                              <input type="number" id="diameter" value="14" step="0.5" onchange="updateRecipe()">
+                              <span class="comfy-unit" id="diameter-unit">in</span>
+                              <button class="comfy-btn" onclick="adjustValue('diameter', 0.5, 0.5)">+</button>
+                           </div>
+                        </div>
+                     </div>
+                     <div id="rectangular-inputs" class="form-row" style="display: none;">
+                        <div class="form-group">
+                           <label>Width <span class="required">*</span></label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('width', -0.5, 0.5)">−</button>
+                              <input type="number" id="width" value="14" step="0.5" onchange="updateRecipe()">
+                              <span class="comfy-unit dim-unit">in</span>
+                              <button class="comfy-btn" onclick="adjustValue('width', 0.5, 0.5)">+</button>
+                           </div>
+                        </div>
+                        <div class="form-group">
+                           <label>Length <span class="required">*</span></label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('length', -0.5, 0.5)">−</button>
+                              <input type="number" id="length" value="14" step="0.5" onchange="updateRecipe()">
+                              <span class="comfy-unit dim-unit">in</span>
+                              <button class="comfy-btn" onclick="adjustValue('length', 0.5, 0.5)">+</button>
+                           </div>
+                        </div>
+                     </div>
+                     <div id="height-input-group" class="form-row" style="display: none;">
+                        <div class="form-group">
+                           <label>Pan Height <span class="required">*</span></label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('pan-height', -0.1, 0.1)">−</button>
+                              <input type="number" id="pan-height" value="1.5" step="0.1" onchange="updateRecipe()">
+                              <span class="comfy-unit dim-unit">in</span>
+                              <button class="comfy-btn" onclick="adjustValue('pan-height', 0.1, 0.1)">+</button>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="form-group">
+                        <label>Target Mode</label>
+                        <select id="target-mode" onchange="handleTargetModeChange()">
+                           <option value="weight">Total Dough Weight</option>
+                           <option value="thickness">Thickness Factor</option>
+                        </select>
+                     </div>
+                     <div class="form-group" id="weight-input-group">
+                        <label>Target Value</label>
+                        <div class="comfy-input">
+                           <button class="comfy-btn" onclick="adjustValue('target-value', -10)">−</button>
+                           <input type="number" id="target-value" value="260" onchange="updateRecipe()">
+                           <span class="comfy-unit" id="target-unit">g</span>
+                           <button class="comfy-btn" onclick="adjustValue('target-value', 10)">+</button>
+                        </div>
+                        <span class="hint" id="target-hint">Per dough ball</span>
+                     </div>
+                     <div class="form-group" id="tf-input-group" style="display: none;">
+                        <label>Thickness Factor <span class="required">*</span></label>
+                        <div class="comfy-input">
+                           <button class="comfy-btn" onclick="adjustValue('tf-value', -0.005, 0.005)">−</button>
+                           <input type="number" id="tf-value" value="0.10" step="0.001" onchange="updateRecipe()">
+                           <button class="comfy-btn" onclick="adjustValue('tf-value', 0.005, 0.005)">+</button>
+                        </div>
+                        <div class="tf-reference">
+                           <span class="tf-badge" data-tf="0.07" onclick="setTF(0.07)">0.07 Thin NY</span>
+                           <span class="tf-badge" data-tf="0.10" onclick="setTF(0.10)">0.10 Standard</span>
+                           <span class="tf-badge" data-tf="0.13" onclick="setTF(0.13)">0.13 Thick</span>
+                           <span class="tf-badge" data-tf="0.15" onclick="setTF(0.15)">0.15 Deep Dish</span>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="step-nav">
+                     <div></div>
+                     <div class="step-nav-right">
+                        <button class="btn" onclick="nextStep(2)">Next Step →</button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <!-- Step 2: Fermentation -->
+            <div class="step" data-step="2">
+               <div class="step-header" onclick="toggleStep(2)">
+                  <div class="step-number">2</div>
+                  <div class="step-title">
+                     <h3>Fermentation Method</h3>
+                     <p>Direct dough or preferment</p>
+                  </div>
+                  <div class="step-status">Required</div>
+               </div>
+               <div class="step-content">
+                  <div class="preferment-type">
+                     <div class="preferment-card active" data-pref="direct" onclick="setPreferment('direct')">
+                        <div class="preferment-icon icon-pref-direct"></div>
+                        <div class="preferment-name">Direct Dough</div>
+                        <div class="preferment-desc">No preferment</div>
+                     </div>
+                     <div class="preferment-card" data-pref="biga" onclick="setPreferment('biga')">
+                        <div class="preferment-icon icon-pref-biga"></div>
+                        <div class="preferment-name">Biga</div>
+                        <div class="preferment-desc">Stiff preferment</div>
+                     </div>
+                     <div class="preferment-card" data-pref="poolish" onclick="setPreferment('poolish')">
+                        <div class="preferment-icon icon-pref-poolish"></div>
+                        <div class="preferment-name">Poolish</div>
+                        <div class="preferment-desc">Liquid preferment</div>
+                     </div>
+                     <div class="preferment-card" data-pref="sourdough" onclick="setPreferment('sourdough')">
+                        <div class="preferment-icon icon-pref-sourdough"></div>
+                        <div class="preferment-name">Sourdough</div>
+                        <div class="preferment-desc">Natural leaven</div>
+                     </div>
+                  </div>
+                  <div id="preferment-params" style="display: none;">
+                     <div class="form-grid">
+                        <div class="form-group full-width">
+                           <label>Preferment Flour % <span class="required">*</span></label>
+                           <div class="slider-container">
+                              <div class="slider-header">
+                                 <span class="hint">1% - 100%</span>
+                                 <span class="slider-value" id="pref-val">30%</span>
+                              </div>
+                              <input type="range" id="pref-percent" min="1" max="100" value="30" 
+                                 oninput="updateSliderValue(this.value, 'pref-val'); updateRecipe()">
+                           </div>
+                        </div>
+                        <div class="form-group">
+                           <label>Preferment Hydration %</label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('pref-hydration', -5)">−</button>
+                              <input type="number" id="pref-hydration" value="100" onchange="updateRecipe()">
+                              <span class="comfy-unit">%</span>
+                              <button class="comfy-btn" onclick="adjustValue('pref-hydration', 5)">+</button>
+                           </div>
+                        </div>
+                        <div class="form-group">
+                           <label>Fermentation Time</label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('pref-hours', -1)">−</button>
+                              <input type="number" id="pref-hours" value="12" onchange="updateRecipe()">
+                              <span class="comfy-unit">hrs</span>
+                              <button class="comfy-btn" onclick="adjustValue('pref-hours', 1)">+</button>
+                           </div>
+                        </div>
+                        <div class="form-group">
+                           <label>Temperature</label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('pref-temp', -1)">−</button>
+                              <input type="number" id="pref-temp" value="70" onchange="updateRecipe()">
+                              <span class="comfy-unit">°F</span>
+                              <button class="comfy-btn" onclick="adjustValue('pref-temp', 1)">+</button>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="step-nav">
+                     <button class="btn btn-ghost" onclick="prevStep(1)">← Back</button>
+                     <div class="step-nav-right">
+                        <button class="btn" onclick="nextStep(3)">Next Step →</button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <!-- Step 3: Flour -->
+            <div class="step" data-step="3">
+               <div class="step-header" onclick="toggleStep(3)">
+                  <div class="step-number">3</div>
+                  <div class="step-title">
+                     <h3>Flour Composition</h3>
+                     <p>Blend, protein, W rating</p>
+                  </div>
+                  <div class="step-status">Required</div>
+               </div>
+               <div class="step-content">
+                  <div class="flour-row-header">
+                     <div>Flour Type</div>
+                     <div style="text-align: right;">Protein</div>
+                     <div style="text-align: right;">Blend %</div>
+                     <div></div>
+                  </div>
+                  <div class="flour-builder" id="flour-builder">
+                     <div class="flour-row" data-flour-id="1">
+                        <div class="form-group" style="margin: 0;">
+                           <div class="flour-select-wrapper">
+                              <div class="flour-logo">🇮🇹</div>
+                              <select class="flour-select" onchange="updateFlour(this)">
+                                 <option value="caputo" data-protein="12.7" data-w="280">Caputo 00 Pizzeria</option>
+                                 <option value="ka" data-protein="12.7" data-w="300">King Arthur Bread</option>
+                                 <option value="cm" data-protein="13.5" data-w="320">Central Milling HG</option>
+                                 <option value="alltrumps" data-protein="14.2" data-w="350">All Trumps</option>
+                                 <option value="custom">Custom...</option>
+                              </select>
+                           </div>
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                           <div class="flour-input-group">
+                              <input type="number" class="flour-protein" value="12.7" step="0.1" onchange="updateRecipe()">
+                              <span class="flour-input-suffix">%</span>
+                           </div>
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                           <div class="flour-input-group">
+                              <input type="number" class="flour-percent" value="100" onchange="handleFlourPercentChange(this)">
+                              <span class="flour-input-suffix">%</span>
+                           </div>
+                        </div>
+                        <button class="btn btn-icon" onclick="removeFlour(this)" disabled style="height: 38px;">✕</button>
+                     </div>
+                  </div>
+                  <button class="btn" style="width: 100%; margin-top: 12px;" onclick="addFlour()">+ Add Flour to Blend</button>
+                  <div class="flour-total" id="flour-total">
+                     <span>Weighted: <span id="avg-protein">12.7%</span> protein | W <span id="avg-w">280</span></span>
+                     <span style="color: var(--accent-primary);" id="total-percent">100%</span>
+                  </div>
+                  <div class="step-nav">
+                     <button class="btn btn-ghost" onclick="prevStep(2)">← Back</button>
+                     <div class="step-nav-right">
+                        <button class="btn" onclick="nextStep(4)">Next Step →</button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <!-- Step 4: Ingredients -->
+            <div class="step" data-step="4">
+               <div class="step-header" onclick="toggleStep(4)">
+                  <div class="step-number">4</div>
+                  <div class="step-title">
+                     <h3>Ingredients</h3>
+                     <p>Hydration, salt, yeast, additions</p>
+                  </div>
+                  <div class="step-status">Required</div>
+               </div>
+               <div class="step-content">
+                  <div class="form-grid">
+                     <div class="form-group">
+                        <label>Hydration % <span class="required">*</span></label>
+                        <div class="comfy-input">
+                           <button class="comfy-btn" onclick="adjustValue('hydration', -1)">−</button>
+                           <input type="number" id="hydration" value="65" step="0.1" onchange="updateRecipe()">
+                           <span class="comfy-unit">%</span>
+                           <button class="comfy-btn" onclick="adjustValue('hydration', 1)">+</button>
+                        </div>
+                        <span class="hint" id="true-hydration">True hydration: 65%</span>
+                     </div>
+                     <div class="form-group">
+                        <label>Salt %</label>
+                        <div class="comfy-input">
+                           <button class="comfy-btn" onclick="adjustValue('salt', -0.1, 0.1)">−</button>
+                           <input type="number" id="salt" value="2.5" step="0.1" onchange="updateRecipe()">
+                           <span class="comfy-unit">%</span>
+                           <button class="comfy-btn" onclick="adjustValue('salt', 0.1, 0.1)">+</button>
+                        </div>
+                        <div class="warning-badge" id="salt-warning" style="display: none;">⚠️ Low salt may affect flavor</div>
+                     </div>
+                  </div>
+                  <div class="optional-ingredients">
+                     <div class="optional-header">
+                        <div class="optional-title">Optional Ingredients</div>
+                     </div>
+                     <div class="ingredient-list" id="optional-list"></div>
+                     <div class="add-ingredient-row">
+                        <select id="add-ingredient-select" onchange="addOptionalIngredient()">
+                           <option value="">+ Add ingredient...</option>
+                           <option value="oil">Oil (Olive/Vegetable)</option>
+                           <option value="sugar">Sugar</option>
+                           <option value="honey">Honey</option>
+                           <option value="malt">Diastatic Malt Powder</option>
+                           <option value="vital">Vital Wheat Gluten</option>
+                           <option value="potato">Potato Flakes</option>
+                           <option value="milk">Dry Milk Powder</option>
+                           <option value="egg">Egg (whole)</option>
+                           <option value="yolk">Egg Yolk</option>
+                           <option value="white">Egg White</option>
+                           <option value="butter">Butter</option>
+                           <option value="shortening">Shortening</option>
+                           <option value="custom">Custom...</option>
+                        </select>
+                     </div>
+                  </div>
+                  <div class="form-grid" style="margin-top: 20px;">
+                     <div class="form-group full-width">
+                        <label>Yeast Calculation Mode</label>
+                        <div class="yeast-mode">
+                           <div class="mode-card active" data-mode="auto" onclick="setYeastMode('auto')">
+                              <div class="mode-title">Auto</div>
+                              <div class="mode-desc">Calculate from time & temp</div>
+                           </div>
+                           <div class="mode-card" data-mode="manual" onclick="setYeastMode('manual')">
+                              <div class="mode-title">Manual</div>
+                              <div class="mode-desc">Enter percentage directly</div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="auto-params" id="auto-yeast">
+                     <div class="form-row">
+                        <div class="form-group">
+                           <label>Primary Temperature</label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('temp', -1)">−</button>
+                              <input type="number" id="temp" value="65" onchange="updateRecipe()">
+                              <span class="comfy-unit">°F</span>
+                              <button class="comfy-btn" onclick="adjustValue('temp', 1)">+</button>
+                           </div>
+                        </div>
+                        <div class="form-group">
+                           <label>Total Fermentation Time</label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('hours', -1)">−</button>
+                              <input type="number" id="hours" value="48" onchange="updateRecipe()">
+                              <span class="comfy-unit">hrs</span>
+                              <button class="comfy-btn" onclick="adjustValue('hours', 1)">+</button>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="form-group" style="margin-bottom: 0;">
+                        <label>Yeast Type</label>
+                        <select id="yeast-type" onchange="updateRecipe()">
+                           <option value="idy">IDY (Instant Dry)</option>
+                           <option value="ady">ADY (Active Dry)</option>
+                           <option value="cy">CY (Compressed/Fresh)</option>
+                        </select>
+                     </div>
+                     <div class="yeast-result">
+                        <div class="yeast-result-title">Calculated: 0.08% IDY</div>
+                        <div class="yeast-result-desc">
+                           At 65°F for 48 hours, use 0.08% IDY (0.10g per ball).<br>
+                           Alternative: 0.24% for 24 hours, or raise temp to 75°F for 0.15%.
+                        </div>
+                     </div>
+                  </div>
+                  <div class="step-nav">
+                     <button class="btn btn-ghost" onclick="prevStep(3)">← Back</button>
+                     <div class="step-nav-right">
+                        <button class="btn" onclick="nextStep(5)">Next Step →</button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <!-- Step 5: DDT -->
+            <div class="step" data-step="5">
+               <div class="step-header" onclick="toggleStep(5)">
+                  <div class="step-number">5</div>
+                  <div class="step-title">
+                     <h3>Desired Dough Temperature</h3>
+                     <p>Calculate water temperature</p>
+                  </div>
+                  <div class="step-status">Optional</div>
+               </div>
+               <div class="step-content">
+                  <div class="checkbox-group" style="margin-bottom: 20px;">
+                     <input type="checkbox" id="ddt-enable" onchange="toggleDDT()">
+                     <label for="ddt-enable">Enable DDT calculation</label>
+                  </div>
+                  <div id="ddt-params" style="display: none;">
+                     <div class="form-grid">
+                        <div class="form-group">
+                           <label>Target DDT</label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('ddt-target', -1)">−</button>
+                              <input type="number" id="ddt-target" value="75" onchange="updateRecipe()">
+                              <span class="comfy-unit">°F</span>
+                              <button class="comfy-btn" onclick="adjustValue('ddt-target', 1)">+</button>
+                           </div>
+                        </div>
+                        <div class="form-group">
+                           <label>Room Temperature</label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('room-temp', -1)">−</button>
+                              <input type="number" id="room-temp" value="70" onchange="updateRecipe()">
+                              <span class="comfy-unit">°F</span>
+                              <button class="comfy-btn" onclick="adjustValue('room-temp', 1)">+</button>
+                           </div>
+                        </div>
+                        <div class="form-group">
+                           <label>Flour Temperature</label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('flour-temp', -1)">−</button>
+                              <input type="number" id="flour-temp" value="70" onchange="updateRecipe()">
+                              <span class="comfy-unit">°F</span>
+                              <button class="comfy-btn" onclick="adjustValue('flour-temp', 1)">+</button>
+                           </div>
+                        </div>
+                        <div class="form-group">
+                           <label>Friction Factor</label>
+                           <select id="friction" onchange="handleFrictionChange()">
+                              <option value="22">Mixer (22°F)</option>
+                              <option value="8">Hand mix (8°F)</option>
+                              <option value="custom">Custom...</option>
+                           </select>
+                           <div class="custom-friction" id="custom-friction-input">
+                              <div class="comfy-input" style="margin-top: 8px;">
+                                 <button class="comfy-btn" onclick="adjustValue('friction-custom', -1)">−</button>
+                                 <input type="number" id="friction-custom" value="22" min="0" max="40" onchange="updateRecipe()">
+                                 <span class="comfy-unit">°F</span>
+                                 <button class="comfy-btn" onclick="adjustValue('friction-custom', 1)">+</button>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="ddt-result">
+                        <div class="ddt-result-title">Required Water Temperature: 62°F</div>
+                        <div class="ddt-result-desc">Use ice water or refrigerate flour to achieve target DDT of 75°F.</div>
+                     </div>
+                  </div>
+                  <div class="step-nav">
+                     <button class="btn btn-ghost" onclick="prevStep(4)">← Back</button>
+                     <div class="step-nav-right">
+                        <button class="btn" onclick="nextStep(6)">Next Step →</button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <!-- Step 6: Toppings -->
+            <div class="step" data-step="6">
+               <div class="step-header" onclick="toggleStep(6)">
+                  <div class="step-number">6</div>
+                  <div class="step-title">
+                     <h3>Toppings Calculator</h3>
+                     <p>Sauce, cheese, toppings by area</p>
+                  </div>
+                  <div class="step-status">Optional</div>
+               </div>
+               <div class="step-content">
+                  <div class="checkbox-group" style="margin-bottom: 20px;">
+                     <input type="checkbox" id="toppings-enable" onchange="toggleToppings()">
+                     <label for="toppings-enable">Enable toppings calculation</label>
+                  </div>
+                  <div id="toppings-params" style="display: none;">
+                     <div class="form-grid">
+                        <div class="form-group">
+                           <label>Loading Style</label>
+                           <div class="toggle-group">
+                              <div class="toggle-option" data-loading="light" onclick="setLoading('light')">Light</div>
+                              <div class="toggle-option active" data-loading="moderate" onclick="setLoading('moderate')">Moderate</div>
+                              <div class="toggle-option" data-loading="heavy" onclick="setLoading('heavy')">Heavy</div>
+                           </div>
+                        </div>
+                        <div class="form-group">
+                           <label>Sauce</label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('sauce', -0.5, 0.5)">−</button>
+                              <input type="number" id="sauce" value="4.0" step="0.1" onchange="updateRecipe()">
+                              <span class="comfy-unit">oz</span>
+                              <button class="comfy-btn" onclick="adjustValue('sauce', 0.5, 0.5)">+</button>
+                           </div>
+                           <span class="hint">3.5 oz per 154 in² (moderate)</span>
+                        </div>
+                        <div class="form-group">
+                           <label>Cheese</label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('cheese', -0.5, 0.5)">−</button>
+                              <input type="number" id="cheese" value="7.0" step="0.1" onchange="updateRecipe()">
+                              <span class="comfy-unit">oz</span>
+                              <button class="comfy-btn" onclick="adjustValue('cheese', 0.5, 0.5)">+</button>
+                           </div>
+                           <span class="hint">7 oz per 154 in² (moderate)</span>
+                        </div>
+                        <div class="form-group">
+                           <label>Pepperoni Slices</label>
+                           <div class="comfy-input">
+                              <button class="comfy-btn" onclick="adjustValue('pepperoni', -1)">−</button>
+                              <input type="number" id="pepperoni" value="28" onchange="updateRecipe()">
+                              <button class="comfy-btn" onclick="adjustValue('pepperoni', 1)">+</button>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="step-nav">
+                     <button class="btn btn-ghost" onclick="prevStep(5)">← Back</button>
+                     <div class="step-nav-right">
+                        <button class="btn btn-primary" onclick="finishWizard()">Complete Recipe</button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <!-- Recipe Card -->
+         <div class="recipe-card">
+            <div class="recipe-header">
+               <div class="recipe-title">
+                  <span id="recipe-name">Custom Recipe</span>
+                  <span class="recipe-badge" id="modified-badge" style="display: none;">Modified</span>
+               </div>
+               <div class="recipe-subtitle" id="recipe-subtitle">Configure your dough</div>
+               <div class="recipe-metrics">
+                  <div class="recipe-metric">TF: <strong id="tf-display">—</strong></div>
+                  <div class="recipe-metric" id="height-metric" style="display: none;">Height: <strong id="height-display">—</strong></div>
+                  <div class="recipe-metric">Area: <strong id="area-display">—</strong></div>
+               </div>
+               <div class="recipe-actions">
+                  <button class="btn" onclick="openExportModal()">Export</button>
+                  <button class="btn btn-primary" onclick="window.print()">Print</button>
+               </div>
+            </div>
+            <div class="recipe-content">
+               <div class="preferment-section" id="recipe-preferment" style="display: none;">
+                  <div class="recipe-section-title">Preferment</div>
+                  <div class="ingredient-row">
+                     <div class="ingredient-name">Flour</div>
+                     <div class="ingredient-weight" id="pref-flour-weight">—</div>
+                  </div>
+                  <div class="ingredient-row">
+                     <div class="ingredient-name">Water</div>
+                     <div class="ingredient-weight" id="pref-water-weight">—</div>
+                  </div>
+                  <div class="ingredient-row">
+                     <div class="ingredient-name">Yeast</div>
+                     <div class="ingredient-weight" id="pref-yeast-weight">—</div>
+                  </div>
+                  <div class="totals-row">
+                     <span>Total Preferment</span>
+                     <span id="pref-total">—</span>
+                  </div>
+               </div>
+               <div class="recipe-section">
+                  <div class="recipe-section-title">Total Formula</div>
+                  <div class="ingredient-row">
+                     <div class="ingredient-name">Flour <span class="ingredient-percent">100%</span></div>
+                     <div class="ingredient-weight" id="total-flour">—</div>
+                  </div>
+                  <div class="ingredient-row">
+                     <div class="ingredient-name">Water <span class="ingredient-percent" id="water-percent">—</span></div>
+                     <div class="ingredient-weight" id="total-water">—</div>
+                  </div>
+                  <div class="ingredient-row">
+                     <div class="ingredient-name">Salt <span class="ingredient-percent" id="salt-percent">—</span></div>
+                     <div class="ingredient-weight" id="total-salt">—</div>
+                  </div>
+                  <div id="optional-recipe-rows"></div>
+                  <div class="ingredient-row">
+                     <div class="ingredient-name">Yeast <span class="ingredient-percent" id="yeast-percent">—</span></div>
+                     <div class="ingredient-weight" id="total-yeast">—</div>
+                  </div>
+                  <div class="totals-row">
+                     <span>Total Dough Weight</span>
+                     <span id="total-dough">—</span>
+                  </div>
+               </div>
+               <div class="recipe-section">
+                  <div class="recipe-section-title">Per Dough Ball</div>
+                  <div class="ingredient-row">
+                     <div class="ingredient-name">Flour</div>
+                     <div class="ingredient-weight" id="ball-flour">—</div>
+                  </div>
+                  <div class="ingredient-row">
+                     <div class="ingredient-name">Water</div>
+                     <div class="ingredient-weight" id="ball-water">—</div>
+                  </div>
+                  <div class="ingredient-row">
+                     <div class="ingredient-name">Salt</div>
+                     <div class="ingredient-weight" id="ball-salt">—</div>
+                  </div>
+                  <div id="optional-ball-rows"></div>
+                  <div class="ingredient-row">
+                     <div class="ingredient-name">Yeast</div>
+                     <div class="ingredient-weight" id="ball-yeast">—</div>
+                  </div>
+                  <div class="totals-row">
+                     <span>Ball Weight</span>
+                     <span class="highlight" id="ball-total">—</span>
+                  </div>
+               </div>
+               <div class="recipe-section">
+                  <div class="recipe-section-title">Validation</div>
+                  <div class="validation-list" id="validation-list">
+                     <div class="validation-item success">✓ Ready to configure</div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+      <!-- Export Modal -->
+      <div class="modal-overlay" id="exportModal" onclick="closeExportModal(event)">
+         <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+               <div class="modal-title">Export Recipe</div>
+            </div>
+            <div class="modal-content">
+               <div class="export-options">
+                  <div class="export-option" onclick="exportRecipe('json')">
+                     <div class="export-icon">📄</div>
+                     <div>
+                        <div class="export-title">JSON (Full Data)</div>
+                        <div class="export-desc">Complete workflow with all parameters</div>
+                     </div>
+                  </div>
+                  <div class="export-option" onclick="exportRecipe('pdf')">
+                     <div class="export-icon">📋</div>
+                     <div>
+                        <div class="export-title">PDF Recipe Card</div>
+                        <div class="export-desc">Formatted for printing or sharing</div>
+                     </div>
+                  </div>
+                  <div class="export-option" onclick="exportRecipe('link')">
+                     <div class="export-icon">🔗</div>
+                     <div>
+                        <div class="export-title">Shareable Link</div>
+                        <div class="export-desc">URL with encoded recipe parameters</div>
+                     </div>
+                  </div>
+                  <div class="export-option" onclick="exportRecipe('text')">
+                     <div class="export-icon">📝</div>
+                     <div>
+                        <div class="export-title">Plain Text</div>
+                        <div class="export-desc">Simple format for forums or notes</div>
+                     </div>
+                  </div>
+               </div>
+               <div class="export-checkboxes">
+                  <div class="checkbox-group"><input type="checkbox" checked><span>Include process steps</span></div>
+                  <div class="checkbox-group"><input type="checkbox" checked><span>Include baker's percentages</span></div>
+                  <div class="checkbox-group"><input type="checkbox"><span>Include personal notes</span></div>
+               </div>
+            </div>
+            <div class="modal-footer">
+               <button class="btn btn-ghost" onclick="closeExportModal()">Cancel</button>
+               <button class="btn btn-primary" onclick="confirmExport()">Export Selected</button>
+            </div>
+         </div>
+      </div>
+      <!-- Preferences Modal -->
+      <div class="modal-overlay" id="preferencesModal" onclick="closePreferences(event)">
+         <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+               <div class="modal-title">Preferences</div>
+            </div>
+            <div class="modal-content">
+               <div class="preference-item">
+                  <div class="preference-label">
+                     <div class="preference-name">Italian Mode</div>
+                     <div class="preference-desc">Classic styling with warmer tones and traditional typography</div>
+                  </div>
+                  <div class="toggle-group">
+                     <div class="toggle-option" data-italian="off" onclick="setItalianMode(false)">Off</div>
+                     <div class="toggle-option active" data-italian="on" onclick="setItalianMode(true)">On</div>
+                  </div>
+               </div>
+               <div class="preference-item">
+                  <div class="preference-label">
+                     <div class="preference-name">Default Units</div>
+                     <div class="preference-desc">Preferred measurement system for new recipes</div>
+                  </div>
+                  <div class="toggle-group">
+                     <div class="toggle-option active" data-pref-unit="metric" onclick="setDefaultUnit('metric')">Metric</div>
+                     <div class="toggle-option" data-pref-unit="imperial" onclick="setDefaultUnit('imperial')">Imperial</div>
+                  </div>
+               </div>
+            </div>
+            <div class="modal-footer">
+               <button class="btn btn-ghost" onclick="closePreferences()">Cancel</button>
+               <button class="btn btn-primary" onclick="savePreferences()">Save</button>
+            </div>
+         </div>
+      </div>
+      <!-- Login Modal -->
+      <div class="modal-overlay" id="loginModal" onclick="closeLogin(event)">
+         <div class="modal modal-sm" onclick="event.stopPropagation()">
+            <div class="modal-header">
+               <div class="modal-title">Sign In</div>
+            </div>
+            <div class="modal-content">
+               <div class="login-options">
+                  <button class="btn btn-login btn-github" onclick="loginWithGitHub()">
+                  <span class="login-icon">🐙</span>
+                  <span>Continue with GitHub</span>
+                  </button>
+                  <button class="btn btn-login btn-google" onclick="loginWithGoogle()">
+                  <span class="login-icon">🔍</span>
+                  <span>Continue with Google</span>
+                  </button>
+               </div>
+               <div class="login-divider">or</div>
+               <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" class="form-input" placeholder="you@example.com">
+               </div>
+               <div class="form-group">
+                  <label>Password</label>
+                  <input type="password" class="form-input" placeholder="••••••••">
+               </div>
+               <button class="btn btn-primary" style="width: 100%;" onclick="loginWithEmail()">Sign In</button>
+               <div class="login-footer">
+                  <a href="#" onclick="showForgotPassword()">Forgot password?</a>
+                  <span>•</span>
+                  <a href="#" onclick="showRegister()">Create account</a>
+               </div>
+            </div>
+         </div>
+      </div>
+      <script src="/static/js/prodoughtype.js"></script>
+      </body>
+   </body>
+</html>

@@ -1,0 +1,110 @@
+How do I calculate the cost of my dough?
+   pmq.com/how-do-i-calculate-the-cost-of-my-dough
+
+Blake Harris                                                              November 1, 2005
+
+
+Question:
+
+How do I calculate the cost of my dough?
+
+Answer:
+
+Many of us have spread sheets that will automatically calculate our dough cost for
+us, but many of the small operators don't have that nifty tool available to work with,
+so they must revert to the old, tried and true method of long hand dough cost
+calculations.
+
+Here is how I've always done it. Set-up the table below on a clean sheet of paper
+and run off some copies:
+
+Now, if you want to figure out what it costs to make your dough, including such
+things as labor, overhead, etc. use the rule of 2.5 times the unit dough cost to get a
+realistic picture of what it is actually costing you to make the dough, in this case it
+would be 2.5 X 7.8 cents = $0.195 (19.5 cents) per dough piece.
+
+In working with this table it is important to remember to show the ingredient
+amounts in pounds as a decimal. To do this, divide the ingredient weight in ounces
+by 16. If an ingredient amount is say, 3 pounds and 7 ounces, the decimal amount
+will be 3.438 pounds (rounded from 3.4375 pounds).
+The ingredient unit cost is the ingredient cost per pound. If, for example, you
+purchase a 50-pound bag of sugar for $19 (delivered to your door), the unit cost
+will be $0.38 (38 cents) per pound.
+
+For the water cost, take your average water bill and see how much water you're
+using. It may be reported either in cubic feet (62.43 pounds of water per cubic foot,
+or in gallons (7.963 pounds per gallon). Not all of that water is being used in making
+your dough, but since a good part of it is either going into the dough or used in
+cleaning dough related equipment, pots and pans/dinnerware the dough is an
+appropriate place to charge it against. Hey, somebody has to pay for it.
+
+You can follow the same outline for calculating the cost of your sauce or anything
+else with multiple ingredients.
+This is the way we used to do it way back when – well lets just say before the day of
+the hand held calculator or computer with all of its labor saving programs.
+
+Question:
+
+I'm trying to make a special Chicago-style pizza crust and I'm having a problem
+getting the crust the right color. I've added eggs and corn flour, but I still can't get
+the yellow, almost orange color I'm looking for.
+
+Answer:
+
+The color you are looking for is not the result of eggs or corn flour, but rather the
+result of adding egg-shade (AKA egg coloring) to the dough.
+
+Question:
+
+I'm new to the pizza business and I'm now looking at vertical and spiral type mixers.
+There are so many to choose from. With all the different speeds these mixers have,
+what is the correct speed to mix the dough on?
+
+Answer:
+
+First let's discuss a little bit about the mixing of a pizza dough. Pizza doughs are best
+under-mixed to some extent. That is, it is really not desirable to fully develop the
+protein in the flour into gluten. If this is done, the resulting dough can become
+excessively tough and elastic, making it difficult to shape due to the snap-back or
+memory properties of the dough. Typically, pizza dough is mixed just to the point of
+developing a smooth dough appearance. There will be a significant amount of
+further gluten development in the dough, but this will come about as a result of bio-
+chemical gluten development, during the fermentation period of the dough (several
+hours at room temperature or 18 to 72 hours in the cooler). When the gluten is
+developed in this manner, the dough has a very relaxed feel and is easy to form
+without excessive snap-back or memory.
+
+To achieve the proper mixing of the dough, we have found that, using a 2-speed,
+vertical mixer, it is best to use low (1st.) speed to blend the ingredients together,
+then switch to 2nd speed for the rest of the mixing. When using a 3-speed mixer, the
+mixing sequence might be a little different. Use low speed to blend the ingredients
+together. This helps to prevent ingredients from becoming air-borne when you
+change up to the next higher speed. Continue mixing at low speed until the dough
+just begins to take on a smooth, satiny appearance. Now, change to 2nd speed to
+mix the dough for a minute or so to finish it. With a 4-speed mixer, you should again
+use 1st speed to blend the ingredients together, then go to 2nd speed for the bulk of
+the dough mixing. I don't ever remember using 3rd or 4th speed on a 3 or 4-speed
+mixer to develop a dough. If you do, you will probably be rudely reminded by the
+mixer that this is not something that it likes to do. First, it will stall, or slow down in
+speed, then if you still haven't gotten the clue, it will begin to overheat and trip out
+the thermal overload switch in the motor. Once this happens, grab yourself a cup of
+coffee and take a break, it will be several minutes before the motor cools down and
+the overloads are automatically reset. Until then, you're without a mixer. If you insist
+on this course of mixer abuse, you will soon notice that your mixer's thermal
+overloads are tripping out sooner, and more frequently. Hello, Mr. Mixer Repair
+Man, I've got this problem with my mixer.
+
+Keep in mind that these are only guidelines for mixing a pizza dough, the exact
+make and model of mixer that you have, the age of it, its overall mechanical
+condition, and the formulation of your dough will dictate the best speeds to mix
+your dough. Remember to always begin mixing at low speed to blend and wet the
+ingredients as this will reduce/prevent splashing of ingredients, then go to the next
+higher speed only if your mixer will handle the load without overheating or stalling,
+and mix the dough just until it takes on a smooth, satiny appearance, any more
+mixing than that will only make life more difficult for both you and your mixer.
+
+Got more dough questions? Be sure to check out The Dough Doctor's New York
+Pizza Show Dough Seminar.
+
+Tom Lehmann, Tom Lehmann: In Lehmann's Terms
+
