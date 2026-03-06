@@ -1,4 +1,3 @@
-// modules/flourPickerModal.js
 import { loadFloursForBrowser } from "./floursDb.js";
 
 export async function openFlourPickerModal(store, opts = {}) {
@@ -8,8 +7,7 @@ export async function openFlourPickerModal(store, opts = {}) {
   let activeSort = "name";
   let activeSearch = "";
   let activeType = "all";
-  let detailPanel = null;
-  let selectedFlours = [];
+  const selectedIds = new Set();
 
   const overlay = document.createElement("div");
   overlay.className = "fpOverlay";
@@ -26,21 +24,22 @@ export async function openFlourPickerModal(store, opts = {}) {
       <div>
         <div class="fpEyebrow">Flour Browser</div>
         <h3 class="fpTitle">Choose Flour</h3>
-        <p class="fpSub">Pick a flour for your blend. Open the detail card for specs and notes.</p>
+        <p class="fpSub">Pick one or more flours for your blend, then click Done.</p>
       </div>
 
-      <button type="button" class="btn ghost sm" id="fpClose">Close</button>
+      <div class="fpHeadActions">
+        <button type="button" class="btn ghost sm" id="fpDone">Done</button>
+        <button type="button" class="btn ghost sm" id="fpClose">Close</button>
+      </div>
     </div>
 
     <div class="fpToolbar">
-      <label class="fpSearchWrap">
-        <input id="fpSearch" class="input fpSearch" placeholder="Search by brand, name, or type..." />
-      </label>
+      <input id="fpSearch" class="input fpSearch" placeholder="Search by brand, name, or type..." />
 
       <select id="fpSort" class="input fpSelect">
-        <option value="name">Name</option>
-        <option value="protein">Protein</option>
-        <option value="absorption">Absorption</option>
+        <option value="name">Sort: Name</option>
+        <option value="protein">Sort: Protein</option>
+        <option value="absorption">Sort: Absorption</option>
       </select>
     </div>
 
@@ -56,31 +55,27 @@ export async function openFlourPickerModal(store, opts = {}) {
 
     <div class="fpMeta" id="fpMeta"></div>
 
-    <div class="fpBody">
-      <div class="fpGrid" id="fpGrid"></div>
-
-      <aside class="fpDetailShell" id="fpDetailShell">
-        <div class="fpDetailEmpty">
-          <div class="fpDetailEmptyTitle">Flour details</div>
-          <div class="fpDetailEmptySub">Click a flour card to inspect specs and add it to the blend.</div>
-        </div>
-      </aside>
+    <div class="fpScroll">
+      <div class="tplGrid fpTplGrid" id="fpGrid"></div>
     </div>
   `;
 
   const closeBtn = box.querySelector("#fpClose");
+  const doneBtn = box.querySelector("#fpDone");
   const searchEl = box.querySelector("#fpSearch");
   const sortEl = box.querySelector("#fpSort");
   const gridEl = box.querySelector("#fpGrid");
   const metaEl = box.querySelector("#fpMeta");
   const filtersEl = box.querySelector("#fpFilters");
-  const detailShellEl = box.querySelector("#fpDetailShell");
 
   closeBtn.addEventListener("click", close);
+  doneBtn.addEventListener("click", done);
+
   searchEl.addEventListener("input", () => {
     activeSearch = searchEl.value || "";
     render();
   });
+
   sortEl.addEventListener("change", () => {
     activeSort = sortEl.value || "name";
     render();
@@ -99,134 +94,96 @@ export async function openFlourPickerModal(store, opts = {}) {
     const q = activeSearch.trim().toLowerCase();
 
     let list = flours.filter((f) => {
-      const hay = `${f.brand} ${f.name} ${f.type}`.toLowerCase();
-      const typeOk = activeType === "all" ? true : String(f.type || "").toLowerCase() === activeType.toLowerCase();
+      const hay = `${f.brand || ""} ${f.name || ""} ${f.type || ""}`.toLowerCase();
+      const typeOk =
+        activeType === "all"
+          ? true
+          : String(f.type || "").toLowerCase() === activeType.toLowerCase();
       const searchOk = !q || hay.includes(q);
       return typeOk && searchOk;
     });
 
     if (activeSort === "protein") {
-      list.sort((a, b) => (Number(b.protein) || 0) - (Number(a.protein) || 0));
+      list.sort((a, b) => (Number(readProtein(b)) || 0) - (Number(readProtein(a)) || 0));
     } else if (activeSort === "absorption") {
-      list.sort((a, b) => (Number(b.absorption) || 0) - (Number(a.absorption) || 0));
+      list.sort((a, b) => readAbsMid(b) - readAbsMid(a));
     } else {
-      list.sort((a, b) => `${a.brand} ${a.name}`.localeCompare(`${b.brand} ${b.name}`));
+      list.sort((a, b) =>
+        `${a.brand || ""} ${a.name || ""}`.localeCompare(`${b.brand || ""} ${b.name || ""}`)
+      );
     }
 
-    metaEl.textContent = `${list.length} flour${list.length === 1 ? "" : "s"} found`;
+    metaEl.textContent = `${list.length} flours found • ${selectedIds.size} selected`;
 
     gridEl.innerHTML = "";
-    list.forEach((f) => gridEl.appendChild(flourCard(f)));
 
     if (!list.length) {
-      gridEl.innerHTML = `
-        <div class="fpZero">
-          <div class="fpZeroTitle">No flours found</div>
-          <div class="fpZeroSub">Try a different search or clear the type filter.</div>
-        </div>
-      `;
+      gridEl.innerHTML = `<div class="muted">No flours found.</div>`;
+      return;
     }
+
+    list.forEach((f) => gridEl.appendChild(flourTplCard(f)));
   }
 
-  function flourCard(f){
+  function flourTplCard(f) {
+    const wrap = document.createElement("div");
+    wrap.className = "tplCardWrap flourTplWrap";
 
-  const el=document.createElement("div");
-  el.className="flourCard";
+    const selected = selectedIds.has(f.id);
+    if (selected) wrap.classList.add("is-selected");
 
-  el.innerHTML=`
-    <button class="flourAdd">+</button>
+    const protein = readProtein(f);
+    const abs = formatAbsCompact(f);
+    const w = formatWCompact(f);
 
-    <div class="flourLogo">
-      <img src="${f.logo || "./icons/flour.svg"}">
-    </div>
+    wrap.title = [
+      protein != null ? `Protein ${protein}%` : "Protein —",
+      w,
+      abs
+    ].join(" • ");
 
-    <div class="flourName">${f.brand} ${f.name}</div>
-    <div class="flourType">${f.type}</div>
-  `;
+    wrap.innerHTML = `
+      <button type="button" class="tplTile flourTplTile">
+        <div class="tplTileInner flourTplInner">
+          <img src="${escapeAttr(f.logo || "./icons/flour.svg")}" alt="" />
+        </div>
+        <div class="tplTileMark ${selected ? "on" : ""}"></div>
+      </button>
 
-  el.querySelector(".flourAdd").addEventListener("click",()=>{
-      selectedFlours.push(f);
-      updateSelectedIndicator(el);
-  });
-
-  return el;
-}
-
-  function openDetail(f, cardEl) {
-    gridEl.querySelectorAll(".fpCard").forEach((x) => x.classList.remove("active"));
-    cardEl.classList.add("active");
-
-    const abs = formatAbsRange(f);
-    const heat = formatHeat(f);
-    const w = formatW(f);
-    const pl = formatPL(f);
-    const protein = f.protein != null ? `${Number(f.protein).toFixed(2)}%` : "—";
-    const malted = f.malted === true ? "Yes" : f.malted === false ? "No" : "—";
-
-    detailShellEl.innerHTML = `
-      <div class="fpDetailCard">
-        <div class="fpDetailHead">
+      <div class="tplCap flourTplCap">
+        <div class="flourCardTop">
           <div>
-            <div class="fpEyebrow">${escapeHtml(f.brand || "Unknown Brand")}</div>
-            <div class="fpDetailTitle">${escapeHtml(f.name || f.id || "Unnamed Flour")}</div>
-          </div>
-        </div>
-
-        <div class="fpDetailType">${escapeHtml(f.type || "—")}</div>
-
-        <div class="fpDetailGrid">
-          <div class="fpDetailStat">
-            <div class="fpDetailLabel">Protein</div>
-            <div class="fpDetailValue">${escapeHtml(protein)}</div>
+            <div class="tplName flourTplName">${escapeHtml([f.brand, f.name].filter(Boolean).join(" "))}</div>
+            <div class="tplSub flourTplSub">${escapeHtml(f.type || "—")}</div>
           </div>
 
-          <div class="fpDetailStat">
-            <div class="fpDetailLabel">Absorption</div>
-            <div class="fpDetailValue">${escapeHtml(abs)}</div>
-          </div>
-
-          <div class="fpDetailStat">
-            <div class="fpDetailLabel">W</div>
-            <div class="fpDetailValue">${escapeHtml(w)}</div>
-          </div>
-
-          <div class="fpDetailStat">
-            <div class="fpDetailLabel">P/L</div>
-            <div class="fpDetailValue">${escapeHtml(pl)}</div>
-          </div>
-
-          <div class="fpDetailStat">
-            <div class="fpDetailLabel">Malted</div>
-            <div class="fpDetailValue">${escapeHtml(malted)}</div>
-          </div>
-
-          <div class="fpDetailStat">
-            <div class="fpDetailLabel">Suggested heat</div>
-            <div class="fpDetailValue">${escapeHtml(heat)}</div>
-          </div>
-        </div>
-
-        <div class="fpNoteBlock">
-          <div class="fpDetailLabel">Notes</div>
-          <div class="fpDetailNote">${escapeHtml(f.notes || "No notes listed yet.")}</div>
-        </div>
-
-        <div class="fpDetailActions">
-          <button type="button" class="btn primary" id="fpUse">Add to Blend</button>
+          <button type="button" class="flourAdd" aria-label="Add flour">
+            ${selected ? "✓" : "+"}
+          </button>
         </div>
       </div>
     `;
 
-    detailPanel = detailShellEl.querySelector("#fpUse");
-    detailPanel?.addEventListener("click", () => {
-      onUse(f._raw || f);
-      close();
+    const toggle = () => {
+      if (selectedIds.has(f.id)) selectedIds.delete(f.id);
+      else selectedIds.add(f.id);
+      render();
+    };
+
+    wrap.querySelector(".tplTile").addEventListener("click", toggle);
+    wrap.querySelector(".flourAdd").addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggle();
     });
+
+    return wrap;
   }
-  
-  function updateSelectedIndicator(card){
-  card.classList.add("selected");
-}
+
+  function done() {
+    const picked = flours.filter((f) => selectedIds.has(f.id)).map((f) => f._raw || f);
+    if (picked.length) onUse(picked);
+    overlay.remove();
+  }
 
   function close() {
     overlay.remove();
@@ -236,17 +193,19 @@ export async function openFlourPickerModal(store, opts = {}) {
   render();
 }
 
-function formatAbsRange(f) {
-  if (f?.absorptionRange?.minPct != null && f?.absorptionRange?.maxPct != null) {
-    return `${f.absorptionRange.minPct}–${f.absorptionRange.maxPct}% absorption`;
-  }
-  if (f?.absorption != null) {
-    return `${Math.round(Number(f.absorption) * 100)}% absorption`;
-  }
-  return "Absorption —";
+function readProtein(f) {
+  return f?.protein ?? f?.proteinPct ?? null;
 }
 
-function formatW(f) {
+function readAbsMid(f) {
+  const min = f?.absorptionRange?.minPct ?? f?.absorption?.minPct ?? null;
+  const max = f?.absorptionRange?.maxPct ?? f?.absorption?.maxPct ?? null;
+  if (min != null && max != null) return (Number(min) + Number(max)) / 2;
+  if (min != null) return Number(min);
+  return 0;
+}
+
+function formatWCompact(f) {
   const min = f?.specs?.w?.min;
   const max = f?.specs?.w?.max;
   if (min != null && max != null) return min === max ? `W ${min}` : `W ${min}–${max}`;
@@ -254,20 +213,12 @@ function formatW(f) {
   return "W —";
 }
 
-function formatPL(f) {
-  const min = f?.specs?.pl?.min;
-  const max = f?.specs?.pl?.max;
-  if (min != null && max != null) return min === max ? `${min}` : `${min}–${max}`;
-  if (min != null) return `${min}`;
-  return "—";
-}
-
-function formatHeat(f) {
-  const min = f?.heat?.tempF?.min;
-  const max = f?.heat?.tempF?.max;
-  if (min != null && max != null) return `${Math.round(min)}–${Math.round(max)}°F`;
-  if (min != null) return `${Math.round(min)}°F+`;
-  return "—";
+function formatAbsCompact(f) {
+  const min = f?.absorptionRange?.minPct ?? f?.absorption?.minPct ?? null;
+  const max = f?.absorptionRange?.maxPct ?? f?.absorption?.maxPct ?? null;
+  if (min != null && max != null) return `Abs ${min}–${max}%`;
+  if (min != null) return `Abs ${min}%`;
+  return "Abs —";
 }
 
 function escapeHtml(s) {
@@ -277,4 +228,8 @@ function escapeHtml(s) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function escapeAttr(s) {
+  return escapeHtml(s);
 }

@@ -401,7 +401,7 @@ const session = defaults;
       <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
         <div class="item">
   <h4>Step 2 • Flour</h4>
-  <p class="muted">Browse the flour library, inspect specs, and build your blend..</p>
+  <p class="muted">Browse the flour library, inspect specs, and build your blend.</p>
 
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
     <button class="btn" id="btnChooseFlours">Browse Flour(s)</button>
@@ -433,6 +433,19 @@ const session = defaults;
   function setBlend(b) {
     session.flourBlend = b;
   }
+  
+  function evenSplit100(rows) {
+  if (!Array.isArray(rows) || !rows.length) return rows;
+
+  const base = Math.floor(100 / rows.length);
+  let remainder = 100 - (base * rows.length);
+
+  rows.forEach((row, i) => {
+    row.pct = base + (i < remainder ? 1 : 0);
+  });
+
+  return rows;
+}
 
   function renderBlendSummary() {
     const b = getBlend();
@@ -463,38 +476,37 @@ const session = defaults;
   }
 
   const btnChooseFlours = root.querySelector("#btnChooseFlours");
-  if (btnChooseFlours) {
-    btnChooseFlours.addEventListener("click", async () => {
-      await openFlourPickerModal(null, {
-        onUse: (flourRaw) => {
-          const b = getBlend();
+if (btnChooseFlours) {
+  btnChooseFlours.addEventListener("click", async () => {
+    await openFlourPickerModal(null, {
+      onUse: (pickedFlours) => {
+        const incoming = Array.isArray(pickedFlours) ? pickedFlours : [pickedFlours];
+        const existing = getBlend();
+        const merged = [...existing];
 
-          b.push({
-            id: flourRaw.id,
-            pct: 0,
-            flour: flourRaw
-          });
-
-          if (b.length === 1) {
-            b[0].pct = 100;
-          } else {
-            evenSplit100(b);
+        incoming.forEach((flourRaw) => {
+          const alreadyThere = merged.some((x) => x.id === flourRaw.id);
+          if (!alreadyThere) {
+            merged.push({
+              id: flourRaw.id,
+              pct: 0,
+              flour: flourRaw
+            });
           }
+        });
 
-          setBlend(b);
-          renderBlendSummary();
+        if (merged.length === 1) {
+          merged[0].pct = 100;
+        } else if (merged.length > 1) {
+          evenSplit100(merged);
         }
-      });
-    });
-  }
 
-  const btnClearFlours = root.querySelector("#btnClearFlours");
-  if (btnClearFlours) {
-    btnClearFlours.addEventListener("click", () => {
-      setBlend([]);
-      renderBlendSummary();
+        setBlend(merged);
+        renderBlendSummary();
+      }
     });
-  }
+  });
+}
 
   renderBlendSummary();
 
