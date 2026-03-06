@@ -1,0 +1,20 @@
+﻿Folder Name : modules
+Full Path   : C:\Users\DIgle\Desktop\VS_Code_PDT\modules
+Generated   : 03/05/2026 14:34:25
+
+Contents:
+----------------------------------------
+.js (0.41 KB)
+auth.js (1.44 KB)
+bakePlan.js (2.89 KB)
+kb.js (1.55 KB)
+loaders.js (0.71 KB)
+modal.js (1.52 KB)
+ovenWidget.js (5.3 KB)
+prefs.js (3.23 KB)
+recipe_defaults.js (0 KB)
+router.js (0.41 KB)
+sauceSource.js (0.61 KB)
+signals.js (2.75 KB)
+store.js (0.39 KB)
+ui.js (44.65 KB)

@@ -1,4 +1,16 @@
 import {
+    openFlourPickerModal
+} from "./flourPickerModal.js";
+
+import {
+    computeBlendStats
+} from "./flourBlendMath.js";
+
+import {
+    loadFloursForBrowser
+} from "./floursDb.js";
+
+import {
     renderSauceSource
 } from "./sauceSource.js";
 
@@ -18,37 +30,41 @@ import {
 
 /* 2a) Toast helper (prevents "toast is not defined") */
 const toast = (msg, ms = 1600) => {
-  // If you later add a real toast somewhere else, this will use it.
-  if (typeof window.toast === "function" && window.toast !== toast) {
-    try { return window.toast(msg, ms); } catch (_) {}
-  }
+    // If you later add a real toast somewhere else, this will use it.
+    if (typeof window.toast === "function" && window.toast !== toast) {
+        try {
+            return window.toast(msg, ms);
+        } catch (_) {}
+    }
 
-  // Minimal built-in toast (no CSS required)
-  let el = document.getElementById("pdtToast");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "pdtToast";
-    el.style.position = "fixed";
-    el.style.left = "50%";
-    el.style.bottom = "18px";
-    el.style.transform = "translateX(-50%)";
-    el.style.padding = "10px 12px";
-    el.style.borderRadius = "12px";
-    el.style.background = "rgba(0,0,0,0.75)";
-    el.style.color = "#fff";
-    el.style.fontSize = "13px";
-    el.style.zIndex = "9999";
-    el.style.maxWidth = "80vw";
-    el.style.textAlign = "center";
-    el.style.opacity = "0";
-    el.style.transition = "opacity 120ms ease";
-    document.body.appendChild(el);
-  }
+    // Minimal built-in toast (no CSS required)
+    let el = document.getElementById("pdtToast");
+    if (!el) {
+        el = document.createElement("div");
+        el.id = "pdtToast";
+        el.style.position = "fixed";
+        el.style.left = "50%";
+        el.style.bottom = "18px";
+        el.style.transform = "translateX(-50%)";
+        el.style.padding = "10px 12px";
+        el.style.borderRadius = "12px";
+        el.style.background = "rgba(0,0,0,0.75)";
+        el.style.color = "#fff";
+        el.style.fontSize = "13px";
+        el.style.zIndex = "9999";
+        el.style.maxWidth = "80vw";
+        el.style.textAlign = "center";
+        el.style.opacity = "0";
+        el.style.transition = "opacity 120ms ease";
+        document.body.appendChild(el);
+    }
 
-  el.textContent = String(msg ?? "");
-  el.style.opacity = "1";
-  clearTimeout(el._t);
-  el._t = setTimeout(() => { el.style.opacity = "0"; }, ms);
+    el.textContent = String(msg ?? "");
+    el.style.opacity = "1";
+    clearTimeout(el._t);
+    el._t = setTimeout(() => {
+        el.style.opacity = "0";
+    }, ms);
 };
 
 export function renderRoute({
@@ -116,8 +132,8 @@ export function renderRoute({
    ========================================================= */
 
 function databasesPanel(store) {
-  // F1) Root
-  const root = div(`
+    // F1) Root
+    const root = div(`
     <div class="flourPage">
 
       <!-- F2) Header / Controls -->
@@ -224,35 +240,38 @@ function databasesPanel(store) {
     </div>
   `);
 
-  // F6) Placeholder flour data (UI only; replace with real DB later)
-  const FLOURS = [
-    { id: "caputo_nuvola", brand: "Caputo", name: "Nuvola", type: "00", protein: 12.5, absorption: 0.66, logo: "./icons/template-neapolitan.svg" },
-    { id: "ka_bread", brand: "King Arthur", name: "Bread Flour", type: "Bread", protein: 12.7, absorption: 0.64, logo: "./icons/template-ny.svg" },
-    { id: "all_trumps", brand: "General Mills", name: "All Trumps", type: "High Gluten", protein: 14.0, absorption: 0.68, logo: "./icons/template-ny.svg" },
-    { id: "semola", brand: "Durum", name: "Semola Rimacinata", type: "Semolina", protein: 13.0, absorption: 0.58, logo: "./icons/template-chicago.svg" },
-    { id: "ap_generic", brand: "Generic", name: "All Purpose", type: "AP", protein: 11.5, absorption: 0.62, logo: "./icons/template-detroit.svg" },
-  ];
+    // F6) Placeholder flour data (UI only; replace with real DB later) DONE!!!
+    let FLOURS = [];
 
-  // F7) State (minimal)
-  const state = {
-    bookmarkedOnly: false,
-    q: "",
-    sort: "pop",
-    selected: [], // array of flour objects
-  };
+    loadFloursForBrowser(store)
+        .then(list => {
+            FLOURS = list;
+            renderCatalog();
+        })
+        .catch(err => {
+            console.warn(err);
+        });
 
-  // F8) DOM
-  const $ = (sel) => root.querySelector(sel);
-  const elPopular = $("#flourGridPopular");
-  const elAll = $("#flourGridAll");
-  const elBlendList = $("#blendList");
+    // F7) State (minimal)
+    const state = {
+        bookmarkedOnly: false,
+        q: "",
+        sort: "pop",
+        selected: [], // array of flour objects
+    };
 
-  // F9) Render helpers
-  function flourCard(f) {
-    const el = document.createElement("button");
-    el.type = "button";
-    el.className = "flourCard";
-    el.innerHTML = `
+    // F8) DOM
+    const $ = (sel) => root.querySelector(sel);
+    const elPopular = $("#flourGridPopular");
+    const elAll = $("#flourGridAll");
+    const elBlendList = $("#blendList");
+
+    // F9) Render helpers
+    function flourCard(f) {
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = "flourCard";
+        el.innerHTML = `
       <div class="flourLogo">
         <img src="${f.logo}" alt="" />
       </div>
@@ -262,132 +281,132 @@ function databasesPanel(store) {
       </div>
       <div class="flourStar" title="Bookmark (later)">⭐</div>
     `;
-    el.addEventListener("click", () => {
-      // F9a) Add to blend (placeholder behavior)
-      state.selected.push(f);
-      renderBlend();
-    });
-    return el;
-  }
-
-  function renderCatalog() {
-    const q = (state.q || "").trim().toLowerCase();
-
-    // F10) Simple filter
-    let list = FLOURS.filter(f => {
-      if (!q) return true;
-      const hay = `${f.brand} ${f.name} ${f.type}`.toLowerCase();
-      return hay.includes(q);
-    });
-
-    // F11) Simple sort (placeholder)
-    if (state.sort === "brand") list.sort((a,b) => (a.brand+a.name).localeCompare(b.brand+b.name));
-    if (state.sort === "protein") list.sort((a,b) => (b.protein - a.protein));
-    if (state.sort === "absorption") list.sort((a,b) => (b.absorption - a.absorption));
-    if (state.sort === "type") list.sort((a,b) => (a.type).localeCompare(b.type));
-
-    // F12) Popular row = first 3 for now
-    elPopular.innerHTML = "";
-    list.slice(0,3).forEach(f => elPopular.appendChild(flourCard(f)));
-
-    // F13) All row
-    elAll.innerHTML = "";
-    list.forEach(f => elAll.appendChild(flourCard(f)));
-  }
-
-  function renderBlend() {
-    // F14) Blend list
-    elBlendList.innerHTML = "";
-
-    if (!state.selected.length) {
-      elBlendList.innerHTML = `<div class="muted">No flour selected yet.</div>`;
-      $("#blendProtein").textContent = "—";
-      $("#blendAbsorb").textContent = "—";
-      return;
+        el.addEventListener("click", () => {
+            // F9a) Add to blend (placeholder behavior)
+            state.selected.push(f);
+            renderBlend();
+        });
+        return el;
     }
 
-    state.selected.forEach((f, idx) => {
-      const row = document.createElement("div");
-      row.className = "blendRow";
-      row.innerHTML = `
+    function renderCatalog() {
+        const q = (state.q || "").trim().toLowerCase();
+
+        // F10) Simple filter
+        let list = FLOURS.filter(f => {
+            if (!q) return true;
+            const hay = `${f.brand} ${f.name} ${f.type}`.toLowerCase();
+            return hay.includes(q);
+        });
+
+        // F11) Simple sort (placeholder)
+        if (state.sort === "brand") list.sort((a, b) => (a.brand + a.name).localeCompare(b.brand + b.name));
+        if (state.sort === "protein") list.sort((a, b) => (b.protein - a.protein));
+        if (state.sort === "absorption") list.sort((a, b) => (b.absorption - a.absorption));
+        if (state.sort === "type") list.sort((a, b) => (a.type).localeCompare(b.type));
+
+        // F12) Popular row = first 3 for now
+        elPopular.innerHTML = "";
+        list.slice(0, 3).forEach(f => elPopular.appendChild(flourCard(f)));
+
+        // F13) All row
+        elAll.innerHTML = "";
+        list.forEach(f => elAll.appendChild(flourCard(f)));
+    }
+
+    function renderBlend() {
+        // F14) Blend list
+        elBlendList.innerHTML = "";
+
+        if (!state.selected.length) {
+            elBlendList.innerHTML = `<div class="muted">No flour selected yet.</div>`;
+            $("#blendProtein").textContent = "—";
+            $("#blendAbsorb").textContent = "—";
+            return;
+        }
+
+        state.selected.forEach((f, idx) => {
+            const row = document.createElement("div");
+            row.className = "blendRow";
+            row.innerHTML = `
         <div class="blendLeft">
           <div class="blendTitle">${esc(f.brand)} • ${esc(f.name)}</div>
           <div class="muted" style="font-size:12px;">${esc(f.type)} • P ${f.protein}% • Abs ${Math.round(f.absorption*100)}%</div>
         </div>
         <button class="btn ghost" type="button" data-rm="${idx}">Remove</button>
       `;
-      row.querySelector("[data-rm]").addEventListener("click", () => {
-        state.selected.splice(idx, 1);
-        renderBlend();
-      });
-      elBlendList.appendChild(row);
+            row.querySelector("[data-rm]").addEventListener("click", () => {
+                state.selected.splice(idx, 1);
+                renderBlend();
+            });
+            elBlendList.appendChild(row);
+        });
+
+        // F15) Placeholder “blend stats”
+        // For now, show simple average; later we’ll weight by % and enforce totals.
+        const avgProtein = state.selected.reduce((s, f) => s + f.protein, 0) / state.selected.length;
+        const avgAbs = state.selected.reduce((s, f) => s + f.absorption, 0) / state.selected.length;
+
+        $("#blendProtein").textContent = `${avgProtein.toFixed(1)}%`;
+        $("#blendAbsorb").textContent = `${Math.round(avgAbs*100)}%`;
+    }
+
+    // F16) Wire controls
+    $("#flourSearch").addEventListener("input", (e) => {
+        state.q = e.target.value || "";
+        renderCatalog();
     });
 
-    // F15) Placeholder “blend stats”
-    // For now, show simple average; later we’ll weight by % and enforce totals.
-    const avgProtein = state.selected.reduce((s,f)=>s+f.protein,0) / state.selected.length;
-    const avgAbs = state.selected.reduce((s,f)=>s+f.absorption,0) / state.selected.length;
+    $("#flourSort").addEventListener("change", (e) => {
+        state.sort = e.target.value || "pop";
+        renderCatalog();
+    });
 
-    $("#blendProtein").textContent = `${avgProtein.toFixed(1)}%`;
-    $("#blendAbsorb").textContent = `${Math.round(avgAbs*100)}%`;
-  }
+    $("#btnFlourBookmarkedOnly").addEventListener("click", () => {
+        // Placeholder: UI toggle only. Real bookmarks later.
+        state.bookmarkedOnly = !state.bookmarkedOnly;
+        $("#btnFlourBookmarkedOnly").setAttribute("aria-pressed", String(state.bookmarkedOnly));
+        alert("Bookmarks not wired yet. This is the UI placeholder.");
+    });
 
-  // F16) Wire controls
-  $("#flourSearch").addEventListener("input", (e) => {
-    state.q = e.target.value || "";
+    $("#btnAddFlour").addEventListener("click", () => {
+        alert("Add Flour button placeholder. For now, click flour cards.");
+    });
+
+    $("#btnClearBlend").addEventListener("click", () => {
+        state.selected = [];
+        renderBlend();
+    });
+
+    // F17) Initial render
     renderCatalog();
-  });
-
-  $("#flourSort").addEventListener("change", (e) => {
-    state.sort = e.target.value || "pop";
-    renderCatalog();
-  });
-
-  $("#btnFlourBookmarkedOnly").addEventListener("click", () => {
-    // Placeholder: UI toggle only. Real bookmarks later.
-    state.bookmarkedOnly = !state.bookmarkedOnly;
-    $("#btnFlourBookmarkedOnly").setAttribute("aria-pressed", String(state.bookmarkedOnly));
-    alert("Bookmarks not wired yet. This is the UI placeholder.");
-  });
-
-  $("#btnAddFlour").addEventListener("click", () => {
-    alert("Add Flour button placeholder. For now, click flour cards.");
-  });
-
-  $("#btnClearBlend").addEventListener("click", () => {
-    state.selected = [];
     renderBlend();
-  });
-
-  // F17) Initial render
-  renderCatalog();
-  renderBlend();
 
     return root;
 }
 
 function doughPanel({ onPreview, onOpenKB }) {
-    // D1) Minimal session state (UI writes here; engine will later read this)
-    const session = {
-        units: "imperial",
-        shape: "round",
-        diameterIn: 12,
-        rectWIn: 14,
-        rectLIn: 14,
-        surface: "freeform", // pan | freeform
-        calcMethod: "tf", // tf | doughWeight
-        tf: 0.100,
-        doughWeight: 0, // if calcMethod = doughWeight
-        hydration: 0.62,
-        balls: 1,
-        preferment: "direct" // direct | biga | poolish | sourdough
-    };
 
+  // D1) Minimal session state (UI writes here; engine will later read this)
+  const defaults = {
+  units: "imperial",
+  shape: "round",
+  diameterIn: 12,
+  rectWIn: 14,
+  rectLIn: 14,
+  surface: "freeform",
+  calcMethod: "tf",
+  tf: 0.100,
+  doughWeight: 0,
+  hydration: 0.62,
+  balls: 1,
+  preferment: "direct",
+  flourBlend: []
+};
 
-
+const session = defaults;
 
     const root = div(`
-  
     <div>
       <!-- D2) Step 1 container -->
       <div class="step">
@@ -537,7 +556,7 @@ function doughPanel({ onPreview, onOpenKB }) {
                 <div class="inline" style="margin-top:10px;">
                   <div style="width:160px;">
                     <label class="lbl" style="margin:0;">Hydration</label>
-                    <input class="input" id="hydInput" type="number" step="0.01" min="0.50" max="0.85" value="0.62" />
+                    <input class="input" id="hydInput" type="number" step="1" min="50" max="85" value="62" />
                   </div>
                   <div style="width:160px;">
                     <label class="lbl" style="margin:0;">Balls</label>
@@ -608,17 +627,103 @@ function doughPanel({ onPreview, onOpenKB }) {
       <!-- D6) Steps 2+ placeholders -->
       <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
         <div class="item">
-          <h4>Step 2 • Fermentation (next)</h4>
-          <p class="muted">Fermentation model lives in Preferences. Recipe-level timing inputs will go here later.</p>
-        </div>
-        <div class="item">
-          <h4>Step 3 • Flour Composition (next)</h4>
-          <p class="muted">Flour blends and strength data will live here later.</p>
-        </div>
+  <h4>Step 2 • Flour</h4>
+  <p class="muted">Choose flours and build a blend. This will drive Considerations and warnings.</p>
+
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+    <button class="btn" id="btnChooseFlours">Choose Flour(s)</button>
+    <button class="btn" id="btnClearFlours">Clear</button>
+  </div>
+
+  <div class="muted" style="margin-top:10px;">
+    <div><b>Blend:</b> <span id="blendSummary">—</span></div>
+    <div style="margin-top:6px;"><b>Protein (blend):</b> <span id="blendProtein">—</span></div>
+    <div style="margin-top:6px;"><b>Absorption band:</b> <span id="blendAbsorption">—</span></div>
+  </div>
+</div>
+
+<div class="item">
+  <h4>Step 3 • Fermentation (next)</h4>
+  <p class="muted">Auto-yeast is driven by txcraig_v1.json. Recipe-level timing inputs will go here.</p>
+</div>
       </div>
 
-    </div>
+        </div>
   `);
+
+  // --- Step 2 • Flour wiring ---
+  function getBlend() {
+    const b = Array.isArray(session.flourBlend) ? session.flourBlend : [];
+    return b;
+  }
+
+  function setBlend(b) {
+    session.flourBlend = b;
+  }
+
+  function renderBlendSummary() {
+    const b = getBlend();
+    const stats = computeBlendStats(b);
+
+    const blendSummary = root.querySelector("#blendSummary");
+    const blendProtein = root.querySelector("#blendProtein");
+    const blendAbsorption = root.querySelector("#blendAbsorption");
+
+    if (!blendSummary || !blendProtein || !blendAbsorption) return;
+
+    blendSummary.textContent = b.length
+      ? b.map((r) => {
+          const brand = (r.flour?.brand || "").trim();
+          const name = (r.flour?.name || r.id || "").trim();
+          const pct = Number(r.pct || 0);
+          return ((brand ? brand + " " : "") + name + " (" + pct + "%)").trim();
+        }).join(", ")
+      : "—";
+
+    blendProtein.textContent =
+      stats.proteinPct != null ? `${stats.proteinPct}%` : "—";
+
+    blendAbsorption.textContent =
+      stats.absorption
+        ? `${stats.absorption.minPct}–${stats.absorption.maxPct}%`
+        : "—";
+  }
+
+  const btnChooseFlours = root.querySelector("#btnChooseFlours");
+  if (btnChooseFlours) {
+    btnChooseFlours.addEventListener("click", async () => {
+      await openFlourPickerModal(null, {
+        onUse: (flourRaw) => {
+          const b = getBlend();
+
+          b.push({
+            id: flourRaw.id,
+            pct: 0,
+            flour: flourRaw
+          });
+
+          if (b.length === 1) {
+            b[0].pct = 100;
+          } else {
+            evenSplit100(b);
+          }
+
+          setBlend(b);
+          renderBlendSummary();
+        }
+      });
+    });
+  }
+
+  const btnClearFlours = root.querySelector("#btnClearFlours");
+  if (btnClearFlours) {
+    btnClearFlours.addEventListener("click", () => {
+      setBlend([]);
+      renderBlendSummary();
+    });
+  }
+
+  renderBlendSummary();
 
     /* 3c) Oven widget mount (optional, removable) */
     const prefs = loadPrefs();
@@ -642,13 +747,13 @@ function doughPanel({ onPreview, onOpenKB }) {
     // D7) Signals (placeholders)
     const signals = getPlaceholderSignals(session);
     applySignals(root, signals);
-	
-	/* =========================================================
+
+    /* =========================================================
    22) Foundation refresh helper
    ========================================================= */
-function refresh(){
-  onPreview?.(renderPreviewPlaceholder(session));
-}
+    function refresh() {
+        onPreview?.(renderPreviewPlaceholder(session));
+    }
 
     // D8) KB mini popups (placeholders)
     root.querySelectorAll("[data-kb]").forEach(btn => {
@@ -680,7 +785,7 @@ function refresh(){
             root.querySelectorAll("[data-units]").forEach(x => x.classList.remove("active"));
             p.classList.add("active");
             session.units = p.getAttribute("data-units");
-			refresh()
+            refresh()
         });
     });
 
@@ -696,7 +801,7 @@ function refresh(){
             const isRound = session.shape === "round";
             roundDims.classList.toggle("hidden", !isRound);
             rectDims.classList.toggle("hidden", isRound);
-			refresh()
+            refresh()
         });
     });
 
@@ -706,7 +811,7 @@ function refresh(){
             root.querySelectorAll("[data-surface]").forEach(x => x.classList.remove("active"));
             p.classList.add("active");
             session.surface = p.getAttribute("data-surface");
-			refresh()
+            refresh()
         });
     });
 
@@ -720,7 +825,7 @@ function refresh(){
             session.calcMethod = p.getAttribute("data-calc");
             tfBlock.classList.toggle("hidden", session.calcMethod !== "tf");
             dwBlock.classList.toggle("hidden", session.calcMethod !== "doughWeight");
-			refresh()
+            refresh()
         });
     });
 
@@ -735,7 +840,7 @@ function refresh(){
         tfSlider.value = n.toFixed(3);
         tfInput.value = n.toFixed(3);
         tfRead.textContent = n.toFixed(3);
-		refresh()
+        refresh()
     }
 
     tfSlider.addEventListener("input", () => setTF(parseFloat(tfSlider.value)));
@@ -750,18 +855,18 @@ function refresh(){
         const n = clamp(v, 0.50, 0.85);
         session.hydration = n;
         hydSlider.value = n.toFixed(2);
-        hydInput.value = n.toFixed(2);
+        hydInput.value = hydInput.value = Math.round(n * 100);
         hydRead.textContent = `${Math.round(n * 100)}%`;
-		refresh()
+        refresh()
     }
 
     hydSlider.addEventListener("input", () => setHyd(parseFloat(hydSlider.value)));
-    hydInput.addEventListener("input", () => setHyd(parseFloat(hydInput.value)));
+    hydInput.addEventListener("input", () => setHyd(parseFloat(hydInput.value) / 100));
 
     // D15) Balls
     root.querySelector("#ballsInput").addEventListener("input", (e) => {
         session.balls = Math.max(1, parseInt(e.target.value || "1", 10));
-		refresh()
+        refresh()
     });
 
     // D16) Preferment selection
@@ -770,7 +875,7 @@ function refresh(){
             root.querySelectorAll("[data-pref]").forEach(x => x.classList.remove("active"));
             card.classList.add("active");
             session.preferment = card.getAttribute("data-pref");
-			refresh()
+            refresh()
         });
     });
 
@@ -786,23 +891,23 @@ function refresh(){
     onPreview?.(renderPreviewPlaceholder(session));
 
     return root;
-  }
+}
 
 // helpers for doughPanel
 /* =========================================================
    21) Live Preview (Foundation metrics now real)
    ========================================================= */
 
-function renderPreviewPlaceholder(session){
-  const m = computeFoundationMetrics(session);
+function renderPreviewPlaceholder(session) {
+    const m = computeFoundationMetrics(session);
 
-  const size = (session.shape === "round")
-    ? `${session.diameterIn}" round`
-    : `${session.rectWIn}"×${session.rectLIn}" rect`;
+    const size = (session.shape === "round") ?
+        `${session.diameterIn}" round` :
+        `${session.rectWIn}"×${session.rectLIn}" rect`;
 
-  const completeness = m.complete ? "Complete" : "Incomplete";
+    const completeness = m.complete ? "Complete" : "Incomplete";
 
-  return `
+    return `
     <div class="item">
       <h4>Recipe Snapshot (Foundation)</h4>
       <p class="muted">
@@ -865,48 +970,118 @@ function clamp(v, a, b) {
    ========================================================= */
 
 function templatesPanel(store) {
-  // T1) Minimal template catalog (Styles V1)
-  // NOTE: paths match your folder: assets/templates/*.svg
-  const STYLE_TEMPLATES = [
-    { id: "ny_round",      name: "NY Round",       cat: "ny",        img: "./assets/templates/ny_round.svg",      desc: "Large foldable slice" },
-    { id: "neapolitan",    name: "Neapolitan",     cat: "neo",       img: "./assets/templates/neapolitan.svg",    desc: "Soft center, airy rim" },
-    { id: "detroit",       name: "Detroit",        cat: "pan",       img: "./assets/templates/detroit.svg",       desc: "Square pan, caramelized edge" },
-    { id: "sicilian",      name: "Sicilian",       cat: "pan",       img: "./assets/templates/sicilian.svg",      desc: "Thick square pan" },
-    { id: "bar_pie",       name: "Bar Pie",        cat: "thin",      img: "./assets/templates/bar_pie.svg",       desc: "Thin tavern-style" },
-    { id: "tomato_pie",    name: "Tomato Pie",     cat: "regional",  img: "./assets/templates/tomato_pie.svg",    desc: "Sauce-forward square" },
-    { id: "deep_dish",     name: "Deep Dish",      cat: "chicago",   img: "./assets/templates/deep_dish.svg",     desc: "Thick, layered pie" },
-    { id: "teglia_romana", name: "Teglia Romana",  cat: "roman",     img: "./assets/templates/teglia_romana.svg", desc: "Crispy bottom, airy crumb" },
-  ];
+    // T1) Minimal template catalog (Styles V1)
+    // NOTE: paths match your folder: assets/templates/*.svg
+    const STYLE_TEMPLATES = [{
+            id: "ny_round",
+            name: "NY Round",
+            cat: "ny",
+            img: "./assets/templates/ny_round.svg",
+            desc: "Large foldable slice"
+        },
+        {
+            id: "neapolitan",
+            name: "Neapolitan",
+            cat: "neo",
+            img: "./assets/templates/neapolitan.svg",
+            desc: "Soft center, airy rim"
+        },
+        {
+            id: "detroit",
+            name: "Detroit",
+            cat: "pan",
+            img: "./assets/templates/detroit.svg",
+            desc: "Square pan, caramelized edge"
+        },
+        {
+            id: "sicilian",
+            name: "Sicilian",
+            cat: "pan",
+            img: "./assets/templates/sicilian.svg",
+            desc: "Thick square pan"
+        },
+        {
+            id: "bar_pie",
+            name: "Bar Pie",
+            cat: "thin",
+            img: "./assets/templates/bar_pie.svg",
+            desc: "Thin tavern-style"
+        },
+        {
+            id: "tomato_pie",
+            name: "Tomato Pie",
+            cat: "regional",
+            img: "./assets/templates/tomato_pie.svg",
+            desc: "Sauce-forward square"
+        },
+        {
+            id: "deep_dish",
+            name: "Deep Dish",
+            cat: "chicago",
+            img: "./assets/templates/deep_dish.svg",
+            desc: "Thick, layered pie"
+        },
+        {
+            id: "teglia_romana",
+            name: "Teglia Romana",
+            cat: "roman",
+            img: "./assets/templates/teglia_romana.svg",
+            desc: "Crispy bottom, airy crumb"
+        },
+    ];
 
-  // T2) Tribute (empty for now; architecture in place)
-  const TRIBUTE_TEMPLATES = [
-    // Example later:
-    // { id:"joes", name:"Joe’s NY Slice", cat:"ny", img:"./assets/tributes/joes.svg", desc:"Community tribute" }
-  ];
+    // T2) Tribute (empty for now; architecture in place)
+    const TRIBUTE_TEMPLATES = [
+        // Example later:
+        // { id:"joes", name:"Joe’s NY Slice", cat:"ny", img:"./assets/tributes/joes.svg", desc:"Community tribute" }
+    ];
 
-  // T3) Categories (left rail)
-  const CATS = [
-    { id: "all",      label: "All" },
-    { id: "ny",       label: "NY Style" },
-    { id: "neo",      label: "Neapolitan" },
-    { id: "pan",      label: "Pan Pizza" },
-    { id: "thin",     label: "Thin / Tavern" },
-    { id: "roman",    label: "Roman" },
-    { id: "chicago",  label: "Chicago" },
-    { id: "regional", label: "Regional" },
-  ];
+    // T3) Categories (left rail)
+    const CATS = [{
+            id: "all",
+            label: "All"
+        },
+        {
+            id: "ny",
+            label: "NY Style"
+        },
+        {
+            id: "neo",
+            label: "Neapolitan"
+        },
+        {
+            id: "pan",
+            label: "Pan Pizza"
+        },
+        {
+            id: "thin",
+            label: "Thin / Tavern"
+        },
+        {
+            id: "roman",
+            label: "Roman"
+        },
+        {
+            id: "chicago",
+            label: "Chicago"
+        },
+        {
+            id: "regional",
+            label: "Regional"
+        },
+    ];
 
-  // T4) State
-  const state = {
-    mode: "styles",      // "styles" | "tribute"
-    cat: "all",
-    q: "",
-    sort: "name",        // "name" | "cat"
-    selectedId: null,
-  };
+    // T4) State
+    const state = {
+        mode: "styles", // "styles" | "tribute"
+        cat: "all",
+        q: "",
+        sort: "name", // "name" | "cat"
+        selectedId: null,
+    };
 
-  // T5) UI
-  const root = div(`
+    // T5) UI
+    const root = div(`
     <div class="flourPage templatePage">
       <div class="flourTop">
         <div>
@@ -958,141 +1133,145 @@ function templatesPanel(store) {
     </div>
   `);
 
-  const $ = (sel) => root.querySelector(sel);
+    const $ = (sel) => root.querySelector(sel);
 
-  // T7) Render categories
-  function renderCats() {
-    const wrap = $("#tplCats");
-    wrap.innerHTML = "";
-    CATS.forEach(c => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "btn ghost tplCat";
-      b.textContent = c.label;
-      b.dataset.cat = c.id;
-      if (state.cat === c.id) b.classList.add("active");
-      b.addEventListener("click", () => {
-        state.cat = c.id;
-        renderCats();
-        renderGrid();
-      });
-      wrap.appendChild(b);
-    });
-  }
+    // T7) Render categories
+    function renderCats() {
+        const wrap = $("#tplCats");
+        wrap.innerHTML = "";
+        CATS.forEach(c => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "btn ghost tplCat";
+            b.textContent = c.label;
+            b.dataset.cat = c.id;
+            if (state.cat === c.id) b.classList.add("active");
+            b.addEventListener("click", () => {
+                state.cat = c.id;
+                renderCats();
+                renderGrid();
+            });
+            wrap.appendChild(b);
+        });
+    }
 
-  // T8) Data source
-  function currentList() {
-    return state.mode === "tribute" ? TRIBUTE_TEMPLATES : STYLE_TEMPLATES;
-  }
+    // T8) Data source
+    function currentList() {
+        return state.mode === "tribute" ? TRIBUTE_TEMPLATES : STYLE_TEMPLATES;
+    }
 
-  // T9) Card (Comfy style: image tile + caption below)
-  function cardTpl(t) {
-    const wrap = document.createElement("div");
-    wrap.className = "tplCardWrap";
+    // T9) Card (Comfy style: image tile + caption below)
+    function cardTpl(t) {
+        const wrap = document.createElement("div");
+        wrap.className = "tplCardWrap";
 
-    const tile = document.createElement("button");
-    tile.type = "button";
-    tile.className = "tplTile";
-    tile.dataset.id = t.id;
-    tile.innerHTML = `
+        const tile = document.createElement("button");
+        tile.type = "button";
+        tile.className = "tplTile";
+        tile.dataset.id = t.id;
+        tile.innerHTML = `
       <div class="tplTileInner">
         <img src="${t.img}" alt="" />
       </div>
       <div class="tplTileMark ${state.selectedId === t.id ? "on" : ""}"></div>
     `;
 
-    // simple hover tooltip using title (V1)
-    tile.title = `${t.name} — ${t.desc || ""}`.trim();
+        // simple hover tooltip using title (V1)
+        tile.title = `${t.name} — ${t.desc || ""}`.trim();
 
-    tile.addEventListener("click", () => {
-      state.selectedId = t.id;
-      renderGrid();
+        tile.addEventListener("click", () => {
+            state.selectedId = t.id;
+            renderGrid();
 
-      // T9a) V1 behavior: show selection + (optional) push into session if store supports it
-      try {
-        const session = store?.get ? (store.get("session") || {}) : {};
-        // store a minimal template selection; you’ll wire real defaults later
-        const next = { ...session, templateId: t.id, templateName: t.name };
-        if (store?.set) store.set("session", next);
-      } catch (_) {}
+            // T9a) V1 behavior: show selection + (optional) push into session if store supports it
+            try {
+                const session = store?.get ? (store.get("session") || {}) : {};
+                // store a minimal template selection; you’ll wire real defaults later
+                const next = {
+                    ...session,
+                    templateId: t.id,
+                    templateName: t.name
+                };
+                if (store?.set) store.set("session", next);
+            } catch (_) {}
 
-      // Visible confirmation without being bossy
-      toast(`${t.name} selected`);
-    });
+            // Visible confirmation without being bossy
+            toast(`${t.name} selected`);
+        });
 
-    const cap = document.createElement("div");
-    cap.className = "tplCap";
-    cap.innerHTML = `
+        const cap = document.createElement("div");
+        cap.className = "tplCap";
+        cap.innerHTML = `
       <div class="tplName">${esc(t.name)}</div>
       <div class="tplSub muted">${esc(t.desc || "")}</div>
     `;
 
-    wrap.appendChild(tile);
-    wrap.appendChild(cap);
-    return wrap;
-  }
+        wrap.appendChild(tile);
+        wrap.appendChild(cap);
+        return wrap;
+    }
 
-  // T10) Render grid
-  function renderGrid() {
-    const list = currentList().slice();
+    // T10) Render grid
+    function renderGrid() {
+        const list = currentList().slice();
 
-    // Tribute disclaimer visibility
-    $("#tplDisclaimer").classList.toggle("hidden", state.mode !== "tribute");
+        // Tribute disclaimer visibility
+        $("#tplDisclaimer").classList.toggle("hidden", state.mode !== "tribute");
 
-    const q = (state.q || "").trim().toLowerCase();
+        const q = (state.q || "").trim().toLowerCase();
 
-    let out = list.filter(t => {
-      if (state.cat !== "all" && t.cat !== state.cat) return false;
-      if (!q) return true;
-      return `${t.name} ${t.desc || ""}`.toLowerCase().includes(q);
+        let out = list.filter(t => {
+            if (state.cat !== "all" && t.cat !== state.cat) return false;
+            if (!q) return true;
+            return `${t.name} ${t.desc || ""}`.toLowerCase().includes(q);
+        });
+
+        if (state.sort === "name") out.sort((a, b) => a.name.localeCompare(b.name));
+        if (state.sort === "cat") out.sort((a, b) => (a.cat || "").localeCompare(b.cat || "") || a.name.localeCompare(b.name));
+
+        const grid = $("#tplGrid");
+        grid.innerHTML = "";
+        out.forEach(t => grid.appendChild(cardTpl(t)));
+
+        const empty = $("#tplEmpty");
+        if (!out.length) {
+            empty.textContent = state.mode === "tribute" ?
+                "No tribute templates yet. (Architecture is ready.)" :
+                "No templates match your search.";
+        } else {
+            empty.textContent = "";
+        }
+    }
+
+    // T11) Controls
+    $("#tplSearch").addEventListener("input", (e) => {
+        state.q = e.target.value || "";
+        renderGrid();
     });
 
-    if (state.sort === "name") out.sort((a,b) => a.name.localeCompare(b.name));
-    if (state.sort === "cat") out.sort((a,b) => (a.cat||"").localeCompare(b.cat||"") || a.name.localeCompare(b.name));
+    $("#tplSort").addEventListener("change", (e) => {
+        state.sort = e.target.value || "name";
+        renderGrid();
+    });
 
-    const grid = $("#tplGrid");
-    grid.innerHTML = "";
-    out.forEach(t => grid.appendChild(cardTpl(t)));
+    $("#btnModeStyles").addEventListener("click", () => {
+        state.mode = "styles";
+        $("#btnModeStyles").setAttribute("aria-selected", "true");
+        $("#btnModeTribute").setAttribute("aria-selected", "false");
+        renderGrid();
+    });
 
-    const empty = $("#tplEmpty");
-    if (!out.length) {
-      empty.textContent = state.mode === "tribute"
-        ? "No tribute templates yet. (Architecture is ready.)"
-        : "No templates match your search.";
-    } else {
-      empty.textContent = "";
-    }
-  }
+    $("#btnModeTribute").addEventListener("click", () => {
+        state.mode = "tribute";
+        $("#btnModeStyles").setAttribute("aria-selected", "false");
+        $("#btnModeTribute").setAttribute("aria-selected", "true");
+        renderGrid();
+    });
 
-  // T11) Controls
-  $("#tplSearch").addEventListener("input", (e) => {
-    state.q = e.target.value || "";
+    // T12) Boot
+    renderCats();
     renderGrid();
-  });
-
-  $("#tplSort").addEventListener("change", (e) => {
-    state.sort = e.target.value || "name";
-    renderGrid();
-  });
-
-  $("#btnModeStyles").addEventListener("click", () => {
-    state.mode = "styles";
-    $("#btnModeStyles").setAttribute("aria-selected", "true");
-    $("#btnModeTribute").setAttribute("aria-selected", "false");
-    renderGrid();
-  });
-
-  $("#btnModeTribute").addEventListener("click", () => {
-    state.mode = "tribute";
-    $("#btnModeStyles").setAttribute("aria-selected", "false");
-    $("#btnModeTribute").setAttribute("aria-selected", "true");
-    renderGrid();
-  });
-
-  // T12) Boot
-  renderCats();
-  renderGrid();
-  return root;
+    return root;
 }
 
 function fermentationPanel(store, onPreview) {
@@ -1185,18 +1364,18 @@ function troubleshootingPanel(store, onOpenKB) {
    - This is NOT the full ingredient engine yet
    ========================================================= */
 
-function computeAreaIn2(session){
-  if (session.shape === "round") {
-    const d = Number(session.diameterIn || 0);
-    if (!d || d <= 0) return 0;
-    const r = d / 2;
-    return Math.PI * r * r;
-  }
-  // rect
-  const w = Number(session.rectWIn || 0);
-  const l = Number(session.rectLIn || 0);
-  if (!w || !l || w <= 0 || l <= 0) return 0;
-  return w * l;
+function computeAreaIn2(session) {
+    if (session.shape === "round") {
+        const d = Number(session.diameterIn || 0);
+        if (!d || d <= 0) return 0;
+        const r = d / 2;
+        return Math.PI * r * r;
+    }
+    // rect
+    const w = Number(session.rectWIn || 0);
+    const l = Number(session.rectLIn || 0);
+    if (!w || !l || w <= 0 || l <= 0) return 0;
+    return w * l;
 }
 
 /* 20b) Dough weight from TF (oz/in²) → grams
@@ -1204,54 +1383,54 @@ function computeAreaIn2(session){
    - ounces = area(in²) * TF
    - grams = ounces * 28.349523125
 */
-function computeDoughWeightFromTF_g(areaIn2, tf){
-  const TF = Number(tf || 0);
-  if (!areaIn2 || areaIn2 <= 0 || !TF || TF <= 0) return 0;
-  const oz = areaIn2 * TF;
-  const g = oz * 28.349523125;
-  return g;
+function computeDoughWeightFromTF_g(areaIn2, tf) {
+    const TF = Number(tf || 0);
+    if (!areaIn2 || areaIn2 <= 0 || !TF || TF <= 0) return 0;
+    const oz = areaIn2 * TF;
+    const g = oz * 28.349523125;
+    return g;
 }
 
 /* 20c) Completion gate (placeholder for QR/step gating later) */
-function isFoundationComplete(session){
-  const area = computeAreaIn2(session);
-  if (area <= 0) return false;
+function isFoundationComplete(session) {
+    const area = computeAreaIn2(session);
+    if (area <= 0) return false;
 
-  if (session.calcMethod === "tf") {
-    if (!(Number(session.tf) > 0)) return false;
-  } else {
-    if (!(Number(session.doughWeight) > 0)) return false;
-  }
+    if (session.calcMethod === "tf") {
+        if (!(Number(session.tf) > 0)) return false;
+    } else {
+        if (!(Number(session.doughWeight) > 0)) return false;
+    }
 
-  if (!(Number(session.hydration) > 0)) return false;
-  if (!(Number(session.balls) >= 1)) return false;
+    if (!(Number(session.hydration) > 0)) return false;
+    if (!(Number(session.balls) >= 1)) return false;
 
-  return true;
+    return true;
 }
 
 /* 20d) Compute metrics bundle */
-function computeFoundationMetrics(session){
-  const areaIn2 = computeAreaIn2(session);
+function computeFoundationMetrics(session) {
+    const areaIn2 = computeAreaIn2(session);
 
-  const totalDoughG = (session.calcMethod === "tf")
-    ? computeDoughWeightFromTF_g(areaIn2, session.tf)
-    : Number(session.doughWeight || 0);
+    const totalDoughG = (session.calcMethod === "tf") ?
+        computeDoughWeightFromTF_g(areaIn2, session.tf) :
+        Number(session.doughWeight || 0);
 
-  const balls = Math.max(1, Number(session.balls || 1));
-  const perBallG = totalDoughG > 0 ? (totalDoughG / balls) : 0;
+    const balls = Math.max(1, Number(session.balls || 1));
+    const perBallG = totalDoughG > 0 ? (totalDoughG / balls) : 0;
 
-  return {
-    areaIn2,
-    totalDoughG,
-    perBallG,
-    complete: isFoundationComplete(session)
-  };
+    return {
+        areaIn2,
+        totalDoughG,
+        perBallG,
+        complete: isFoundationComplete(session)
+    };
 }
 
-function fmt(n, digits=0){
-  const x = Number(n || 0);
-  if (!Number.isFinite(x)) return "0";
-  return x.toFixed(digits);
+function fmt(n, digits = 0) {
+    const x = Number(n || 0);
+    if (!Number.isFinite(x)) return "0";
+    return x.toFixed(digits);
 }
 
 function div(html) {

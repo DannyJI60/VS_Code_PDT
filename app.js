@@ -72,7 +72,8 @@ const prefs = initPrefs();
 
     // 2b.2 Load external indexes (templates, DBs, fermentation models, etc.)
     const indexes = await loadIndexes();
-    store.set("indexes", indexes);
+	store.set("indexes", indexes);
+	window.__PDT_STORE__ = store;
 	
 	/* 2c) Publish prefs into store for UI/modules */
 store.set("prefs", prefs);
