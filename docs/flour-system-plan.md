@@ -484,6 +484,27 @@ Possible additions:
 
 • KB integration
 
+## Related Future Workflow Placeholder — Portable Dough Import
+Although the flour system belongs inside Step 2 of the calculator, it should eventually work with a broader portable recipe system.
+
+Future idea:
+- A portable dough recipe file can preload:
+  - selected flour(s)
+  - blend percentages
+  - hydration
+  - fermentation settings
+  - style/template defaults
+
+Potential sources:
+- local file picker
+- bookmarked user templates
+- community/forum shared recipes
+- QR-based recipe exchange
+
+For now:
+- no implementation work is required here
+- just keep Step 2 compatible with imported blend data later
+
 
 
 ---

@@ -251,7 +251,6 @@ Step 2 Flour
 Step 3 Hydration  
 Step 4 Fermentation  
 Step 5 Ingredients  
-Step 6 Bake Plan
 
 Each step updates:
 
@@ -401,6 +400,27 @@ icons
 # Future Modules
 
 Planned expansions include:
+
+# Portable Recipe / Community Import (Placeholder)
+A future sharing layer should allow dough setups to move between users and between platforms.
+
+Concept:
+- A dough recipe can be serialized into a small portable format
+- The format can be loaded into the calculator and populate the builder steps
+- This may later support:
+  - file picker import
+  - exported recipe files
+  - community/forum template links
+  - QR code import/export
+
+Suggested future format:
+- JSON-based
+- Contains template ID, style/geometry, flour blend, hydration, fermentation inputs, and final formula settings
+
+Important:
+- Sharing/import should preload the existing calculator workflow, not bypass it
+- Imported recipes remain editable by the user
+- This is a future system and should remain placeholder-only for now
 
 SauceSource  
 ingredient library  

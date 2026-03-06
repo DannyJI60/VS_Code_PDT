@@ -388,6 +388,22 @@ Beddia style
 
 Templates remain editable by the user.
 
+### Portable Recipe Import / Sharing (Placeholder)
+ProDoughType should eventually support portable dough files and community imports.
+
+Planned capabilities:
+- Import recipe from file picker
+- Export current dough setup as a portable file
+- Future support for importing from community/forum posts
+- Future support for QR-based recipe sharing
+
+Notes:
+- This is not required for V1 launch.
+- V1 should focus on the core dough workflow first.
+- The simplest future version is file-based import/export using a small JSON recipe format.
+- Community/forum integration can be layered on later once the import format is stable.
+
+
 
 
 ---
@@ -587,4 +603,3 @@ Next tasks:
 
 
 Once these are complete, ProDoughType will be ready for early testing.
-
