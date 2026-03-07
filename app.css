@@ -763,11 +763,12 @@ body[data-uimode="focus"] .layout{ grid-template-columns: 92px 1fr; }
 }
 
 .flourTplInner img {
-  width: 100%;
-  height: 100%;
+  width: 82%;
+  height: 82%;
   display: block;
   object-fit: contain;
   object-position: center;
+  margin: auto;
 }
 
 .flourTplCap {

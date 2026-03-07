@@ -68,7 +68,7 @@ export async function loadFloursForBrowser(store) {
         heat: f.heat || null,
         specs: f.specs || null,
         notes: f.notes || "",
-        logo: "./icons/db.svg",   // safe default icon
+        logo: f.logo || "./icons/db.svg",   // safe default icon
         _raw: f                   // future popover/modal can read this
       };
     });

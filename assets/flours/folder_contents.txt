@@ -1,0 +1,15 @@
+﻿Folder Name : flours
+Full Path   : C:\Users\DIgle\Desktop\VS_Code_PDT\assets\flours
+Generated   : 03/06/2026 17:45:45
+
+Contents:
+----------------------------------------
+flour_caputo_cuoco.svg (2.08 KB)
+flour_caputo_pizzeria.svg (0.99 KB)
+flour_centralmilling_tipo00_normale.svg (1 KB)
+flour_ceresota_premium_high_gluten.svg (1 KB)
+flour_generalmills_all_trumps.svg (1 KB)
+flour_kingarthur_bread.svg (0.99 KB)
+flour_kingarthur_sir_lancelot.svg (1 KB)
+flour_polselli_vivace.svg (0.99 KB)
+flour_vigevano_vesuvio.svg (0.99 KB)
