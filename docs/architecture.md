@@ -1,4 +1,6 @@
-# ProDoughType — Application Architecture
+> Note: This document is now secondary. Use `PRODOUGHTYPE_UNIFIED_WORK_ORDER.md` as the canonical implementation spec. If this file conflicts with the unified work order, follow the unified work order.
+
+# ProDoughType - Application Architecture
 
 ## Purpose
 
@@ -8,10 +10,10 @@ The goal is to maintain a stable structure while new features are developed.
 
 Key principles:
 
-• modular design  
-• predictable data flow  
-• reusable UI components  
-• centralized application state
+- modular design  
+- predictable data flow  
+- reusable UI components  
+- centralized application state
 
 ---
 
@@ -265,9 +267,9 @@ Flour selection occurs in Step 2.
 Flow:
 
 Choose Flour  
-→ Flour Browser  
-→ Flour Detail  
-→ Add to Blend
+-> Flour Browser  
+-> Flour Detail  
+-> Add to Blend
 
 Blend example:
 

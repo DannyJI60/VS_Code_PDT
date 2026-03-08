@@ -21,12 +21,16 @@ import {
 
 /* 3a) Foundation plug-ins */
 import {
-    loadPrefs
+    loadPrefs,
+    savePrefs
 } from "./prefs.js";
 
 import {
     mountOvenWidget
 } from "./ovenWidget.js";
+
+import { renderWorkOrderCalculator } from "./workOrderCalculator.js";
+import { renderWorkOrderPreferences } from "./workOrderPreferences.js";
 
 /* 2a) Toast helper (prevents "toast is not defined") */
 const toast = (msg, ms = 1600) => {
@@ -77,11 +81,7 @@ export function renderRoute({
     mount.innerHTML = ""; // wipe
 
     if (route === "dough") {
-        mount.appendChild(doughPanel({
-            onPreview,
-            onOpenKB
-        }));
-        onPreview(`<div class="muted">Select a template or enter dough settings.</div>`);
+        mount.appendChild(renderWorkOrderCalculator({ store, onPreview, onOpenKB }));
         return;
     }
 
@@ -101,7 +101,12 @@ export function renderRoute({
     }
 
     if (route === "preferences") {
-        mount.appendChild(preferencesPanel(store));
+        mount.appendChild(renderWorkOrderPreferences({ store }));
+        return;
+    }
+
+    if (route === "guides") {
+        mount.appendChild(guidesPanel(store, onOpenKB));
         return;
     }
 
@@ -126,7 +131,7 @@ export function renderRoute({
 /* 3a) Panels (numbered, replaceable blocks) */
 
 /* =========================================================
-   F0) STEP 2 • FLOUR (Full-page “template grid”)
+   F0) STEP 2 - FLOUR (Full-page "template grid")
    - Lives in route: databases (for now)
    - No real data wiring yet; uses placeholders
    ========================================================= */
@@ -144,7 +149,7 @@ function databasesPanel(store) {
       <div class="cardbody">
         <div class="stack">
           <div class="muted">
-            Flour selection now lives in <strong>Dough → Step 2 • Flour</strong>.
+            Flour selection now lives in <strong>Dough -> Step 2 - Flour</strong>.
           </div>
 
           <div class="muted">
@@ -185,8 +190,8 @@ const session = defaults;
       <div class="step">
         <div class="stephead">
           <div>
-            <div class="steptitle">Step 1 • Foundation</div>
-            <div class="stepsub">Geometry → TF → Dough weight. Preferment lives here.</div>
+            <div class="steptitle">Step 1 - Foundation</div>
+            <div class="stepsub">Geometry -> TF -> Dough weight. Preferment lives here.</div>
           </div>
           <div class="muted" style="font-size:12px;">Signals are placeholders</div>
         </div>
@@ -223,17 +228,17 @@ const session = defaults;
                 </div>
                 <div class="square-grid">
                   <div class="sq active" data-shape="round">
-                    <div class="sqico">◯</div>
+                    <div class="sqico">&#9711;</div>
                     <div>
                       <div class="sqt">Round</div>
                       <div class="sqs">Diameter</div>
                     </div>
                   </div>
                   <div class="sq" data-shape="rect">
-                    <div class="sqico">▭</div>
+                    <div class="sqico">&#9645;</div>
                     <div>
                       <div class="sqt">Rectangular</div>
-                      <div class="sqs">Width × Length</div>
+                      <div class="sqs">Width x Length</div>
                     </div>
                   </div>
                 </div>
@@ -244,7 +249,7 @@ const session = defaults;
                     <input class="input smallinput" id="diamIn" type="number" step="0.25" value="12" />
                   </div>
                   <div id="rectDims" class="hidden">
-                    <label class="lbl" style="margin:0;">W × L (in)</label>
+                    <label class="lbl" style="margin:0;">W x L (in)</label>
                     <div class="inline">
                       <input class="input smallinput" id="rectWIn" type="number" step="0.25" value="14" />
                       <input class="input smallinput" id="rectLIn" type="number" step="0.25" value="14" />
@@ -350,28 +355,28 @@ const session = defaults;
 
                 <div class="square-grid">
                   <div class="sq active" data-pref="direct">
-                    <div class="sqico">⚡</div>
+                    <div class="sqico">D</div>
                     <div>
                       <div class="sqt">Direct</div>
                       <div class="sqs">No preferment</div>
                     </div>
                   </div>
                   <div class="sq" data-pref="biga">
-                    <div class="sqico">🇮🇹</div>
+                    <div class="sqico">B</div>
                     <div>
                       <div class="sqt">Biga</div>
                       <div class="sqs">Stiff</div>
                     </div>
                   </div>
                   <div class="sq" data-pref="poolish">
-                    <div class="sqico">🧪</div>
+                    <div class="sqico">P</div>
                     <div>
                       <div class="sqt">Poolish</div>
                       <div class="sqs">100% hydration</div>
                     </div>
                   </div>
                   <div class="sq" data-pref="sourdough">
-                    <div class="sqico">🌾</div>
+                    <div class="sqico">S</div>
                     <div>
                       <div class="sqt">Sourdough</div>
                       <div class="sqs">Starter</div>
@@ -400,7 +405,7 @@ const session = defaults;
       <!-- D6) Steps 2+ placeholders -->
       <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
         <div class="item">
-  <h4>Step 2 • Flour</h4>
+  <h4>Step 2 - Flour</h4>
   <p class="muted">Browse the flour library, inspect specs, and build your blend.</p>
 
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
@@ -409,14 +414,15 @@ const session = defaults;
   </div>
 
   <div class="muted" style="margin-top:10px;">
-    <div><b>Blend:</b> <span id="blendSummary">—</span></div>
-    <div style="margin-top:6px;"><b>Protein (blend):</b> <span id="blendProtein">—</span></div>
-    <div style="margin-top:6px;"><b>Absorption band:</b> <span id="blendAbsorption">—</span></div>
+    <div><b>Flours added:</b> <span id="blendCount">0</span></div>
+    <div style="margin-top:6px;"><b>Blend:</b> <span id="blendSummary">--</span></div>
+    <div style="margin-top:6px;"><b>Protein (blend):</b> <span id="blendProtein">--</span></div>
+    <div style="margin-top:6px;"><b>Absorption band:</b> <span id="blendAbsorption">--</span></div>
   </div>
 </div>
 
 <div class="item">
-  <h4>Step 3 • Fermentation (next)</h4>
+  <h4>Step 3 - Fermentation (next)</h4>
   <p class="muted">Auto-yeast is driven by txcraig_v1.json. Recipe-level timing inputs will go here.</p>
 </div>
       </div>
@@ -424,7 +430,7 @@ const session = defaults;
         </div>
   `);
 
-  // --- Step 2 • Flour wiring ---
+  // --- Step 2 - Flour wiring ---
   function getBlend() {
     const b = Array.isArray(session.flourBlend) ? session.flourBlend : [];
     return b;
@@ -435,78 +441,124 @@ const session = defaults;
   }
   
   function evenSplit100(rows) {
-  if (!Array.isArray(rows) || !rows.length) return rows;
+    if (!Array.isArray(rows) || !rows.length) return rows;
 
-  const base = Math.floor(100 / rows.length);
-  let remainder = 100 - (base * rows.length);
+    const base = Math.floor(100 / rows.length);
+    let remainder = 100 - (base * rows.length);
 
-  rows.forEach((row, i) => {
-    row.pct = base + (i < remainder ? 1 : 0);
-  });
+    rows.forEach((row, i) => {
+      row.pct = base + (i < remainder ? 1 : 0);
+    });
 
-  return rows;
-}
+    return rows;
+  }
+
+  function flourDisplayName(flourLike) {
+    const flour = flourLike?.flour || flourLike || {};
+    const brand = String(flour.brand || "").trim();
+    const name = String(flour.name || flour.id || flourLike?.id || "Flour").trim();
+    return [brand, name].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+  }
+
+  function sameBlendIds(a, b) {
+    if (a.length !== b.length) return false;
+    const bIds = new Set(b.map((row) => row.id));
+    return a.every((row) => bIds.has(row.id));
+  }
+
+  function buildBlendFromPickedFlours(existingBlend, pickedFlours) {
+    const incoming = Array.isArray(pickedFlours) ? pickedFlours : [];
+    const nextBlend = incoming.map((flourRaw) => {
+      const existingRow = existingBlend.find((row) => row.id === flourRaw.id);
+      if (existingRow) {
+        return {
+          ...existingRow,
+          flour: flourRaw
+        };
+      }
+
+      return {
+        id: flourRaw.id,
+        pct: 0,
+        flour: flourRaw
+      };
+    });
+
+    if (!nextBlend.length) return [];
+    if (sameBlendIds(existingBlend, nextBlend)) return nextBlend;
+
+    if (nextBlend.length === 1) {
+      nextBlend[0].pct = 100;
+      return nextBlend;
+    }
+
+    return evenSplit100(nextBlend);
+  }
+
+  function summarizeFlourFormulaChange(previousBlend, nextBlend) {
+    const prevIds = new Set(previousBlend.map((row) => row.id));
+    const nextIds = new Set(nextBlend.map((row) => row.id));
+    const added = nextBlend.filter((row) => !prevIds.has(row.id));
+    const removed = previousBlend.filter((row) => !nextIds.has(row.id));
+
+    if (!added.length && !removed.length) return "";
+    if (added.length === 1 && !removed.length) return `${flourDisplayName(added[0])} added to formula`;
+    if (removed.length === 1 && !added.length) return `${flourDisplayName(removed[0])} removed from formula`;
+    return `Flours added: ${nextBlend.length}`;
+  }
 
   function renderBlendSummary() {
     const b = getBlend();
     const stats = computeBlendStats(b);
 
+    const blendCount = root.querySelector("#blendCount");
     const blendSummary = root.querySelector("#blendSummary");
     const blendProtein = root.querySelector("#blendProtein");
     const blendAbsorption = root.querySelector("#blendAbsorption");
 
-    if (!blendSummary || !blendProtein || !blendAbsorption) return;
+    if (!blendCount || !blendSummary || !blendProtein || !blendAbsorption) return;
 
+    blendCount.textContent = String(b.length);
     blendSummary.textContent = b.length
-      ? b.map((r) => {
-          const brand = (r.flour?.brand || "").trim();
-          const name = (r.flour?.name || r.id || "").trim();
-          const pct = Number(r.pct || 0);
-          return ((brand ? brand + " " : "") + name + " (" + pct + "%)").trim();
-        }).join(", ")
-      : "—";
+      ? b.map((r) => `${flourDisplayName(r)} (${Number(r.pct || 0)}%)`).join(", ")
+      : "--";
 
     blendProtein.textContent =
-      stats.proteinPct != null ? `${stats.proteinPct}%` : "—";
+      stats.proteinPct != null ? `${stats.proteinPct}%` : "--";
 
     blendAbsorption.textContent =
       stats.absorption
-        ? `${stats.absorption.minPct}–${stats.absorption.maxPct}%`
-        : "—";
+        ? `${stats.absorption.minPct}-${stats.absorption.maxPct}%`
+        : "--";
   }
 
   const btnChooseFlours = root.querySelector("#btnChooseFlours");
 if (btnChooseFlours) {
   btnChooseFlours.addEventListener("click", async () => {
     await openFlourPickerModal(null, {
+      initialSelectedIds: getBlend().map((row) => row.id),
       onUse: (pickedFlours) => {
-        const incoming = Array.isArray(pickedFlours) ? pickedFlours : [pickedFlours];
-        const existing = getBlend();
-        const merged = [...existing];
+        const previousBlend = getBlend();
+        const nextBlend = buildBlendFromPickedFlours(previousBlend, pickedFlours);
+        const message = summarizeFlourFormulaChange(previousBlend, nextBlend);
 
-        incoming.forEach((flourRaw) => {
-          const alreadyThere = merged.some((x) => x.id === flourRaw.id);
-          if (!alreadyThere) {
-            merged.push({
-              id: flourRaw.id,
-              pct: 0,
-              flour: flourRaw
-            });
-          }
-        });
-
-        if (merged.length === 1) {
-          merged[0].pct = 100;
-        } else if (merged.length > 1) {
-          evenSplit100(merged);
-        }
-
-        setBlend(merged);
+        setBlend(nextBlend);
         renderBlendSummary();
+        if (message) toast(message);
       }
     });
   });
 }
+
+  const btnClearFlours = root.querySelector("#btnClearFlours");
+  if (btnClearFlours) {
+    btnClearFlours.addEventListener("click", () => {
+      if (!getBlend().length) return;
+      setBlend([]);
+      renderBlendSummary();
+      toast("Flour formula cleared");
+    });
+  }
 
   renderBlendSummary();
 
@@ -524,7 +576,7 @@ if (btnChooseFlours) {
             refresh()
         },
         onOpenPrefs: () => {
-            // Placeholder: later you’ll route to Preferences UI
+            // Placeholder: later you'll route to Preferences UI
             alert("Preferences UI placeholder. Oven list lives in prefs for now.");
         }
     });
@@ -688,7 +740,7 @@ function renderPreviewPlaceholder(session) {
 
     const size = (session.shape === "round") ?
         `${session.diameterIn}" round` :
-        `${session.rectWIn}"×${session.rectLIn}" rect`;
+        `${session.rectWIn}"x${session.rectLIn}" rect`;
 
     const completeness = m.complete ? "Complete" : "Incomplete";
 
@@ -703,20 +755,20 @@ function renderPreviewPlaceholder(session) {
       <div class="item">
         <h4>Foundation</h4>
         <p class="muted">
-          Units: ${esc(session.units)} • Shape: ${esc(session.shape)} (${esc(size)}) • Surface: ${esc(session.surface)} • Preferment: ${esc(session.preferment)}
+          Units: ${esc(session.units)} | Shape: ${esc(session.shape)} (${esc(size)}) | Surface: ${esc(session.surface)} | Preferment: ${esc(session.preferment)}
         </p>
         <p class="muted">
-          Calc: ${esc(session.calcMethod)} • TF: ${fmt(session.tf,3)} • Hydration: ${Math.round(session.hydration*100)}% • Balls: ${session.balls}
+          Calc: ${esc(session.calcMethod)} | TF: ${fmt(session.tf,3)} | Hydration: ${Math.round(session.hydration*100)}% | Balls: ${session.balls}
         </p>
       </div>
 
       <div class="item">
         <h4>Computed</h4>
         <p class="muted">
-          Area: ${fmt(m.areaIn2,1)} in²
+          Area: ${fmt(m.areaIn2,1)} in^2
         </p>
         <p class="muted">
-          Dough weight: ${fmt(m.totalDoughG,0)} g total • ${fmt(m.perBallG,0)} g / ball
+          Dough weight: ${fmt(m.totalDoughG,0)} g total | ${fmt(m.perBallG,0)} g / ball
         </p>
         <p class="muted">
           Status: <strong>${completeness}</strong>
@@ -818,7 +870,7 @@ function templatesPanel(store) {
     // T2) Tribute (empty for now; architecture in place)
     const TRIBUTE_TEMPLATES = [
         // Example later:
-        // { id:"joes", name:"Joe’s NY Slice", cat:"ny", img:"./assets/tributes/joes.svg", desc:"Community tribute" }
+        // { id:"joes", name:"Joe's NY Slice", cat:"ny", img:"./assets/tributes/joes.svg", desc:"Community tribute" }
     ];
 
     // T3) Categories (left rail)
@@ -883,7 +935,7 @@ function templatesPanel(store) {
 
           <!-- T5b) Search -->
           <div class="flourSearch">
-            <input class="input" id="tplSearch" placeholder="Search templates…" />
+            <input class="input" id="tplSearch" placeholder="Search templates..." />
           </div>
 
           <!-- T5c) Sort -->
@@ -962,7 +1014,7 @@ function templatesPanel(store) {
     `;
 
         // simple hover tooltip using title (V1)
-        tile.title = `${t.name} — ${t.desc || ""}`.trim();
+        tile.title = `${t.name} - ${t.desc || ""}`.trim();
 
         tile.addEventListener("click", () => {
             state.selectedId = t.id;
@@ -970,14 +1022,14 @@ function templatesPanel(store) {
 
             // T9a) V1 behavior: show selection + (optional) push into session if store supports it
             try {
-                const session = store?.get ? (store.get("session") || {}) : {};
-                // store a minimal template selection; you’ll wire real defaults later
+                const session = store?.get ? (store.get("recipeSession") || {}) : {};
+                // store a minimal template selection; you'll wire real defaults later
                 const next = {
                     ...session,
                     templateId: t.id,
                     templateName: t.name
                 };
-                if (store?.set) store.set("session", next);
+                if (store?.set) store.set("recipeSession", next);
             } catch (_) {}
 
             // Visible confirmation without being bossy
@@ -1083,18 +1135,211 @@ function fermentationPanel(store, onPreview) {
     return el;
 }
 
-function preferencesPanel(store) {
-    const uiMode = store.get("uiMode", "standard");
-    return div(`
+function guidesPanel(store, onOpenKB) {
+    const idx = store.get("indexes", {});
+    const items = idx.guides?.items || [];
+    const el = div(`
     <div class="item">
-      <h4>3e) Preferences</h4>
-      <p class="muted">This will hold: default model selection, units default, UI mode, template defaults, etc.</p>
-      <div class="item">
-        <h4>UI Mode</h4>
-        <p class="muted">Current: ${esc(uiMode)}</p>
+      <h4>Guides</h4>
+      <p class="muted">Short walkthroughs live here while the full guide system is being built.</p>
+      <div class="list" style="margin-top:10px;">
+        ${items.length ? items.map(x => `
+          <div class="item">
+            <h4>${esc(x.title)}</h4>
+            <p>${esc(x.summary || "")}</p>
+          </div>
+        `).join("") : `<div class="muted">No guides yet.</div>`}
+      </div>
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button class="btn primary" id="btnGuidesKB">Open KB</button>
       </div>
     </div>
   `);
+
+    el.querySelector("#btnGuidesKB")?.addEventListener("click", () => onOpenKB?.());
+    return el;
+}
+
+function preferencesPanel(store) {
+    let prefs = loadPrefs();
+    const uiMode = store.get("uiMode", "standard");
+
+    const el = div(`
+    <div class="prefStack">
+      <div class="item">
+        <h4>Settings</h4>
+        <p class="muted">Local preferences for now. These can later sync to the signed-in account.</p>
+      </div>
+
+      <div class="prefsGrid">
+        <div class="prefSection">
+          <h4>Workspace Mode</h4>
+          <p>Choose how much chrome stays visible around the calculator.</p>
+          <div class="pills" id="prefUiMode" style="margin-top:12px;">
+            <button class="pill ${uiMode === "standard" ? "active" : ""}" type="button" data-mode="standard">Standard</button>
+            <button class="pill ${uiMode === "compact" ? "active" : ""}" type="button" data-mode="compact">Compact</button>
+            <button class="pill ${uiMode === "focus" ? "active" : ""}" type="button" data-mode="focus">Focus</button>
+          </div>
+        </div>
+
+        <div class="prefSection">
+          <h4>Units</h4>
+          <p>Set your preferred defaults for weight and size inputs.</p>
+          <div style="margin-top:12px;">
+            <label class="lbl">Weight unit</label>
+            <div class="pills" id="prefMassUnits">
+              <button class="pill ${prefs.massUnitsDefault === "metric" ? "active" : ""}" type="button" data-mass-unit="metric">Metric</button>
+              <button class="pill ${prefs.massUnitsDefault === "imperial" ? "active" : ""}" type="button" data-mass-unit="imperial">Imperial</button>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <label class="lbl">Size unit</label>
+            <div class="pills" id="prefSizeUnits">
+              <button class="pill ${prefs.sizeUnitsDefault === "metric" ? "active" : ""}" type="button" data-size-unit="metric">Metric</button>
+              <button class="pill ${prefs.sizeUnitsDefault === "imperial" ? "active" : ""}" type="button" data-size-unit="imperial">Imperial</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="prefSection">
+          <h4>Language</h4>
+          <p>Multilingual support is a future implementation. English is the current base language.</p>
+          <div style="margin-top:12px;">
+            <label class="lbl">Language</label>
+            <select class="input" disabled>
+              <option>English (current)</option>
+              <option>Italian (future)</option>
+              <option>Spanish (future)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="prefSection">
+          <h4>Personal Ovens</h4>
+          <p>Store local oven presets and pick the default oven for calculator guidance.</p>
+          <div style="margin-top:12px;">
+            <label class="lbl">Default oven</label>
+            <select class="input" id="prefDefaultOven"></select>
+          </div>
+          <div class="prefOvenList" id="prefOvenList"></div>
+          <div class="prefAddOven">
+            <input class="input" id="prefOvenName" placeholder="Add oven name" />
+            <input class="input" id="prefOvenMax" type="number" min="8" step="0.5" placeholder="14" />
+            <button class="btn primary" id="btnAddOven" type="button">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `);
+
+    const ovenListEl = el.querySelector("#prefOvenList");
+    const defaultOvenEl = el.querySelector("#prefDefaultOven");
+
+    function commitPrefs(nextPrefs) {
+        prefs = nextPrefs;
+        savePrefs(nextPrefs);
+        store.set("prefs", nextPrefs);
+    }
+
+    function renderOvens() {
+        const ovens = prefs.ovens || [];
+        defaultOvenEl.innerHTML = ovens.length
+            ? ovens.map((oven) => `<option value="${esc(oven.id)}" ${prefs.defaultOvenId === oven.id ? "selected" : ""}>${esc(oven.name)}</option>`).join("")
+            : `<option value="">No ovens configured</option>`;
+
+        ovenListEl.innerHTML = ovens.length
+            ? ovens.map((oven) => `
+                <div class="prefOvenRow">
+                  <div>
+                    <div>${esc(oven.name)}</div>
+                    <div class="prefOvenMeta">Max round ${esc(String(oven.maxRoundIn || "?"))} in${prefs.defaultOvenId === oven.id ? " | Default" : ""}</div>
+                  </div>
+                  <button class="btn ghost sm" type="button" data-remove-oven="${esc(oven.id)}">Remove</button>
+                </div>
+              `).join("")
+            : `<div class="muted">No personal ovens yet.</div>`;
+
+        ovenListEl.querySelectorAll("[data-remove-oven]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const ovenId = btn.getAttribute("data-remove-oven");
+                const nextOvens = (prefs.ovens || []).filter((oven) => oven.id !== ovenId);
+                const nextDefault = prefs.defaultOvenId === ovenId ? (nextOvens[0]?.id || null) : prefs.defaultOvenId;
+                commitPrefs({
+                    ...prefs,
+                    ovens: nextOvens,
+                    defaultOvenId: nextDefault
+                });
+                renderOvens();
+                toast("Oven removed");
+            });
+        });
+    }
+
+    el.querySelectorAll("[data-mode]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const mode = btn.getAttribute("data-mode");
+            store.set("uiMode", mode);
+            document.body.dataset.uimode = mode;
+            el.querySelectorAll("[data-mode]").forEach((node) => node.classList.toggle("active", node === btn));
+            toast(`Mode set to ${mode}`);
+        });
+    });
+
+    el.querySelectorAll("[data-mass-unit]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const massUnitsDefault = btn.getAttribute("data-mass-unit");
+            commitPrefs({ ...prefs, massUnitsDefault });
+            el.querySelectorAll("[data-mass-unit]").forEach((node) => node.classList.toggle("active", node === btn));
+            toast(`Weight units set to ${massUnitsDefault}`);
+        });
+    });
+
+    el.querySelectorAll("[data-size-unit]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const sizeUnitsDefault = btn.getAttribute("data-size-unit");
+            commitPrefs({ ...prefs, sizeUnitsDefault });
+            el.querySelectorAll("[data-size-unit]").forEach((node) => node.classList.toggle("active", node === btn));
+            toast(`Size units set to ${sizeUnitsDefault}`);
+        });
+    });
+
+    defaultOvenEl.addEventListener("change", () => {
+        commitPrefs({
+            ...prefs,
+            defaultOvenId: defaultOvenEl.value || null
+        });
+        renderOvens();
+        toast("Default oven updated");
+    });
+
+    el.querySelector("#btnAddOven")?.addEventListener("click", () => {
+        const nameEl = el.querySelector("#prefOvenName");
+        const maxEl = el.querySelector("#prefOvenMax");
+        const name = nameEl.value.trim();
+        const maxRoundIn = Number(maxEl.value || 0);
+        if (!name) return;
+
+        const oven = {
+            id: `oven_${Date.now()}`,
+            name,
+            maxRoundIn: maxRoundIn > 0 ? maxRoundIn : 14
+        };
+
+        const nextOvens = [...(prefs.ovens || []), oven];
+        commitPrefs({
+            ...prefs,
+            ovens: nextOvens,
+            defaultOvenId: prefs.defaultOvenId || oven.id
+        });
+
+        nameEl.value = "";
+        maxEl.value = "";
+        renderOvens();
+        toast("Oven added");
+    });
+
+    renderOvens();
+    return el;
 }
 
 function glossaryPanel(store, onOpenKB) {
@@ -1163,9 +1408,9 @@ function computeAreaIn2(session) {
     return w * l;
 }
 
-/* 20b) Dough weight from TF (oz/in²) → grams
-   - TF is traditionally oz per in².
-   - ounces = area(in²) * TF
+/* 20b) Dough weight from TF (oz/in^2) -> grams
+   - TF is traditionally oz per in^2.
+   - ounces = area(in^2) * TF
    - grams = ounces * 28.349523125
 */
 function computeDoughWeightFromTF_g(areaIn2, tf) {

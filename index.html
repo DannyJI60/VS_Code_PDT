@@ -1,170 +1,116 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ProDoughType vNext</title>
-
-  <!-- 1a) CSS -->
   <link rel="stylesheet" href="./app.css" />
 </head>
 
 <body>
-  <!-- 1b) App Shell -->
   <div id="app" class="app">
-
-    <!-- 2a) Top Bar -->
     <header class="topbar">
-      <div class="brand">
-        <div class="brand-dot"></div>
-        <div class="brand-text">
-          <div class="brand-title">ProDoughType</div>
-          <div class="brand-sub">vNext • Modular UI</div>
-        </div>
+      <div class="topbar-left">
+        <button class="brand brand-btn" id="btnHome" type="button" title="Open calculator">
+          <span class="brand-flag" aria-hidden="true">
+            <span class="brand-stripe green"></span>
+            <span class="brand-stripe white"></span>
+            <span class="brand-stripe red"></span>
+          </span>
+          <span class="brand-text">
+            <span class="brand-title">
+              <span class="brand-word pro">Pro</span><span class="brand-word dough">Dough</span><span class="brand-word type">Type</span>
+            </span>
+          </span>
+        </button>
       </div>
 
-      <div class="topbar-actions">
-        <button class="btn ghost" id="btnQuickGuide" title="Guides">
-          <img class="ico" src="./icons/guides.svg" alt="" />
-          <span>Guides</span>
+      <div class="topbar-center">
+        <nav class="toolbar-nav" aria-label="Primary">
+          <button class="toolbar-link" id="btnCalculator" type="button" data-route-link="dough">Calculator</button>
+          <button class="toolbar-link" id="btnGallery" type="button" data-route-link="templates">Gallery</button>
+          <button class="toolbar-link placeholder-link" id="btnForum" type="button">Forum</button>
+          <button class="toolbar-link" id="btnOpenKB" type="button">Knowledge Base</button>
+          <button class="toolbar-link" id="btnGuides" type="button" data-route-link="guides">Guides</button>
+        </nav>
+      </div>
+
+      <div class="topbar-right">
+        <button class="iconbtn" id="btnPreferences" type="button" title="Preferences" aria-label="Preferences">
+          <span class="gear-mark" aria-hidden="true">&#9881;</span>
         </button>
 
-        <button class="btn ghost" id="btnOpenKB" title="Knowledge Base">
-          <img class="ico" src="./icons/kb.svg" alt="" />
-          <span>KB</span>
-        </button>
-
-        <button class="btn primary" id="btnAuth" title="Login">
-          <img class="ico" src="./icons/login.svg" alt="" />
-          <span id="authLabel">Login</span>
+        <button class="auth-trigger" id="btnAuth" type="button" title="Login or profile">
+          <img class="auth-image hidden" id="authImage" alt="" />
+          <span class="auth-avatar hidden" id="authAvatar"></span>
+          <span class="auth-label" id="authLabel">Login</span>
         </button>
       </div>
     </header>
 
-    <!-- 2b) Main Layout -->
     <div class="layout">
-
-      <!-- 3a) Left Nav (icon buttons, compact) -->
-      <nav class="sidebar" aria-label="Primary">
-        <button class="navbtn active" data-route="dough" title="Dough">
-          <img class="ico" src="./icons/dough.svg" alt="" />
-          <div class="navtxt">Dough</div>
-        </button>
-
-        <button class="navbtn" data-route="templates" title="Templates">
-          <img class="ico" src="./icons/templates.svg" alt="" />
-          <div class="navtxt">Templates</div>
-        </button>
-
-        <button class="navbtn" data-route="databases" title="Databases">
-          <img class="ico" src="./icons/db.svg" alt="" />
-          <div class="navtxt">DB</div>
-        </button>
-
-        <button class="navbtn" data-route="fermentation" title="Fermentation">
-          <img class="ico" src="./icons/ferment.svg" alt="" />
-          <div class="navtxt">Ferment</div>
-        </button>
-
-        <button class="navbtn" data-route="preferences" title="Preferences">
-          <img class="ico" src="./icons/prefs.svg" alt="" />
-          <div class="navtxt">Prefs</div>
-        </button>
-
-        <button class="navbtn" data-route="glossary" title="Glossary">
-          <img class="ico" src="./icons/guides.svg" alt="" />
-          <div class="navtxt">Glossary</div>
-        </button>
-
-        <button class="navbtn" data-route="troubleshooting" title="Troubleshooting">
-          <img class="ico" src="./icons/kb.svg" alt="" />
-          <div class="navtxt">Fix</div>
-        </button>
-
-        <button class="navbtn" data-route="sauceSource" title="SauceSource (placeholder)">
-          <img class="ico" src="./icons/sauce.svg" alt="" />
-          <div class="navtxt">Sauce</div>
-        </button>
-      </nav>
-
-      <!-- 3b) Workspace -->
       <main class="workspace" aria-label="Workspace">
-        <!-- 4a) Route Header -->
         <div class="panelhead">
           <div>
-            <div class="paneltitle" id="routeTitle">Dough</div>
-            <div class="panelsub" id="routeSub">Compute, preview, export.</div>
+            <div class="paneltitle" id="routeTitle">Calculator</div>
+            <div class="panelsub" id="routeSub">Build formulas, preview, and export.</div>
           </div>
 
           <div class="paneltools">
-            <div class="seg" id="uiModeSeg">
-              <button class="segbtn active" data-uimode="standard">Standard</button>
-              <button class="segbtn" data-uimode="compact">Compact</button>
-              <button class="segbtn" data-uimode="focus">Focus</button>
-			  <!-- E1) Add this button in paneltools -->
-              <button class="btn primary" id="btnReminderQR">
-             <span>Reminder QR</span>
-             </button>
-          </div>
-
-            <button class="btn ghost" id="btnExport">
+            <button class="btn primary" id="btnReminderQR" type="button">
+              <span>Reminder QR</span>
+            </button>
+            <button class="btn ghost" id="btnExport" type="button">
               <span>Export</span>
             </button>
           </div>
         </div>
 
-        <!-- 4b) Route Content Mount -->
         <section id="routeMount" class="routemount"></section>
       </main>
 
-      <!-- 3c) Right Panel: Live Preview + KB Drawer -->
       <aside class="rightpanel" aria-label="Preview">
-        <!-- 5a) Live Preview Card -->
         <div class="card" id="previewCard">
-          <!-- A1) Live Preview header tools -->
-<div class="cardhead">
-  <div class="cardtitle">Live Preview</div>
+          <div class="cardhead">
+            <div class="cardtitle">Live Preview</div>
 
-  <div style="display:flex; gap:8px; align-items:center;">
-    <button class="btn ghost sm" id="btnPreviewQR" title="Reminder QR">
-      <span>QR</span>
-    </button>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn ghost sm" id="btnPreviewQR" title="Reminder QR" type="button">
+                <span>QR</span>
+              </button>
 
-    <button class="btn ghost sm" id="btnSwapToKB">
-      <img class="ico" src="./icons/kb.svg" alt="" />
-      <span>KB</span>
-    </button>
-  </div>
-</div>
+              <button class="btn ghost sm" id="btnSwapToKB" type="button">
+                <img class="ico" src="./icons/kb.svg" alt="" />
+                <span>KB</span>
+              </button>
+            </div>
+          </div>
           <div class="cardbody" id="previewBody">
             <div class="muted">Preview will appear here.</div>
           </div>
         </div>
 
-        <!-- 5b) KB Drawer (replaces preview when open) -->
         <div class="card hidden" id="kbCard">
           <div class="cardhead">
             <div class="cardtitle">Knowledge Base</div>
-            <button class="btn ghost sm" id="btnBackToPreview">
+            <button class="btn ghost sm" id="btnBackToPreview" type="button">
               <span>Back</span>
             </button>
           </div>
           <div class="cardbody">
-            <input id="kbQuery" class="input" placeholder="Search (sticky dough, slack, gummy, overproofed…)" />
+            <input id="kbQuery" class="input" placeholder="Search (sticky dough, slack, gummy, overproofed...)" />
             <div class="list" id="kbResults"></div>
           </div>
         </div>
       </aside>
-
     </div>
   </div>
 
-  <!-- 6a) Login Modal -->
   <div class="modal hidden" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="modalbox">
       <div class="modalhead">
         <div class="modaltitle" id="authTitle">Login</div>
-        <button class="btn ghost sm" id="btnCloseAuth">Close</button>
+        <button class="btn ghost sm" id="btnCloseAuth" type="button">Close</button>
       </div>
 
       <div class="modalbody">
@@ -174,22 +120,63 @@
         </div>
         <div class="row">
           <label class="lbl">Password</label>
-          <input id="authPass" class="input" placeholder="••••••••" type="password" />
+          <input id="authPass" class="input" placeholder="password" type="password" />
         </div>
 
         <div class="row split">
-          <button class="btn primary" id="btnDoLogin">Login</button>
-          <button class="btn ghost" id="btnDoLogout">Logout</button>
+          <button class="btn primary" id="btnDoLogin" type="button">Login</button>
         </div>
 
         <div class="hint">
-          Placeholder auth: localStorage session token (swap later for real backend).
+          Placeholder auth popup for local development. Profile details are stored locally for now.
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 7a) App JS -->
+  <div class="modal hidden" id="profileModal" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+    <div class="modalbox">
+      <div class="modalhead">
+        <div class="modaltitle" id="profileTitle">Profile</div>
+        <button class="btn ghost sm" id="btnCloseProfile" type="button">Close</button>
+      </div>
+
+      <div class="modalbody">
+        <div class="row">
+          <label class="lbl">Username</label>
+          <input id="profileUsername" class="input" placeholder="Danny Dough" />
+        </div>
+        <div class="row">
+          <label class="lbl">Email</label>
+          <input id="profileEmail" class="input" placeholder="name@example.com" />
+        </div>
+        <div class="row">
+          <label class="lbl">Avatar image URL</label>
+          <input id="profileAvatarUrl" class="input" placeholder="https://example.com/avatar.jpg" />
+        </div>
+        <div class="row">
+          <label class="lbl">Favorite pizza</label>
+          <input id="profileFavoritePizza" class="input" placeholder="NY slice" />
+        </div>
+        <div class="row">
+          <label class="checkrow">
+            <input id="profileSubscriber" type="checkbox" />
+            <span>Paid subscriber</span>
+          </label>
+        </div>
+
+        <div class="row split">
+          <button class="btn primary" id="btnSaveProfile" type="button">Save Profile</button>
+          <button class="btn ghost" id="btnProfileLogout" type="button">Logout</button>
+        </div>
+
+        <div class="hint">
+          Account data is local-only until backend auth and billing are wired.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="./app.js"></script>
 </body>
 </html>

@@ -1,4 +1,6 @@
-\# ProDoughType — Development Roadmap
+> Note: This roadmap predates the unified work order. Use `PRODOUGHTYPE_UNIFIED_WORK_ORDER.md` as the canonical implementation spec for current calculator architecture and priorities.
+
+\# ProDoughType - Development Roadmap
 
 
 
@@ -14,7 +16,7 @@ The focus of V1 is to create a \*\*fully working pizza dough calculator with flo
 
 
 
-\# Version 1 — Core Calculator (Launch Version)
+\# Version 1 - Core Calculator (Launch Version)
 
 
 
@@ -26,17 +28,17 @@ Major components:
 
 
 
-• Dough calculator  
+- Dough calculator  
 
-• Flour selection and blending  
+- Flour selection and blending  
 
-• Template presets  
+- Template presets  
 
-• Fermentation guidance  
+- Fermentation guidance  
 
-• Live recipe preview  
+- Live recipe preview  
 
-• Knowledge base search  
+- Knowledge base search  
 
 
 
@@ -56,17 +58,17 @@ Steps inside the Dough route:
 
 
 
-Step 1 — Geometry  
+Step 1 - Geometry  
 
-Step 2 — Flour  
+Step 2 - Flour  
 
-Step 3 — Hydration  
+Step 3 - Hydration  
 
-Step 4 — Fermentation  
+Step 4 - Fermentation  
 
-Step 5 — Ingredients  
+Step 5 - Ingredients  
 
-Step 6 — Bake Plan  
+Step 6 - Bake Plan  
 
 
 
@@ -104,15 +106,15 @@ Selecting a template sets:
 
 
 
-• hydration  
+- hydration  
 
-• dough weight  
+- dough weight  
 
-• thickness factor  
+- thickness factor  
 
-• fermentation suggestions  
+- fermentation suggestions  
 
-• flour recommendations  
+- flour recommendations  
 
 
 
@@ -154,11 +156,11 @@ The system computes:
 
 
 
-• weighted protein  
+- weighted protein  
 
-• weighted absorption  
+- weighted absorption  
 
-• estimated dough strength  
+- estimated dough strength  
 
 
 
@@ -194,11 +196,11 @@ Inputs:
 
 
 
-• dough temperature  
+- dough temperature  
 
-• room temperature  
+- room temperature  
 
-• fermentation time  
+- fermentation time  
 
 
 
@@ -206,9 +208,9 @@ Outputs:
 
 
 
-• yeast percentage  
+- yeast percentage  
 
-• recommended schedule  
+- recommended schedule  
 
 
 
@@ -228,13 +230,13 @@ Preview includes:
 
 
 
-• ingredient weights  
+- ingredient weights  
 
-• baker's percentages  
+- baker's percentages  
 
-• dough ball count  
+- dough ball count  
 
-• fermentation timeline  
+- fermentation timeline  
 
 
 
@@ -292,11 +294,11 @@ The QR contains:
 
 
 
-• timeline events  
+- timeline events  
 
-• recipe snapshot  
+- recipe snapshot  
 
-• bake time  
+- bake time  
 
 
 
@@ -308,7 +310,7 @@ Future mobile tools can read the QR and create reminders.
 
 
 
-\# Version 2 — Smart Dough System
+\# Version 2 - Smart Dough System
 
 
 
@@ -328,13 +330,13 @@ More accurate yeast prediction using:
 
 
 
-• flour strength (W value)  
+- flour strength (W value)  
 
-• hydration  
+- hydration  
 
-• temperature  
+- temperature  
 
-• fermentation duration  
+- fermentation duration  
 
 
 
@@ -354,11 +356,11 @@ Examples:
 
 
 
-• hydration too high for flour  
+- hydration too high for flour  
 
-• weak flour for long fermentation  
+- weak flour for long fermentation  
 
-• low browning potential  
+- low browning potential  
 
 
 
@@ -438,7 +440,7 @@ High Mountain
 
 
 
-\# Version 3 — Full Ecosystem
+\# Version 3 - Full Ecosystem
 
 
 
@@ -462,13 +464,13 @@ Controls:
 
 
 
-• acidity  
+- acidity  
 
-• sweetness  
+- sweetness  
 
-• thickness  
+- thickness  
 
-• umami  
+- umami  
 
 
 
@@ -488,13 +490,13 @@ Database for:
 
 
 
-• cheese types  
+- cheese types  
 
-• oils  
+- oils  
 
-• toppings  
+- toppings  
 
-• salts  
+- salts  
 
 
 
@@ -538,11 +540,11 @@ Features:
 
 
 
-• fermentation reminders  
+- fermentation reminders  
 
-• bake timers  
+- bake timers  
 
-• recipe display  
+- recipe display  
 
 
 
@@ -562,15 +564,15 @@ Capabilities include:
 
 
 
-• dough design  
+- dough design  
 
-• sauce formulation  
+- sauce formulation  
 
-• topping design  
+- topping design  
 
-• bake scheduling  
+- bake scheduling  
 
-• community recipes  
+- community recipes  
 
 
 
