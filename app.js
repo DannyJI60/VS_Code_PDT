@@ -1,7 +1,7 @@
-﻿import { store } from "./modules/store.js";
+import { store } from "./modules/store.js";
 import { initAuth, openAuthModal, openProfileModal, refreshAuthUI } from "./modules/auth.js";
 import { initPrefs } from "./modules/prefs.js";
-import { initRouter, setRoute } from "./modules/router.js";
+import { getRoute, initRouter, setRoute } from "./modules/router.js";
 import { loadIndexes } from "./modules/loaders.js";
 import { renderRoute } from "./modules/ui.js";
 import { initKB } from "./modules/kb.js";
@@ -59,7 +59,14 @@ const prefs = initPrefs();
 
   wireUI();
   refreshPreviewButtons();
-  setRoute("dough");
+
+  const initialRoute = getRoute();
+  if (location.hash) {
+    highlightRoute(initialRoute);
+    render(initialRoute);
+  } else {
+    setRoute(initialRoute);
+  }
 })();
 
 function render(route) {

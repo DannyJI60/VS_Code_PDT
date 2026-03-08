@@ -124,7 +124,14 @@ export async function loadFloursForBrowser(store) {
         f?.absorption?.maxPct != null
     )
     .map((f) => {
-      const absorption = midpointPctRangeToDecimal(f.absorption);
+      const absorption = f.absorption
+        ? {
+            minPct: Number(f.absorption.minPct),
+            maxPct: Number(f.absorption.maxPct),
+            basis: f.absorption.basis || "bakers_pct"
+          }
+        : null;
+      const absorptionDecimal = midpointPctRangeToDecimal(f.absorption);
       const brandLogo = resolveBrandLogo(f);
 
       return {
@@ -132,9 +139,11 @@ export async function loadFloursForBrowser(store) {
         brand: f.brand || "",
         name: f.name || f.id,
         type: f.type || "",
+        proteinPct: f.proteinPct,
         protein: f.proteinPct,
         absorption,
-        absorptionRange: f.absorption,
+        absorptionRange: absorption,
+        absorptionDecimal,
         malted: typeof f.malted === "boolean" ? f.malted : null,
         heat: f.heat || null,
         specs: f.specs || null,
