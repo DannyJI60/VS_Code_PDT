@@ -1423,3 +1423,119 @@ body[data-uimode="focus"] .layout{
     justify-content: flex-start;
   }
 }
+
+/* Work Order WWAD refinements */
+.wo-step.is-collapsed .stepbody {
+  display: none;
+}
+
+.wo-stephead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.wo-stephead-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wo-stephead-actions {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.wo-step-mini {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.wo-compact-row,
+.wo-formula-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.wo-formula-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.wo-formula-row {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255,255,255,.03);
+}
+
+.wo-compact-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.wo-compact-control {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.wo-compact-input {
+  width: 80px;
+  text-align: right;
+}
+
+.wo-compact-suffix {
+  min-width: 20px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.wo-scrub {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,.03);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  cursor: ew-resize;
+}
+
+.wo-scrub.is-scrubbing {
+  border-color: rgba(245,158,11,.45);
+  background: rgba(245,158,11,.12);
+  color: var(--text);
+}
+
+.wo-formula-note {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 980px) {
+  .wo-stephead,
+  .wo-stephead-actions,
+  .wo-compact-row,
+  .wo-formula-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .wo-stephead-actions,
+  .wo-compact-control {
+    justify-content: flex-start;
+  }
+}

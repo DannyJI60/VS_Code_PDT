@@ -4,8 +4,12 @@ let onRouteCb = null;
 export function initRouter({ onRoute }) {
   onRouteCb = onRoute;
   window.addEventListener("hashchange", () => onRouteCb?.(getRoute()));
+  if (!location.hash) {
+    location.hash = "#/dough";
+    return;
+  }
+  onRouteCb?.(getRoute());
 }
-
 export function setRoute(route) {
   location.hash = `#/${route}`;
 }

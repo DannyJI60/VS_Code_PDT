@@ -1,14 +1,26 @@
 import { openFlourPickerModal } from "./flourPickerModal.js";
 import { loadFloursForBrowser } from "./floursDb.js";
-import { BUILTIN_OVENS, getAllOvens, getDefaultBlend, getFavoriteFlourIds, loadPrefs, normalizePrefs, savePrefs } from "./prefs.js";
+import {
+  BUILTIN_OVENS,
+  getAllIngredients,
+  getAllOvens,
+  getDefaultBlend,
+  getFavoriteFlourIds,
+  loadPrefs,
+  normalizePrefs,
+  savePrefs
+} from "./prefs.js";
 
 export function renderWorkOrderPreferences({ store }) {
   let prefs = loadPrefs();
   let flourById = new Map();
+  let ingredientQuery = "";
+  let editingIngredientId = null;
 
   const root = wrap(`
     <div class="prefStack">
       <div class="item"><h4>Preferences</h4><p class="muted">Saved locally to <code>localStorage["pdt.preferences"]</code>. These values define defaults and favorite items, not the recipe itself.</p></div>
+      <div class="item"><h4>Calculator Setup</h4><p class="muted">Reopen Quick Setup to change the environment defaults the calculator should start from.</p><div class="wo-inline-actions" style="margin-top:12px;"><button class="btn ghost" id="prefOpenQuickSetup" type="button">Open Quick Setup</button></div></div>
       <div class="prefsGrid wo-prefs-grid">
         <div class="prefSection">
           <h4>General</h4>
@@ -45,14 +57,26 @@ export function renderWorkOrderPreferences({ store }) {
           <textarea class="input wo-textarea" id="prefFlourNotes" placeholder="Notes" style="margin-top:12px;"></textarea>
           <div class="wo-inline-actions" style="margin-top:12px;"><button class="btn primary" id="prefAddFlour" type="button">Add Custom Flour</button></div>
         </div>
+        <div class="prefSection">
+          <h4>Ingredient Library</h4>
+          <p>Search, bookmark, add, edit, and remove formula ingredients.</p>
+          <div class="wo-grid2" style="margin-top:12px;">
+            <div><label class="lbl">Search ingredients</label><input class="input" id="prefIngredientSearch" placeholder="Search ingredients" /></div>
+            <div class="wo-inline-end"><button class="btn ghost" id="prefIngredientClear" type="button">Clear</button></div>
+          </div>
+          <div class="wo-library-list" id="prefIngredientLibrary" style="margin-top:12px;"></div>
+          <div class="wo-grid2" style="margin-top:12px;"><input class="input" id="prefIngredientName" placeholder="Ingredient name" /><input class="input" id="prefIngredientCategory" placeholder="Category" /><input class="input" id="prefIngredientDefaultPct" type="number" min="0" max="100" step="0.1" placeholder="Default %" /><input class="input" id="prefIngredientMinPct" type="number" min="0" max="100" step="0.1" placeholder="Min %" /><input class="input" id="prefIngredientMaxPct" type="number" min="0" max="100" step="0.1" placeholder="Max %" /></div>
+          <div class="wo-inline-actions" style="margin-top:12px;"><button class="btn primary" id="prefSaveIngredient" type="button">Add Ingredient</button><button class="btn ghost hidden" id="prefCancelIngredient" type="button">Cancel Edit</button></div>
+        </div>
       </div>
     </div>
   `);
 
   const ui = map(root, {
-    weightUnit: "#prefWeightUnit", sizeUnit: "#prefSizeUnit", calcMethod: "#prefCalcMethod", ballWeight: "#prefBallWeight", tf: "#prefTf", warnings: "#prefWarnings", analysis: "#prefAnalysis", workflow: "#prefWorkflow",
+    openQuickSetup: "#prefOpenQuickSetup", weightUnit: "#prefWeightUnit", sizeUnit: "#prefSizeUnit", calcMethod: "#prefCalcMethod", ballWeight: "#prefBallWeight", tf: "#prefTf", warnings: "#prefWarnings", analysis: "#prefAnalysis", workflow: "#prefWorkflow",
     ovenLibrary: "#prefOvenLibrary", ovenName: "#prefOvenName", ovenType: "#prefOvenType", ovenMin: "#prefOvenMin", ovenMax: "#prefOvenMax", ovenNotes: "#prefOvenNotes", addOven: "#prefAddOven",
-    chooseFavorites: "#prefChooseFavorites", evenSplit: "#prefEvenSplit", flourLibrary: "#prefFlourLibrary", flourName: "#prefFlourName", flourBrand: "#prefFlourBrand", flourType: "#prefFlourType", flourProtein: "#prefFlourProtein", flourAbsMin: "#prefFlourAbsMin", flourAbsMax: "#prefFlourAbsMax", flourW: "#prefFlourW", flourPL: "#prefFlourPL", flourMalted: "#prefFlourMalted", flourNotes: "#prefFlourNotes", addFlour: "#prefAddFlour"
+    chooseFavorites: "#prefChooseFavorites", evenSplit: "#prefEvenSplit", flourLibrary: "#prefFlourLibrary", flourName: "#prefFlourName", flourBrand: "#prefFlourBrand", flourType: "#prefFlourType", flourProtein: "#prefFlourProtein", flourAbsMin: "#prefFlourAbsMin", flourAbsMax: "#prefFlourAbsMax", flourW: "#prefFlourW", flourPL: "#prefFlourPL", flourMalted: "#prefFlourMalted", flourNotes: "#prefFlourNotes", addFlour: "#prefAddFlour",
+    ingredientSearch: "#prefIngredientSearch", ingredientClear: "#prefIngredientClear", ingredientLibrary: "#prefIngredientLibrary", ingredientName: "#prefIngredientName", ingredientCategory: "#prefIngredientCategory", ingredientDefaultPct: "#prefIngredientDefaultPct", ingredientMinPct: "#prefIngredientMinPct", ingredientMaxPct: "#prefIngredientMaxPct", saveIngredient: "#prefSaveIngredient", cancelIngredient: "#prefCancelIngredient"
   });
 
   function commit(nextPrefs) {
@@ -60,6 +84,28 @@ export function renderWorkOrderPreferences({ store }) {
     savePrefs(prefs);
     store.set("prefs", prefs);
     render();
+  }
+
+  function resetIngredientForm() {
+    editingIngredientId = null;
+    ui.ingredientName.value = "";
+    ui.ingredientCategory.value = "";
+    ui.ingredientDefaultPct.value = "";
+    ui.ingredientMinPct.value = "";
+    ui.ingredientMaxPct.value = "";
+    ui.saveIngredient.textContent = "Add Ingredient";
+    ui.cancelIngredient.classList.add("hidden");
+  }
+
+  function startIngredientEdit(ingredient) {
+    editingIngredientId = ingredient.id;
+    ui.ingredientName.value = ingredient.name || "";
+    ui.ingredientCategory.value = ingredient.category || "";
+    ui.ingredientDefaultPct.value = ingredient.defaultPct != null ? String(ingredient.defaultPct) : "";
+    ui.ingredientMinPct.value = ingredient.minPct != null ? String(ingredient.minPct) : "";
+    ui.ingredientMaxPct.value = ingredient.maxPct != null ? String(ingredient.maxPct) : "";
+    ui.saveIngredient.textContent = "Update Ingredient";
+    ui.cancelIngredient.classList.remove("hidden");
   }
 
   function render() {
@@ -70,9 +116,11 @@ export function renderWorkOrderPreferences({ store }) {
     ui.tf.value = String(prefs.general.defaultThicknessFactor);
     ui.warnings.checked = prefs.general.showWarnings;
     ui.analysis.checked = prefs.general.enableDoughAnalysis;
+    ui.ingredientSearch.value = ingredientQuery;
     renderWorkflow();
     renderOvens();
     renderFlours();
+    renderIngredients();
   }
 
   function renderWorkflow() {
@@ -120,6 +168,40 @@ export function renderWorkOrderPreferences({ store }) {
     }));
   }
 
+  function renderIngredients() {
+    const list = getAllIngredients(prefs).filter((ingredient) => {
+      const haystack = `${ingredient.name} ${ingredient.category}`.toLowerCase();
+      return !ingredientQuery || haystack.includes(ingredientQuery.toLowerCase());
+    });
+    ui.ingredientLibrary.innerHTML = list.length
+      ? list.map((ingredient) => `<div class="wo-library-row"><div><div class="wo-library-title">${esc(ingredient.name)}</div><div class="muted">${esc(`${ingredient.category} | Default ${fmtPct(ingredient.defaultPct)} | Range ${fmtPct(ingredient.minPct)}-${fmtPct(ingredient.maxPct)}`)}${ingredient.builtIn ? " | Built-in" : " | Custom"}</div></div><div class="wo-library-actions"><label class="checkrow"><input type="checkbox" data-ingredient-bookmark="${esc(ingredient.id)}" ${ingredient.bookmarked ? "checked" : ""} /><span>Bookmark</span></label>${ingredient.builtIn ? "" : `<button class="btn ghost sm" type="button" data-edit-ingredient="${esc(ingredient.id)}">Edit</button><button class="btn ghost sm" type="button" data-remove-ingredient="${esc(ingredient.id)}">Remove</button>`}</div></div>`).join("")
+      : `<div class="muted">No ingredients match your search.</div>`;
+
+    ui.ingredientLibrary.querySelectorAll("[data-ingredient-bookmark]").forEach((input) => input.addEventListener("change", () => {
+      const id = input.getAttribute("data-ingredient-bookmark");
+      const next = new Set(prefs.ingredients.favoriteIds || []);
+      if (input.checked) next.add(id); else next.delete(id);
+      commit({ ...prefs, ingredients: { ...prefs.ingredients, favoriteIds: Array.from(next).sort() } });
+    }));
+
+    ui.ingredientLibrary.querySelectorAll("[data-edit-ingredient]").forEach((button) => button.addEventListener("click", () => {
+      const ingredient = (prefs.ingredients.custom || []).find((item) => item.id === button.getAttribute("data-edit-ingredient"));
+      if (ingredient) startIngredientEdit(ingredient);
+    }));
+
+    ui.ingredientLibrary.querySelectorAll("[data-remove-ingredient]").forEach((button) => button.addEventListener("click", () => {
+      const id = button.getAttribute("data-remove-ingredient");
+      commit({ ...prefs, ingredients: { ...prefs.ingredients, favoriteIds: (prefs.ingredients.favoriteIds || []).filter((item) => item !== id), custom: (prefs.ingredients.custom || []).filter((item) => item.id !== id) } });
+      if (editingIngredientId === id) resetIngredientForm();
+    }));
+  }
+
+  ui.openQuickSetup.addEventListener("click", () => {
+    store.set("openQuickSetup", true);
+    window.PDT?.setRoute?.("dough");
+    if (!window.PDT?.setRoute) window.location.hash = "#/dough";
+  });
+
   ui.weightUnit.addEventListener("change", () => commit({ ...prefs, general: { ...prefs.general, weightUnit: ui.weightUnit.value } }));
   ui.sizeUnit.addEventListener("change", () => commit({ ...prefs, general: { ...prefs.general, sizeUnit: ui.sizeUnit.value } }));
   ui.calcMethod.addEventListener("change", () => commit({ ...prefs, general: { ...prefs.general, calculationMethod: ui.calcMethod.value } }));
@@ -136,8 +218,16 @@ export function renderWorkOrderPreferences({ store }) {
   });
 
   ui.chooseFavorites.addEventListener("click", async () => {
-    await openFlourPickerModal(store, { initialSelectedIds: getFavoriteFlourIds(prefs), onUse: (picked) => { const favoriteIds = (picked || []).map((flour) => flour.id); const defaultBlend = (prefs.flours.defaultBlend || []).filter((row) => favoriteIds.includes(row.id)); commit({ ...prefs, flours: { ...prefs.flours, favoriteIds, defaultBlend: defaultBlend.length ? defaultBlend : getDefaultBlend({ ...prefs, flours: { ...prefs.flours, favoriteIds } }) } }); } });
+    await openFlourPickerModal(store, {
+      initialSelectedIds: getFavoriteFlourIds(prefs),
+      onUse: (picked) => {
+        const favoriteIds = (picked || []).map((flour) => flour.id);
+        const defaultBlend = (prefs.flours.defaultBlend || []).filter((row) => favoriteIds.includes(row.id));
+        commit({ ...prefs, flours: { ...prefs.flours, favoriteIds, defaultBlend: defaultBlend.length ? defaultBlend : getDefaultBlend({ ...prefs, flours: { ...prefs.flours, favoriteIds } }) } });
+      }
+    });
   });
+
   ui.evenSplit.addEventListener("click", () => commit({ ...prefs, flours: { ...prefs.flours, defaultBlend: evenSplit(prefs.flours.defaultBlend || []) } }));
   ui.addFlour.addEventListener("click", () => {
     const name = ui.flourName.value.trim();
@@ -146,16 +236,53 @@ export function renderWorkOrderPreferences({ store }) {
     const favoriteIds = Array.from(new Set([...(prefs.flours.favoriteIds || []), custom[custom.length - 1].id]));
     commit({ ...prefs, flours: { ...prefs.flours, custom, favoriteIds } });
     [ui.flourName, ui.flourBrand, ui.flourProtein, ui.flourAbsMin, ui.flourAbsMax, ui.flourW, ui.flourPL, ui.flourNotes].forEach((el) => { el.value = ""; });
-    ui.flourType.value = "00"; ui.flourMalted.checked = false;
+    ui.flourType.value = "00";
+    ui.flourMalted.checked = false;
   });
 
-  loadFloursForBrowser(store).then((flours) => { flourById = new Map(flours.map((flour) => [flour.id, flour])); render(); }).catch((error) => console.warn(error));
+  ui.ingredientSearch.addEventListener("input", () => {
+    ingredientQuery = ui.ingredientSearch.value.trim();
+    renderIngredients();
+  });
+
+  ui.ingredientClear.addEventListener("click", () => {
+    ingredientQuery = "";
+    ui.ingredientSearch.value = "";
+    renderIngredients();
+  });
+
+  ui.saveIngredient.addEventListener("click", () => {
+    const name = ui.ingredientName.value.trim();
+    if (!name) return;
+    const payload = {
+      id: editingIngredientId || slug(`custom_ingredient_${name}`),
+      name,
+      category: ui.ingredientCategory.value.trim() || "Custom",
+      defaultPct: Number(ui.ingredientDefaultPct.value || 0),
+      minPct: Number(ui.ingredientMinPct.value || 0),
+      maxPct: Number(ui.ingredientMaxPct.value || 0)
+    };
+    const custom = editingIngredientId
+      ? (prefs.ingredients.custom || []).map((item) => item.id === editingIngredientId ? payload : item)
+      : [...(prefs.ingredients.custom || []), payload];
+    const favoriteIds = Array.from(new Set([...(prefs.ingredients.favoriteIds || []), payload.id]));
+    commit({ ...prefs, ingredients: { ...prefs.ingredients, custom, favoriteIds } });
+    resetIngredientForm();
+  });
+
+  ui.cancelIngredient.addEventListener("click", resetIngredientForm);
+
+  loadFloursForBrowser(store)
+    .then((flours) => { flourById = new Map(flours.map((flour) => [flour.id, flour])); render(); })
+    .catch((error) => console.warn(error));
+
   render();
   return root;
 }
 
 function evenSplit(rows) { const list = (rows || []).filter((row) => row?.id); if (!list.length) return []; const base = Math.floor(100 / list.length); let remainder = 100 - base * list.length; return list.map((row) => ({ ...row, pct: base + (remainder-- > 0 ? 1 : 0) })); }
 function findPct(rows, id) { return (rows || []).find((row) => row.id === id)?.pct || 0; }
+function fmtPct(value) { return `${Number(value || 0).toFixed(2)}%`; }
 function flourName(flour, fallback) { return [flour?.brand, flour?.name].filter(Boolean).join(" ").trim() || fallback || "Flour"; }
 function map(root, selectors) { return Object.fromEntries(Object.entries(selectors).map(([key, selector]) => [key, root.querySelector(selector)])); }
 function wrap(html) { const el = document.createElement("div"); el.innerHTML = html.trim(); return el.firstElementChild; }

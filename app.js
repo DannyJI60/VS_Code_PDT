@@ -1,7 +1,7 @@
 import { store } from "./modules/store.js";
 import { initAuth, openAuthModal, openProfileModal, refreshAuthUI } from "./modules/auth.js";
 import { initPrefs } from "./modules/prefs.js";
-import { getRoute, initRouter, setRoute } from "./modules/router.js";
+import { initRouter, setRoute } from "./modules/router.js";
 import { loadIndexes } from "./modules/loaders.js";
 import { renderRoute } from "./modules/ui.js";
 import { initKB } from "./modules/kb.js";
@@ -50,23 +50,15 @@ const prefs = initPrefs();
     resultsEl: document.getElementById("kbResults")
   }, store);
 
+  wireUI();
+  refreshPreviewButtons();
+
   initRouter({
     onRoute: (route) => {
       highlightRoute(route);
       render(route);
     }
   });
-
-  wireUI();
-  refreshPreviewButtons();
-
-  const initialRoute = getRoute();
-  if (location.hash) {
-    highlightRoute(initialRoute);
-    render(initialRoute);
-  } else {
-    setRoute(initialRoute);
-  }
 })();
 
 function render(route) {

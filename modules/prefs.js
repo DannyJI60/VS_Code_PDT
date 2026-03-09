@@ -16,12 +16,26 @@ const BUILTIN_OVENS = Object.freeze([
   { id: "wood_fired_oven", name: "Wood Fired Oven", type: "wood", minTemperature: 700, maxTemperature: 1000 }
 ]);
 
+const BUILTIN_INGREDIENTS = Object.freeze([
+  { id: "diastatic_malt", name: "Diastatic Malt", category: "Malt", defaultPct: 0.3, minPct: 0, maxPct: 2 },
+  { id: "honey", name: "Honey", category: "Sweetener", defaultPct: 2, minPct: 0, maxPct: 8 },
+  { id: "milk_powder", name: "Milk Powder", category: "Dairy", defaultPct: 2, minPct: 0, maxPct: 6 },
+  { id: "butter", name: "Butter", category: "Fat", defaultPct: 2, minPct: 0, maxPct: 12 },
+  { id: "whey", name: "Whey", category: "Dairy", defaultPct: 1, minPct: 0, maxPct: 6 },
+  { id: "barley_malt_syrup", name: "Barley Malt Syrup", category: "Malt", defaultPct: 1.5, minPct: 0, maxPct: 6 },
+  { id: "egg", name: "Egg", category: "Enrichment", defaultPct: 4, minPct: 0, maxPct: 12 },
+  { id: "vital_wheat_gluten", name: "Vital Wheat Gluten", category: "Strengthener", defaultPct: 1.5, minPct: 0, maxPct: 5 }
+]);
+
 const DEFAULT_PREFS = Object.freeze({
-  version: 2,
+  version: 3,
   general: {
     weightUnit: "grams",
     sizeUnit: "inches",
     calculationMethod: "DBW",
+    defaultShape: "round",
+    defaultSurfaceType: "deck",
+    defaultTemplateId: null,
     defaultDoughBallWeight: 280,
     defaultThicknessFactor: 0.1,
     showWarnings: true,
@@ -43,10 +57,14 @@ const DEFAULT_PREFS = Object.freeze({
     favoriteIds: ["ka_bread", "all_trumps", "cuoco_red"],
     defaultBlend: [{ id: "ka_bread", pct: 100 }],
     custom: []
+  },
+  ingredients: {
+    favoriteIds: ["diastatic_malt", "honey"],
+    custom: []
   }
 });
 
-export { PREFS_KEY, BUILTIN_OVENS };
+export { PREFS_KEY, BUILTIN_OVENS, BUILTIN_INGREDIENTS };
 
 export function loadPrefs() {
   const stored = readJson(PREFS_KEY);
@@ -109,6 +127,22 @@ export function getDefaultBlend(prefs) {
   return normalizeBlendRows(prefs?.flours?.defaultBlend);
 }
 
+export function getFavoriteIngredientIds(prefs) {
+  return normalizeStringArray(prefs?.ingredients?.favoriteIds);
+}
+
+export function getAllIngredients(prefs) {
+  const favoriteIds = new Set(getFavoriteIngredientIds(prefs));
+  const custom = normalizeCustomIngredients(prefs?.ingredients?.custom);
+  const builtins = BUILTIN_INGREDIENTS.map((ingredient) => ({
+    ...ingredient,
+    builtIn: true,
+    bookmarked: favoriteIds.has(ingredient.id)
+  }));
+
+  return [...builtins, ...custom.map((ingredient) => ({ ...ingredient, builtIn: false, bookmarked: favoriteIds.has(ingredient.id) }))];
+}
+
 export function isWorkflowEnabled(prefs, key) {
   return Boolean(normalizePrefs(prefs).workflow[key]);
 }
@@ -117,11 +151,14 @@ export function normalizePrefs(input) {
   const base = clone(DEFAULT_PREFS);
   const next = mergeDeep(base, input && typeof input === "object" ? input : {});
 
-  next.version = 2;
+  next.version = 3;
 
   next.general.weightUnit = next.general.weightUnit === "ounces" ? "ounces" : "grams";
   next.general.sizeUnit = next.general.sizeUnit === "centimeters" ? "centimeters" : "inches";
   next.general.calculationMethod = next.general.calculationMethod === "TF" ? "TF" : "DBW";
+  next.general.defaultShape = next.general.defaultShape === "rectangular" ? "rectangular" : "round";
+  next.general.defaultSurfaceType = next.general.defaultSurfaceType === "pan" ? "pan" : "deck";
+  next.general.defaultTemplateId = String(next.general.defaultTemplateId || "").trim() || null;
   next.general.defaultDoughBallWeight = clampNumber(next.general.defaultDoughBallWeight, 50, 2000, DEFAULT_PREFS.general.defaultDoughBallWeight);
   next.general.defaultThicknessFactor = clampNumber(next.general.defaultThicknessFactor, 0.05, 0.2, DEFAULT_PREFS.general.defaultThicknessFactor);
   next.general.showWarnings = Boolean(next.general.showWarnings);
@@ -140,6 +177,9 @@ export function normalizePrefs(input) {
   next.flours.favoriteIds = normalizeStringArray(next.flours.favoriteIds);
   next.flours.custom = normalizeCustomFlours(next.flours.custom);
   next.flours.defaultBlend = normalizeBlendRows(next.flours.defaultBlend);
+
+  next.ingredients.favoriteIds = normalizeStringArray(next.ingredients.favoriteIds);
+  next.ingredients.custom = normalizeCustomIngredients(next.ingredients.custom);
 
   return next;
 }
@@ -240,6 +280,29 @@ function normalizeCustomFlours(items) {
       };
     })
     .filter(Boolean);
+}
+
+function normalizeCustomIngredients(items) {
+  const source = Array.isArray(items) ? items : [];
+  return source
+    .map((item, index) => {
+      const name = String(item?.name || "").trim();
+      if (!name) return null;
+
+      return {
+        id: slugId(item.id || `custom_ingredient_${index + 1}_${name}`),
+        name,
+        category: String(item?.category || "Custom").trim() || "Custom",
+        defaultPct: clampNumber(item?.defaultPct, 0, 100, 0),
+        minPct: clampNumber(item?.minPct, 0, 100, 0),
+        maxPct: clampNumber(item?.maxPct, 0, 100, 100)
+      };
+    })
+    .filter(Boolean)
+    .map((item) => ({
+      ...item,
+      maxPct: Math.max(item.minPct ?? 0, item.maxPct ?? 0)
+    }));
 }
 
 function normalizeBlendRows(rows) {
