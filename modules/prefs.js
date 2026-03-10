@@ -4,38 +4,50 @@ const LEGACY_PREFS_KEY = "pdt_prefs_v1";
 const BUILTIN_OVENS = Object.freeze([
   { id: "home_oven", name: "Home Oven", type: "home", minTemperature: 450, maxTemperature: 550 },
   { id: "home_steel", name: "Home Oven + Steel", type: "home", minTemperature: 500, maxTemperature: 650 },
+  { id: "breville_pizzaiolo", name: "Breville Pizzaiolo", type: "electric", minTemperature: 650, maxTemperature: 750 },
   { id: "ooni_volt", name: "Ooni Volt", type: "electric", minTemperature: 650, maxTemperature: 850 },
   { id: "ooni_karu_12", name: "Ooni Karu 12", type: "hybrid", minTemperature: 700, maxTemperature: 950 },
   { id: "ooni_karu_16", name: "Ooni Karu 16", type: "hybrid", minTemperature: 700, maxTemperature: 950 },
   { id: "ooni_koda_12", name: "Ooni Koda 12", type: "gas", minTemperature: 700, maxTemperature: 950 },
   { id: "ooni_koda_16", name: "Ooni Koda 16", type: "gas", minTemperature: 700, maxTemperature: 950 },
   { id: "gozney_roccbox", name: "Gozney Roccbox", type: "gas", minTemperature: 700, maxTemperature: 950 },
+  { id: "gozney_arc", name: "Gozney Arc", type: "gas", minTemperature: 700, maxTemperature: 950 },
+  { id: "gozney_arc_xl", name: "Gozney Arc XL", type: "gas", minTemperature: 700, maxTemperature: 950 },
   { id: "gozney_dome", name: "Gozney Dome", type: "hybrid", minTemperature: 700, maxTemperature: 1000 },
+  { id: "effeuno_p134h", name: "Effeuno P134H", type: "electric", minTemperature: 650, maxTemperature: 950 },
   { id: "deck_oven", name: "Deck Oven", type: "commercial", minTemperature: 500, maxTemperature: 700 },
   { id: "conveyor_oven", name: "Conveyor Oven", type: "commercial", minTemperature: 450, maxTemperature: 600 },
   { id: "wood_fired_oven", name: "Wood Fired Oven", type: "wood", minTemperature: 700, maxTemperature: 1000 }
 ]);
 
 const BUILTIN_INGREDIENTS = Object.freeze([
-  { id: "diastatic_malt", name: "Diastatic Malt", category: "Malt", defaultPct: 0.3, minPct: 0, maxPct: 2 },
-  { id: "honey", name: "Honey", category: "Sweetener", defaultPct: 2, minPct: 0, maxPct: 8 },
+  { id: "honey", name: "Honey", category: "Sweeteners", defaultPct: 2, minPct: 0, maxPct: 8 },
+  { id: "sugar", name: "Sugar", category: "Sweeteners", defaultPct: 2, minPct: 0, maxPct: 8 },
+  { id: "barley_malt_syrup", name: "Barley Malt Syrup", category: "Sweeteners", defaultPct: 1.5, minPct: 0, maxPct: 6 },
   { id: "milk_powder", name: "Milk Powder", category: "Dairy", defaultPct: 2, minPct: 0, maxPct: 6 },
-  { id: "butter", name: "Butter", category: "Fat", defaultPct: 2, minPct: 0, maxPct: 12 },
   { id: "whey", name: "Whey", category: "Dairy", defaultPct: 1, minPct: 0, maxPct: 6 },
-  { id: "barley_malt_syrup", name: "Barley Malt Syrup", category: "Malt", defaultPct: 1.5, minPct: 0, maxPct: 6 },
-  { id: "egg", name: "Egg", category: "Enrichment", defaultPct: 4, minPct: 0, maxPct: 12 },
-  { id: "vital_wheat_gluten", name: "Vital Wheat Gluten", category: "Strengthener", defaultPct: 1.5, minPct: 0, maxPct: 5 }
+  { id: "butter", name: "Butter", category: "Dairy", defaultPct: 2, minPct: 0, maxPct: 12 },
+  { id: "vital_wheat_gluten", name: "Vital Wheat Gluten", category: "Strengtheners", defaultPct: 1.5, minPct: 0, maxPct: 5 },
+  { id: "diastatic_malt", name: "Diastatic Malt", category: "Strengtheners", defaultPct: 0.3, minPct: 0, maxPct: 2 },
+  { id: "egg", name: "Egg", category: "Enrichment", defaultPct: 4, minPct: 0, maxPct: 12 }
+]);
+
+const STARTUP_WORKFLOWS = Object.freeze([
+  { id: "blank", label: "Blank Calculator" },
+  { id: "ny_style", label: "NY Style" },
+  { id: "neapolitan", label: "Neapolitan" },
+  { id: "detroit", label: "Detroit" }
 ]);
 
 const DEFAULT_PREFS = Object.freeze({
-  version: 3,
+  version: 4,
   general: {
     weightUnit: "grams",
     sizeUnit: "inches",
     calculationMethod: "DBW",
     defaultShape: "round",
     defaultSurfaceType: "deck",
-    defaultTemplateId: null,
+    startupWorkflow: "blank",
     defaultDoughBallWeight: 280,
     defaultThicknessFactor: 0.1,
     showWarnings: true,
@@ -49,22 +61,22 @@ const DEFAULT_PREFS = Object.freeze({
     doughAnalysis: true
   },
   ovens: {
-    favoriteIds: ["home_oven", "home_steel", "ooni_volt"],
-    defaultOvenId: "home_oven",
+    selectedIds: [],
+    defaultOvenId: null,
     custom: []
   },
   flours: {
     favoriteIds: ["ka_bread", "all_trumps", "cuoco_red"],
-    defaultBlend: [{ id: "ka_bread", pct: 100 }],
+    defaultBlend: [],
     custom: []
   },
   ingredients: {
-    favoriteIds: ["diastatic_malt", "honey"],
+    selectedIds: ["honey"],
     custom: []
   }
 });
 
-export { PREFS_KEY, BUILTIN_OVENS, BUILTIN_INGREDIENTS };
+export { PREFS_KEY, BUILTIN_OVENS, BUILTIN_INGREDIENTS, STARTUP_WORKFLOWS };
 
 export function loadPrefs() {
   const stored = readJson(PREFS_KEY);
@@ -88,20 +100,30 @@ export function initPrefs() {
 }
 
 export function getAllOvens(prefs) {
-  const favoriteIds = new Set(normalizeStringArray(prefs?.ovens?.favoriteIds));
+  const selectedIds = new Set(normalizeStringArray(prefs?.ovens?.selectedIds ?? prefs?.ovens?.favoriteIds));
   const custom = normalizeCustomOvens(prefs?.ovens?.custom);
 
   const builtins = BUILTIN_OVENS.map((oven) => ({
     ...oven,
     builtin: true,
-    favorite: favoriteIds.has(oven.id)
+    selected: selectedIds.has(oven.id),
+    favorite: selectedIds.has(oven.id)
   }));
 
-  return [...builtins, ...custom.map((oven) => ({ ...oven, builtin: false, favorite: favoriteIds.has(oven.id) }))];
+  return [...builtins, ...custom.map((oven) => ({
+    ...oven,
+    builtin: false,
+    selected: selectedIds.has(oven.id),
+    favorite: selectedIds.has(oven.id)
+  }))];
+}
+
+export function getSelectedOvens(prefs) {
+  return getAllOvens(prefs).filter((oven) => oven.selected);
 }
 
 export function getFavoriteOvens(prefs) {
-  return getAllOvens(prefs).filter((oven) => oven.favorite);
+  return getSelectedOvens(prefs);
 }
 
 export function getOven(prefs, ovenId) {
@@ -109,10 +131,9 @@ export function getOven(prefs, ovenId) {
 }
 
 export function getDefaultOvenId(prefs) {
-  const all = getAllOvens(prefs);
-  if (!all.length) return null;
+  const selectedIds = new Set(getSelectedOvens(prefs).map((oven) => oven.id));
   const preferred = String(prefs?.ovens?.defaultOvenId || "").trim();
-  return all.some((oven) => oven.id === preferred) ? preferred : all[0].id;
+  return selectedIds.has(preferred) ? preferred : null;
 }
 
 export function getCustomFlours(prefs) {
@@ -123,24 +144,34 @@ export function getFavoriteFlourIds(prefs) {
   return normalizeStringArray(prefs?.flours?.favoriteIds);
 }
 
-export function getDefaultBlend(prefs) {
-  return normalizeBlendRows(prefs?.flours?.defaultBlend);
+export function getDefaultBlend() {
+  return [];
+}
+
+export function getSelectedIngredientIds(prefs) {
+  return normalizeStringArray(prefs?.ingredients?.selectedIds ?? prefs?.ingredients?.favoriteIds);
 }
 
 export function getFavoriteIngredientIds(prefs) {
-  return normalizeStringArray(prefs?.ingredients?.favoriteIds);
+  return getSelectedIngredientIds(prefs);
 }
 
 export function getAllIngredients(prefs) {
-  const favoriteIds = new Set(getFavoriteIngredientIds(prefs));
+  const selectedIds = new Set(getSelectedIngredientIds(prefs));
   const custom = normalizeCustomIngredients(prefs?.ingredients?.custom);
   const builtins = BUILTIN_INGREDIENTS.map((ingredient) => ({
     ...ingredient,
     builtIn: true,
-    bookmarked: favoriteIds.has(ingredient.id)
+    selected: selectedIds.has(ingredient.id),
+    bookmarked: selectedIds.has(ingredient.id)
   }));
 
-  return [...builtins, ...custom.map((ingredient) => ({ ...ingredient, builtIn: false, bookmarked: favoriteIds.has(ingredient.id) }))];
+  return [...builtins, ...custom.map((ingredient) => ({
+    ...ingredient,
+    builtIn: false,
+    selected: selectedIds.has(ingredient.id),
+    bookmarked: selectedIds.has(ingredient.id)
+  }))];
 }
 
 export function isWorkflowEnabled(prefs, key) {
@@ -151,14 +182,14 @@ export function normalizePrefs(input) {
   const base = clone(DEFAULT_PREFS);
   const next = mergeDeep(base, input && typeof input === "object" ? input : {});
 
-  next.version = 3;
+  next.version = 4;
 
   next.general.weightUnit = next.general.weightUnit === "ounces" ? "ounces" : "grams";
   next.general.sizeUnit = next.general.sizeUnit === "centimeters" ? "centimeters" : "inches";
   next.general.calculationMethod = next.general.calculationMethod === "TF" ? "TF" : "DBW";
   next.general.defaultShape = next.general.defaultShape === "rectangular" ? "rectangular" : "round";
   next.general.defaultSurfaceType = next.general.defaultSurfaceType === "pan" ? "pan" : "deck";
-  next.general.defaultTemplateId = String(next.general.defaultTemplateId || "").trim() || null;
+  next.general.startupWorkflow = sanitizeStartupWorkflow(next.general.startupWorkflow || next.general.defaultTemplateId);
   next.general.defaultDoughBallWeight = clampNumber(next.general.defaultDoughBallWeight, 50, 2000, DEFAULT_PREFS.general.defaultDoughBallWeight);
   next.general.defaultThicknessFactor = clampNumber(next.general.defaultThicknessFactor, 0.05, 0.2, DEFAULT_PREFS.general.defaultThicknessFactor);
   next.general.showWarnings = Boolean(next.general.showWarnings);
@@ -170,15 +201,15 @@ export function normalizePrefs(input) {
   next.workflow.sauce = Boolean(next.workflow.sauce);
   next.workflow.doughAnalysis = Boolean(next.workflow.doughAnalysis);
 
-  next.ovens.favoriteIds = normalizeStringArray(next.ovens.favoriteIds);
+  next.ovens.selectedIds = normalizeStringArray(next.ovens.selectedIds ?? next.ovens.favoriteIds);
   next.ovens.custom = normalizeCustomOvens(next.ovens.custom);
-  next.ovens.defaultOvenId = sanitizeDefaultOvenId(next.ovens.defaultOvenId, next.ovens.favoriteIds, next.ovens.custom);
+  next.ovens.defaultOvenId = sanitizeDefaultOvenId(next.ovens.defaultOvenId, next.ovens.selectedIds, next.ovens.custom);
 
   next.flours.favoriteIds = normalizeStringArray(next.flours.favoriteIds);
   next.flours.custom = normalizeCustomFlours(next.flours.custom);
-  next.flours.defaultBlend = normalizeBlendRows(next.flours.defaultBlend);
+  next.flours.defaultBlend = [];
 
-  next.ingredients.favoriteIds = normalizeStringArray(next.ingredients.favoriteIds);
+  next.ingredients.selectedIds = normalizeStringArray(next.ingredients.selectedIds ?? next.ingredients.favoriteIds);
   next.ingredients.custom = normalizeCustomIngredients(next.ingredients.custom);
 
   return next;
@@ -202,26 +233,31 @@ function migrateLegacyPrefs(legacy) {
       maxTemperature: clampNumber((oven.maxTemperature != null ? oven.maxTemperature : (oven.maxRoundIn != null ? Number(oven.maxRoundIn) * 40 : null)), 0, 1200, 750),
       notes: String(oven.notes || "")
     }));
-    migrated.ovens.favoriteIds = migrated.ovens.custom.map((oven) => oven.id);
-    migrated.ovens.defaultOvenId = migrated.ovens.custom[0]?.id || migrated.ovens.defaultOvenId;
+    migrated.ovens.selectedIds = migrated.ovens.custom.map((oven) => oven.id);
   }
 
   if (legacy.defaultOvenId) migrated.ovens.defaultOvenId = slugId(legacy.defaultOvenId);
+  if (Array.isArray(legacy.favoriteFlours)) migrated.flours.favoriteIds = normalizeStringArray(legacy.favoriteFlours);
 
   return migrated;
 }
 
-function sanitizeDefaultOvenId(defaultOvenId, favoriteIds, custom) {
+function sanitizeStartupWorkflow(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return DEFAULT_PREFS.general.startupWorkflow;
+  if (STARTUP_WORKFLOWS.some((item) => item.id === raw)) return raw;
+  if (raw === "ny_round") return "ny_style";
+  return DEFAULT_PREFS.general.startupWorkflow;
+}
+
+function sanitizeDefaultOvenId(defaultOvenId, selectedIds, custom) {
   const builtinIds = BUILTIN_OVENS.map((oven) => oven.id);
   const customIds = normalizeCustomOvens(custom).map((oven) => oven.id);
   const validIds = new Set([...builtinIds, ...customIds]);
   const preferred = String(defaultOvenId || "").trim();
-  if (validIds.has(preferred)) return preferred;
-
-  const favorite = normalizeStringArray(favoriteIds).find((id) => validIds.has(id));
-  if (favorite) return favorite;
-
-  return BUILTIN_OVENS[0]?.id || null;
+  const selected = new Set(normalizeStringArray(selectedIds));
+  if (validIds.has(preferred) && selected.has(preferred)) return preferred;
+  return null;
 }
 
 function normalizeCustomOvens(items) {
@@ -303,43 +339,6 @@ function normalizeCustomIngredients(items) {
       ...item,
       maxPct: Math.max(item.minPct ?? 0, item.maxPct ?? 0)
     }));
-}
-
-function normalizeBlendRows(rows) {
-  const source = Array.isArray(rows) ? rows : [];
-  const cleaned = source
-    .map((row) => ({
-      id: String(row?.id || "").trim(),
-      pct: clampNumber(row?.pct, 0, 100, 0)
-    }))
-    .filter((row) => row.id);
-
-  if (!cleaned.length) return clone(DEFAULT_PREFS.flours.defaultBlend);
-
-  const total = cleaned.reduce((sum, row) => sum + row.pct, 0);
-  if (total <= 0) {
-    const even = Math.floor(100 / cleaned.length);
-    let remainder = 100 - even * cleaned.length;
-    return cleaned.map((row) => ({
-      id: row.id,
-      pct: even + (remainder-- > 0 ? 1 : 0)
-    }));
-  }
-
-  const scaled = cleaned.map((row) => ({
-    id: row.id,
-    pct: Math.round((row.pct / total) * 100)
-  }));
-
-  let diff = 100 - scaled.reduce((sum, row) => sum + row.pct, 0);
-  let index = 0;
-  while (diff !== 0 && scaled.length) {
-    scaled[index % scaled.length].pct += diff > 0 ? 1 : -1;
-    diff += diff > 0 ? -1 : 1;
-    index += 1;
-  }
-
-  return scaled;
 }
 
 function normalizeStringArray(items) {

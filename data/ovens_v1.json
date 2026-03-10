@@ -1,0 +1,20 @@
+{
+  "items": [
+    { "id": "home_oven", "name": "Home Oven", "type": "home", "minTemperature": 450, "maxTemperature": 550 },
+    { "id": "home_steel", "name": "Home Oven + Steel", "type": "home", "minTemperature": 500, "maxTemperature": 650 },
+    { "id": "breville_pizzaiolo", "name": "Breville Pizzaiolo", "type": "electric", "minTemperature": 650, "maxTemperature": 750 },
+    { "id": "ooni_volt", "name": "Ooni Volt", "type": "electric", "minTemperature": 650, "maxTemperature": 850 },
+    { "id": "ooni_karu_12", "name": "Ooni Karu 12", "type": "hybrid", "minTemperature": 700, "maxTemperature": 950 },
+    { "id": "ooni_karu_16", "name": "Ooni Karu 16", "type": "hybrid", "minTemperature": 700, "maxTemperature": 950 },
+    { "id": "ooni_koda_12", "name": "Ooni Koda 12", "type": "gas", "minTemperature": 700, "maxTemperature": 950 },
+    { "id": "ooni_koda_16", "name": "Ooni Koda 16", "type": "gas", "minTemperature": 700, "maxTemperature": 950 },
+    { "id": "gozney_roccbox", "name": "Gozney Roccbox", "type": "gas", "minTemperature": 700, "maxTemperature": 950 },
+    { "id": "gozney_arc", "name": "Gozney Arc", "type": "gas", "minTemperature": 700, "maxTemperature": 950 },
+    { "id": "gozney_arc_xl", "name": "Gozney Arc XL", "type": "gas", "minTemperature": 700, "maxTemperature": 950 },
+    { "id": "gozney_dome", "name": "Gozney Dome", "type": "hybrid", "minTemperature": 700, "maxTemperature": 1000 },
+    { "id": "effeuno_p134h", "name": "Effeuno P134H", "type": "electric", "minTemperature": 650, "maxTemperature": 950 },
+    { "id": "deck_oven", "name": "Deck Oven", "type": "commercial", "minTemperature": 500, "maxTemperature": 700 },
+    { "id": "conveyor_oven", "name": "Conveyor Oven", "type": "commercial", "minTemperature": 450, "maxTemperature": 600 },
+    { "id": "wood_fired_oven", "name": "Wood Fired Oven", "type": "wood", "minTemperature": 700, "maxTemperature": 1000 }
+  ]
+}

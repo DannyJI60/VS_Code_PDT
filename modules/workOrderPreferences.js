@@ -1,82 +1,136 @@
 import { openFlourPickerModal } from "./flourPickerModal.js";
 import { loadFloursForBrowser } from "./floursDb.js";
+import { showModal } from "./modal.js";
 import {
   BUILTIN_OVENS,
+  STARTUP_WORKFLOWS,
   getAllIngredients,
   getAllOvens,
-  getDefaultBlend,
   getFavoriteFlourIds,
   loadPrefs,
   normalizePrefs,
   savePrefs
 } from "./prefs.js";
+import { TEMPLATE_LIBRARY } from "./workOrderRecipe.js";
+
+const TEMPLATE_LOADING_MESSAGE = "Template loading will be enabled in a future update.";
+const INGREDIENT_CATEGORY_ORDER = ["Sweeteners", "Dairy", "Strengtheners", "Enrichment", "Custom"];
 
 export function renderWorkOrderPreferences({ store }) {
   let prefs = loadPrefs();
   let flourById = new Map();
-  let ingredientQuery = "";
-  let editingIngredientId = null;
 
   const root = wrap(`
-    <div class="prefStack">
-      <div class="item"><h4>Preferences</h4><p class="muted">Saved locally to <code>localStorage["pdt.preferences"]</code>. These values define defaults and favorite items, not the recipe itself.</p></div>
-      <div class="item"><h4>Calculator Setup</h4><p class="muted">Reopen Quick Setup to change the environment defaults the calculator should start from.</p><div class="wo-inline-actions" style="margin-top:12px;"><button class="btn ghost" id="prefOpenQuickSetup" type="button">Open Quick Setup</button></div></div>
+    <div class="prefStack wo-pref-stack">
+      <div class="item">
+        <h4>Preferences</h4>
+        <p class="muted">Saved locally to <code>localStorage["pdt.preferences"]</code>. This page is dedicated to defaults, startup behavior, and your personal ingredient libraries.</p>
+      </div>
+
       <div class="prefsGrid wo-prefs-grid">
-        <div class="prefSection">
-          <h4>General</h4>
-          <p>Defaults for units, method, warnings, and analysis.</p>
+        <section class="prefSection wo-pref-section">
+          <h4>Calculator Defaults</h4>
+          <p>Set the measurement and calculation defaults the calculator should use for new sessions.</p>
           <div class="wo-grid2" style="margin-top:12px;">
-            <div><label class="lbl">Weight unit</label><select class="input" id="prefWeightUnit"><option value="grams">Grams</option><option value="ounces">Ounces</option></select></div>
-            <div><label class="lbl">Size unit</label><select class="input" id="prefSizeUnit"><option value="inches">Inches</option><option value="centimeters">Centimeters</option></select></div>
-            <div><label class="lbl">Calculation method</label><select class="input" id="prefCalcMethod"><option value="DBW">DBW</option><option value="TF">TF</option></select></div>
-            <div><label class="lbl">Default dough ball weight (g)</label><input class="input" id="prefBallWeight" type="number" min="50" max="2000" step="1" /></div>
-            <div><label class="lbl">Default thickness factor</label><input class="input" id="prefTf" type="number" min="0.05" max="0.2" step="0.001" /></div>
-            <div><label class="checkrow"><input id="prefWarnings" type="checkbox" /><span>Show warnings</span></label><label class="checkrow" style="margin-top:10px;"><input id="prefAnalysis" type="checkbox" /><span>Enable dough analysis</span></label></div>
+            <div>
+              <label class="lbl" for="prefWeightUnit">Weight Units</label>
+              <select class="input" id="prefWeightUnit">
+                <option value="grams">grams</option>
+                <option value="ounces">ounces</option>
+              </select>
+            </div>
+            <div>
+              <label class="lbl" for="prefSizeUnit">Size Units</label>
+              <select class="input" id="prefSizeUnit">
+                <option value="inches">inches</option>
+                <option value="centimeters">centimeters</option>
+              </select>
+            </div>
           </div>
-        </div>
-        <div class="prefSection">
-          <h4>Workflow Modules</h4>
-          <p>Optional calculator sections.</p>
-          <div class="wo-toggle-list" id="prefWorkflow" style="margin-top:12px;"></div>
-        </div>
-        <div class="prefSection">
-          <h4>Oven Library Manager</h4>
-          <p>Favorite built-in ovens, set a default oven, and add custom ovens.</p>
-          <div class="wo-library-list" id="prefOvenLibrary" style="margin-top:12px;"></div>
-          <div class="wo-grid2" style="margin-top:12px;"><input class="input" id="prefOvenName" placeholder="Custom oven name" /><input class="input" id="prefOvenType" placeholder="Type" /><input class="input" id="prefOvenMin" type="number" min="0" step="1" placeholder="Min temp F" /><input class="input" id="prefOvenMax" type="number" min="0" step="1" placeholder="Max temp F" /></div>
-          <textarea class="input wo-textarea" id="prefOvenNotes" placeholder="Notes" style="margin-top:12px;"></textarea>
-          <div class="wo-inline-actions" style="margin-top:12px;"><button class="btn primary" id="prefAddOven" type="button">Add Custom Oven</button></div>
-        </div>
-        <div class="prefSection">
-          <h4>Flours</h4>
-          <p>Choose favorite flours, define a default blend, and add custom flour entries.</p>
-          <div class="wo-inline-actions" style="margin-top:12px;"><button class="btn" id="prefChooseFavorites" type="button">Choose Favorite Flours</button><button class="btn ghost" id="prefEvenSplit" type="button">Even Split Default Blend</button></div>
-          <div class="wo-library-list" id="prefFlourLibrary" style="margin-top:12px;"></div>
-          <div class="wo-grid2" style="margin-top:12px;"><input class="input" id="prefFlourName" placeholder="Flour name" /><input class="input" id="prefFlourBrand" placeholder="Brand" /><select class="input" id="prefFlourType"><option value="00">00</option><option value="AP">AP</option><option value="Bread">Bread</option><option value="High Gluten">High Gluten</option><option value="Whole Wheat">Whole Wheat</option><option value="Manitoba">Manitoba</option><option value="Other">Other</option></select><input class="input" id="prefFlourProtein" type="number" min="0" max="30" step="0.1" placeholder="Protein %" /><input class="input" id="prefFlourAbsMin" type="number" min="0" max="100" step="0.1" placeholder="Abs min %" /><input class="input" id="prefFlourAbsMax" type="number" min="0" max="100" step="0.1" placeholder="Abs max %" /></div>
-          <div class="wo-grid2" style="margin-top:12px;"><input class="input" id="prefFlourW" type="number" min="0" max="600" step="1" placeholder="W value" /><input class="input" id="prefFlourPL" type="number" min="0" max="10" step="0.1" placeholder="P/L ratio" /><label class="checkrow"><input id="prefFlourMalted" type="checkbox" /><span>Malted</span></label></div>
-          <textarea class="input wo-textarea" id="prefFlourNotes" placeholder="Notes" style="margin-top:12px;"></textarea>
-          <div class="wo-inline-actions" style="margin-top:12px;"><button class="btn primary" id="prefAddFlour" type="button">Add Custom Flour</button></div>
-        </div>
-        <div class="prefSection">
-          <h4>Ingredient Library</h4>
-          <p>Search, bookmark, add, edit, and remove formula ingredients.</p>
-          <div class="wo-grid2" style="margin-top:12px;">
-            <div><label class="lbl">Search ingredients</label><input class="input" id="prefIngredientSearch" placeholder="Search ingredients" /></div>
-            <div class="wo-inline-end"><button class="btn ghost" id="prefIngredientClear" type="button">Clear</button></div>
+          <div style="margin-top:14px;">
+            <label class="lbl">Calculation System</label>
+            <div class="wo-radio-row" id="prefCalcMethod">
+              <label class="wo-radio-card"><input type="radio" name="prefCalcSystem" value="TF" /><span>Thickness Factor (TF)</span></label>
+              <label class="wo-radio-card"><input type="radio" name="prefCalcSystem" value="DBW" /><span>Dough Ball Weight (DBW)</span></label>
+            </div>
           </div>
-          <div class="wo-library-list" id="prefIngredientLibrary" style="margin-top:12px;"></div>
-          <div class="wo-grid2" style="margin-top:12px;"><input class="input" id="prefIngredientName" placeholder="Ingredient name" /><input class="input" id="prefIngredientCategory" placeholder="Category" /><input class="input" id="prefIngredientDefaultPct" type="number" min="0" max="100" step="0.1" placeholder="Default %" /><input class="input" id="prefIngredientMinPct" type="number" min="0" max="100" step="0.1" placeholder="Min %" /><input class="input" id="prefIngredientMaxPct" type="number" min="0" max="100" step="0.1" placeholder="Max %" /></div>
-          <div class="wo-inline-actions" style="margin-top:12px;"><button class="btn primary" id="prefSaveIngredient" type="button">Add Ingredient</button><button class="btn ghost hidden" id="prefCancelIngredient" type="button">Cancel Edit</button></div>
-        </div>
+          <div class="wo-grid2" style="margin-top:14px;">
+            <div>
+              <label class="lbl" for="prefBallWeight">Default Dough Ball Weight</label>
+              <input class="input" id="prefBallWeight" type="number" min="50" max="2000" step="1" />
+            </div>
+            <div>
+              <label class="lbl" for="prefThicknessFactor">Default Thickness Factor</label>
+              <input class="input" id="prefThicknessFactor" type="number" min="0.05" max="0.2" step="0.001" />
+            </div>
+          </div>
+        </section>
+
+        <section class="prefSection wo-pref-section">
+          <h4>Startup Behavior</h4>
+          <p>Choose what the app should load when you start a fresh calculator session.</p>
+          <div style="margin-top:12px;">
+            <label class="lbl" for="prefStartupWorkflow">Startup Workflow</label>
+            <select class="input" id="prefStartupWorkflow"></select>
+          </div>
+          <p class="muted wo-pref-status" id="prefStartupStatus" style="margin-top:12px;"></p>
+        </section>
+
+        <section class="prefSection wo-pref-section">
+          <h4>Oven Preferences</h4>
+          <p>Only checked ovens appear in the calculator. Start with none selected, then keep your working oven list tight.</p>
+          <div class="wo-selection-list" id="prefOvenList" style="margin-top:12px;"></div>
+          <div class="wo-inline-actions" style="margin-top:12px;">
+            <button class="btn primary" id="prefSelectOvens" type="button">Select Ovens</button>
+          </div>
+        </section>
+
+        <section class="prefSection wo-pref-section">
+          <h4>Flour Preferences</h4>
+          <p>Manage favorite flours only. The calculator can pull from this list without storing a default blend.</p>
+          <div class="wo-selection-list" id="prefFlourList" style="margin-top:12px;"></div>
+          <div class="wo-inline-actions" style="margin-top:12px;">
+            <button class="btn primary" id="prefOpenFlourBrowser" type="button">Open Flour Browser</button>
+          </div>
+        </section>
+
+        <section class="prefSection wo-pref-section">
+          <h4>Optional Ingredients</h4>
+          <p>Select which optional ingredients should be available in the calculator, and manage custom ingredient presets in one place.</p>
+          <div class="wo-selection-list" id="prefIngredientList" style="margin-top:12px;"></div>
+          <div class="wo-inline-actions" style="margin-top:12px;">
+            <button class="btn primary" id="prefSelectIngredients" type="button">Select Optional Ingredients</button>
+          </div>
+        </section>
+
+        <section class="prefSection wo-pref-section">
+          <h4>Data Tools</h4>
+          <p>Export or reset the locally stored preferences data for this browser profile.</p>
+          <div class="wo-inline-actions" style="margin-top:12px;">
+            <button class="btn" id="prefExport" type="button">Export Preferences</button>
+            <button class="btn ghost" id="prefReset" type="button">Reset Preferences</button>
+          </div>
+        </section>
       </div>
     </div>
   `);
 
   const ui = map(root, {
-    openQuickSetup: "#prefOpenQuickSetup", weightUnit: "#prefWeightUnit", sizeUnit: "#prefSizeUnit", calcMethod: "#prefCalcMethod", ballWeight: "#prefBallWeight", tf: "#prefTf", warnings: "#prefWarnings", analysis: "#prefAnalysis", workflow: "#prefWorkflow",
-    ovenLibrary: "#prefOvenLibrary", ovenName: "#prefOvenName", ovenType: "#prefOvenType", ovenMin: "#prefOvenMin", ovenMax: "#prefOvenMax", ovenNotes: "#prefOvenNotes", addOven: "#prefAddOven",
-    chooseFavorites: "#prefChooseFavorites", evenSplit: "#prefEvenSplit", flourLibrary: "#prefFlourLibrary", flourName: "#prefFlourName", flourBrand: "#prefFlourBrand", flourType: "#prefFlourType", flourProtein: "#prefFlourProtein", flourAbsMin: "#prefFlourAbsMin", flourAbsMax: "#prefFlourAbsMax", flourW: "#prefFlourW", flourPL: "#prefFlourPL", flourMalted: "#prefFlourMalted", flourNotes: "#prefFlourNotes", addFlour: "#prefAddFlour",
-    ingredientSearch: "#prefIngredientSearch", ingredientClear: "#prefIngredientClear", ingredientLibrary: "#prefIngredientLibrary", ingredientName: "#prefIngredientName", ingredientCategory: "#prefIngredientCategory", ingredientDefaultPct: "#prefIngredientDefaultPct", ingredientMinPct: "#prefIngredientMinPct", ingredientMaxPct: "#prefIngredientMaxPct", saveIngredient: "#prefSaveIngredient", cancelIngredient: "#prefCancelIngredient"
+    weightUnit: "#prefWeightUnit",
+    sizeUnit: "#prefSizeUnit",
+    calcMethod: "#prefCalcMethod",
+    ballWeight: "#prefBallWeight",
+    thicknessFactor: "#prefThicknessFactor",
+    startupWorkflow: "#prefStartupWorkflow",
+    startupStatus: "#prefStartupStatus",
+    ovenList: "#prefOvenList",
+    selectOvens: "#prefSelectOvens",
+    flourList: "#prefFlourList",
+    openFlourBrowser: "#prefOpenFlourBrowser",
+    ingredientList: "#prefIngredientList",
+    selectIngredients: "#prefSelectIngredients",
+    exportBtn: "#prefExport",
+    resetBtn: "#prefReset"
   });
 
   function commit(nextPrefs) {
@@ -86,205 +140,490 @@ export function renderWorkOrderPreferences({ store }) {
     render();
   }
 
-  function resetIngredientForm() {
-    editingIngredientId = null;
-    ui.ingredientName.value = "";
-    ui.ingredientCategory.value = "";
-    ui.ingredientDefaultPct.value = "";
-    ui.ingredientMinPct.value = "";
-    ui.ingredientMaxPct.value = "";
-    ui.saveIngredient.textContent = "Add Ingredient";
-    ui.cancelIngredient.classList.add("hidden");
-  }
-
-  function startIngredientEdit(ingredient) {
-    editingIngredientId = ingredient.id;
-    ui.ingredientName.value = ingredient.name || "";
-    ui.ingredientCategory.value = ingredient.category || "";
-    ui.ingredientDefaultPct.value = ingredient.defaultPct != null ? String(ingredient.defaultPct) : "";
-    ui.ingredientMinPct.value = ingredient.minPct != null ? String(ingredient.minPct) : "";
-    ui.ingredientMaxPct.value = ingredient.maxPct != null ? String(ingredient.maxPct) : "";
-    ui.saveIngredient.textContent = "Update Ingredient";
-    ui.cancelIngredient.classList.remove("hidden");
-  }
-
   function render() {
     ui.weightUnit.value = prefs.general.weightUnit;
     ui.sizeUnit.value = prefs.general.sizeUnit;
-    ui.calcMethod.value = prefs.general.calculationMethod;
     ui.ballWeight.value = String(prefs.general.defaultDoughBallWeight);
-    ui.tf.value = String(prefs.general.defaultThicknessFactor);
-    ui.warnings.checked = prefs.general.showWarnings;
-    ui.analysis.checked = prefs.general.enableDoughAnalysis;
-    ui.ingredientSearch.value = ingredientQuery;
-    renderWorkflow();
+    ui.thicknessFactor.value = String(prefs.general.defaultThicknessFactor);
+    ui.startupWorkflow.innerHTML = STARTUP_WORKFLOWS
+      .map((option) => `<option value="${esc(option.id)}">${esc(option.label)}</option>`)
+      .join("");
+    ui.startupWorkflow.value = prefs.general.startupWorkflow || "blank";
+
+    ui.calcMethod.querySelectorAll("input[name='prefCalcSystem']").forEach((input) => {
+      input.checked = input.value === prefs.general.calculationMethod;
+    });
+
+    renderStartupStatus();
     renderOvens();
     renderFlours();
     renderIngredients();
   }
 
-  function renderWorkflow() {
-    const items = [["Preferments", "preferments"], ["Toppings", "toppings"], ["Sauce", "sauce"], ["Dough Analysis", "doughAnalysis"]];
-    ui.workflow.innerHTML = items.map(([label, key]) => `<label class="checkrow"><input type="checkbox" data-flow="${esc(key)}" ${prefs.workflow[key] ? "checked" : ""} /><span>${esc(label)}</span></label>`).join("");
-    ui.workflow.querySelectorAll("[data-flow]").forEach((input) => input.addEventListener("change", () => commit({ ...prefs, workflow: { ...prefs.workflow, [input.getAttribute("data-flow")]: input.checked } })));
+  function renderStartupStatus() {
+    const workflowId = prefs.general.startupWorkflow || "blank";
+    if (workflowId === "blank") {
+      ui.startupStatus.textContent = "The calculator will open to a blank workflow.";
+      return;
+    }
+
+    const template = TEMPLATE_LIBRARY.find((item) => item.id === workflowId);
+    ui.startupStatus.textContent = template
+      ? `${template.name} will load when you start a fresh calculator session.`
+      : TEMPLATE_LOADING_MESSAGE;
   }
 
   function renderOvens() {
-    const ovens = getAllOvens(prefs);
-    ui.ovenLibrary.innerHTML = ovens.map((oven) => `<div class="wo-library-row"><div><div class="wo-library-title">${esc(oven.name)}</div><div class="muted">${esc(`${oven.type} | ${oven.minTemperature || "-"}-${oven.maxTemperature || "-"} F`)}${oven.builtin ? " | Built-in" : " | Custom"}</div></div><div class="wo-library-actions"><label class="checkrow"><input type="checkbox" data-oven-favorite="${esc(oven.id)}" ${oven.favorite ? "checked" : ""} /><span>Favorite</span></label><label class="checkrow"><input type="radio" name="prefDefaultOven" data-oven-default="${esc(oven.id)}" ${prefs.ovens.defaultOvenId === oven.id ? "checked" : ""} /><span>Default</span></label>${oven.builtin ? "" : `<button class="btn ghost sm" type="button" data-remove-oven="${esc(oven.id)}">Remove</button>`}</div></div>`).join("");
-    ui.ovenLibrary.querySelectorAll("[data-oven-favorite]").forEach((input) => input.addEventListener("change", () => {
-      const id = input.getAttribute("data-oven-favorite");
-      const next = new Set(prefs.ovens.favoriteIds || []);
-      if (input.checked) next.add(id); else next.delete(id);
-      commit({ ...prefs, ovens: { ...prefs.ovens, favoriteIds: Array.from(next).sort() } });
-    }));
-    ui.ovenLibrary.querySelectorAll("[data-oven-default]").forEach((input) => input.addEventListener("change", () => commit({ ...prefs, ovens: { ...prefs.ovens, defaultOvenId: input.getAttribute("data-oven-default") } })));
-    ui.ovenLibrary.querySelectorAll("[data-remove-oven]").forEach((button) => button.addEventListener("click", () => {
-      const id = button.getAttribute("data-remove-oven");
-      commit({ ...prefs, ovens: { ...prefs.ovens, favoriteIds: (prefs.ovens.favoriteIds || []).filter((item) => item !== id), custom: (prefs.ovens.custom || []).filter((oven) => oven.id !== id), defaultOvenId: prefs.ovens.defaultOvenId === id ? BUILTIN_OVENS[0].id : prefs.ovens.defaultOvenId } });
-    }));
+    const selected = getAllOvens(prefs).filter((oven) => oven.selected);
+    ui.ovenList.innerHTML = selected.length
+      ? selected.map((oven) => `
+          <div class="wo-selection-row">
+            <div>
+              <div class="wo-selection-title">${esc(oven.name)}</div>
+              <div class="muted">${esc(`${oven.type} | ${formatTempBand(oven)}`)}</div>
+            </div>
+            <span class="wo-selection-tag">${oven.builtin ? "Popular" : "Custom"}</span>
+          </div>
+        `).join("")
+      : `<div class="muted">No ovens selected. The calculator will start with no oven selected.</div>`;
   }
 
   function renderFlours() {
     const favoriteIds = getFavoriteFlourIds(prefs);
-    const defaultIds = new Set((prefs.flours.defaultBlend || []).map((row) => row.id));
-    ui.flourLibrary.innerHTML = favoriteIds.length
-      ? favoriteIds.map((id) => `<div class="wo-library-row"><div><div class="wo-library-title">${esc(flourName(flourById.get(id), id))}</div><div class="muted">${esc(flourById.get(id)?.type || "Favorite flour")}</div></div><div class="wo-library-actions"><label class="checkrow"><input type="checkbox" data-default-flour="${esc(id)}" ${defaultIds.has(id) ? "checked" : ""} /><span>Default blend</span></label><input class="input wo-pct-input" type="number" min="0" max="100" step="1" data-default-pct="${esc(id)}" value="${findPct(prefs.flours.defaultBlend, id)}" ${defaultIds.has(id) ? "" : "disabled"} /><span class="muted">%</span>${prefs.flours.custom.some((flour) => flour.id === id) ? `<button class="btn ghost sm" type="button" data-remove-flour="${esc(id)}">Remove</button>` : ""}</div></div>`).join("")
-      : `<div class="muted">No favorite flours yet. Use the flour picker to choose favorites.</div>`;
-    ui.flourLibrary.querySelectorAll("[data-default-flour]").forEach((input) => input.addEventListener("change", () => {
-      const id = input.getAttribute("data-default-flour");
-      let next = (prefs.flours.defaultBlend || []).filter((row) => row.id !== id);
-      if (input.checked) next.push({ id, pct: 0 });
-      commit({ ...prefs, flours: { ...prefs.flours, defaultBlend: evenSplit(next) } });
-    }));
-    ui.flourLibrary.querySelectorAll("[data-default-pct]").forEach((input) => input.addEventListener("input", () => {
-      const id = input.getAttribute("data-default-pct");
-      const next = (prefs.flours.defaultBlend || []).map((row) => row.id === id ? { ...row, pct: Number(input.value || 0) } : row);
-      commit({ ...prefs, flours: { ...prefs.flours, defaultBlend: next } });
-    }));
-    ui.flourLibrary.querySelectorAll("[data-remove-flour]").forEach((button) => button.addEventListener("click", () => {
-      const id = button.getAttribute("data-remove-flour");
-      commit({ ...prefs, flours: { ...prefs.flours, favoriteIds: favoriteIds.filter((item) => item !== id), custom: prefs.flours.custom.filter((item) => item.id !== id), defaultBlend: (prefs.flours.defaultBlend || []).filter((row) => row.id !== id) } });
-    }));
+    ui.flourList.innerHTML = favoriteIds.length
+      ? favoriteIds.map((id) => {
+          const flour = flourById.get(id);
+          return `
+            <div class="wo-selection-row">
+              <div>
+                <div class="wo-selection-title">&#9733; ${esc(flourName(flour, id))}</div>
+                <div class="muted">${esc(flour?.type || "Favorite flour")}</div>
+              </div>
+            </div>
+          `;
+        }).join("")
+      : `<div class="muted">No favorite flours selected yet.</div>`;
   }
 
   function renderIngredients() {
-    const list = getAllIngredients(prefs).filter((ingredient) => {
-      const haystack = `${ingredient.name} ${ingredient.category}`.toLowerCase();
-      return !ingredientQuery || haystack.includes(ingredientQuery.toLowerCase());
-    });
-    ui.ingredientLibrary.innerHTML = list.length
-      ? list.map((ingredient) => `<div class="wo-library-row"><div><div class="wo-library-title">${esc(ingredient.name)}</div><div class="muted">${esc(`${ingredient.category} | Default ${fmtPct(ingredient.defaultPct)} | Range ${fmtPct(ingredient.minPct)}-${fmtPct(ingredient.maxPct)}`)}${ingredient.builtIn ? " | Built-in" : " | Custom"}</div></div><div class="wo-library-actions"><label class="checkrow"><input type="checkbox" data-ingredient-bookmark="${esc(ingredient.id)}" ${ingredient.bookmarked ? "checked" : ""} /><span>Bookmark</span></label>${ingredient.builtIn ? "" : `<button class="btn ghost sm" type="button" data-edit-ingredient="${esc(ingredient.id)}">Edit</button><button class="btn ghost sm" type="button" data-remove-ingredient="${esc(ingredient.id)}">Remove</button>`}</div></div>`).join("")
-      : `<div class="muted">No ingredients match your search.</div>`;
-
-    ui.ingredientLibrary.querySelectorAll("[data-ingredient-bookmark]").forEach((input) => input.addEventListener("change", () => {
-      const id = input.getAttribute("data-ingredient-bookmark");
-      const next = new Set(prefs.ingredients.favoriteIds || []);
-      if (input.checked) next.add(id); else next.delete(id);
-      commit({ ...prefs, ingredients: { ...prefs.ingredients, favoriteIds: Array.from(next).sort() } });
-    }));
-
-    ui.ingredientLibrary.querySelectorAll("[data-edit-ingredient]").forEach((button) => button.addEventListener("click", () => {
-      const ingredient = (prefs.ingredients.custom || []).find((item) => item.id === button.getAttribute("data-edit-ingredient"));
-      if (ingredient) startIngredientEdit(ingredient);
-    }));
-
-    ui.ingredientLibrary.querySelectorAll("[data-remove-ingredient]").forEach((button) => button.addEventListener("click", () => {
-      const id = button.getAttribute("data-remove-ingredient");
-      commit({ ...prefs, ingredients: { ...prefs.ingredients, favoriteIds: (prefs.ingredients.favoriteIds || []).filter((item) => item !== id), custom: (prefs.ingredients.custom || []).filter((item) => item.id !== id) } });
-      if (editingIngredientId === id) resetIngredientForm();
-    }));
+    const selected = getAllIngredients(prefs).filter((ingredient) => ingredient.selected);
+    ui.ingredientList.innerHTML = selected.length
+      ? groupIngredients(selected).map(([category, rows]) => `
+          <div class="wo-selection-group">
+            <div class="wo-selection-grouphead">${esc(category)}</div>
+            ${rows.map((ingredient) => `
+              <div class="wo-selection-row">
+                <div>
+                  <div class="wo-selection-title">${esc(ingredient.name)}</div>
+                  <div class="muted">Default ${fmtPct(ingredient.defaultPct)} | Range ${fmtPct(ingredient.minPct)}-${fmtPct(ingredient.maxPct)}</div>
+                </div>
+                <span class="wo-selection-tag">${ingredient.builtIn ? "Built-in" : "Custom"}</span>
+              </div>
+            `).join("")}
+          </div>
+        `).join("")
+      : `<div class="muted">No optional ingredients selected. The calculator will only show the core formula rows.</div>`;
   }
 
-  ui.openQuickSetup.addEventListener("click", () => {
-    store.set("openQuickSetup", true);
-    window.PDT?.setRoute?.("dough");
-    if (!window.PDT?.setRoute) window.location.hash = "#/dough";
+  async function openOvenChecklist() {
+    const body = document.createElement("div");
+    body.innerHTML = `
+      <div class="wo-modal-grid">
+        <div>
+          <div class="muted">Check the ovens you want available in the calculator. Popular ovens load from the oven database, and custom ovens can be added below.</div>
+        </div>
+        <div>
+          <label class="lbl" for="prefOvenSearch">Search Ovens</label>
+          <input class="input" id="prefOvenSearch" placeholder="Search ovens" />
+        </div>
+        <div class="wo-modal-checklist" id="prefOvenChecklist"></div>
+        <div class="wo-modal-form">
+          <div class="wo-modal-formhead">Add Custom Oven</div>
+          <div class="wo-grid2">
+            <input class="input" id="prefCustomOvenName" placeholder="Custom oven name" />
+            <input class="input" id="prefCustomOvenType" placeholder="Type" />
+            <input class="input" id="prefCustomOvenMin" type="number" min="0" step="1" placeholder="Min temp F" />
+            <input class="input" id="prefCustomOvenMax" type="number" min="0" step="1" placeholder="Max temp F" />
+          </div>
+          <textarea class="input wo-textarea" id="prefCustomOvenNotes" placeholder="Notes" style="margin-top:12px;"></textarea>
+          <div class="wo-inline-actions" style="margin-top:12px;">
+            <button class="btn" id="prefAddCustomOven" type="button">Add Custom Oven</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const searchEl = body.querySelector("#prefOvenSearch");
+    const listEl = body.querySelector("#prefOvenChecklist");
+    const draftSelected = new Set(prefs.ovens.selectedIds || []);
+    let draftCustom = [...(prefs.ovens.custom || [])];
+    const catalog = await loadOvenCatalog(store);
+
+    function rows() {
+      const builtins = catalog.map((oven) => ({ ...oven, builtin: true }));
+      const customs = draftCustom.map((oven) => ({ ...oven, builtin: false }));
+      return [...builtins, ...customs];
+    }
+
+    function renderList() {
+      const query = String(searchEl.value || "").trim().toLowerCase();
+      const filtered = rows().filter((oven) => !query || `${oven.name} ${oven.type}`.toLowerCase().includes(query));
+      listEl.innerHTML = filtered.length
+        ? filtered.map((oven) => `
+            <label class="wo-checklist-row">
+              <span class="wo-checklist-main">
+                <input type="checkbox" data-oven-id="${esc(oven.id)}" ${draftSelected.has(oven.id) ? "checked" : ""} />
+                <span>
+                  <strong>${esc(oven.name)}</strong>
+                  <span class="muted">${esc(`${oven.type} | ${formatTempBand(oven)}`)}</span>
+                </span>
+              </span>
+              <span class="wo-checklist-actions">
+                <span class="wo-selection-tag">${oven.builtin ? "Popular" : "Custom"}</span>
+                ${oven.builtin ? "" : `<button class="btn ghost sm" type="button" data-remove-oven="${esc(oven.id)}">Delete</button>`}
+              </span>
+            </label>
+          `).join("")
+        : `<div class="muted">No ovens match your search.</div>`;
+
+      listEl.querySelectorAll("[data-oven-id]").forEach((input) => {
+        input.addEventListener("change", () => {
+          const id = input.getAttribute("data-oven-id");
+          if (input.checked) draftSelected.add(id); else draftSelected.delete(id);
+        });
+      });
+
+      listEl.querySelectorAll("[data-remove-oven]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const id = button.getAttribute("data-remove-oven");
+          draftSelected.delete(id);
+          draftCustom = draftCustom.filter((oven) => oven.id !== id);
+          renderList();
+        });
+      });
+    }
+
+    body.querySelector("#prefAddCustomOven").addEventListener("click", () => {
+      const name = body.querySelector("#prefCustomOvenName").value.trim();
+      if (!name) return;
+      const oven = {
+        id: slug(`custom_oven_${name}`),
+        name,
+        type: body.querySelector("#prefCustomOvenType").value.trim() || "custom",
+        minTemperature: numberOrNull(body.querySelector("#prefCustomOvenMin").value),
+        maxTemperature: numberOrNull(body.querySelector("#prefCustomOvenMax").value),
+        notes: body.querySelector("#prefCustomOvenNotes").value.trim()
+      };
+      draftCustom = [...draftCustom.filter((item) => item.id !== oven.id), oven];
+      draftSelected.add(oven.id);
+      ["#prefCustomOvenName", "#prefCustomOvenType", "#prefCustomOvenMin", "#prefCustomOvenMax", "#prefCustomOvenNotes"].forEach((selector) => {
+        body.querySelector(selector).value = "";
+      });
+      renderList();
+    });
+
+    searchEl.addEventListener("input", renderList);
+    renderList();
+
+    showModal({
+      title: "Oven Preferences",
+      bodyEl: body,
+      actions: [{
+        label: "Save Ovens",
+        primary: true,
+        onClick: ({ close }) => {
+          commit({
+            ...prefs,
+            ovens: {
+              ...prefs.ovens,
+              selectedIds: Array.from(draftSelected).sort(),
+              custom: draftCustom,
+              defaultOvenId: null
+            }
+          });
+          close();
+        }
+      }]
+    });
+  }
+
+  function openIngredientChecklist() {
+    const body = document.createElement("div");
+    body.innerHTML = `
+      <div class="wo-modal-grid">
+        <div>
+          <div class="muted">Only selected ingredients appear in the calculator. Use the checklist to keep the formula editor focused.</div>
+        </div>
+        <div class="wo-modal-checklist" id="prefIngredientChecklist"></div>
+        <div class="wo-modal-form">
+          <div class="wo-modal-formhead">Add Custom Ingredient</div>
+          <div class="wo-grid2">
+            <input class="input" id="prefCustomIngredientName" placeholder="Ingredient Name" />
+            <input class="input" id="prefCustomIngredientCategory" placeholder="Category" />
+            <input class="input" id="prefCustomIngredientDefault" type="number" min="0" max="100" step="0.1" placeholder="Default %" />
+            <input class="input" id="prefCustomIngredientMin" type="number" min="0" max="100" step="0.1" placeholder="Minimum %" />
+            <input class="input" id="prefCustomIngredientMax" type="number" min="0" max="100" step="0.1" placeholder="Maximum %" />
+          </div>
+          <div class="wo-inline-actions" style="margin-top:12px;">
+            <button class="btn" id="prefAddCustomIngredient" type="button">Add Custom Ingredient</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const listEl = body.querySelector("#prefIngredientChecklist");
+    const draftSelected = new Set(prefs.ingredients.selectedIds || []);
+    let draftCustom = [...(prefs.ingredients.custom || [])];
+
+    function rows() {
+      return getAllIngredients({
+        ...prefs,
+        ingredients: {
+          ...prefs.ingredients,
+          selectedIds: Array.from(draftSelected),
+          custom: draftCustom
+        }
+      });
+    }
+
+    function renderList() {
+      const grouped = groupIngredients(rows());
+      listEl.innerHTML = grouped.map(([category, ingredients]) => `
+        <div class="wo-checklist-group">
+          <div class="wo-checklist-grouphead">${esc(category)}</div>
+          ${ingredients.map((ingredient) => `
+            <label class="wo-checklist-row">
+              <span class="wo-checklist-main">
+                <input type="checkbox" data-ingredient-id="${esc(ingredient.id)}" ${draftSelected.has(ingredient.id) ? "checked" : ""} />
+                <span>
+                  <strong>${esc(ingredient.name)}</strong>
+                  <span class="muted">Default ${fmtPct(ingredient.defaultPct)} | Range ${fmtPct(ingredient.minPct)}-${fmtPct(ingredient.maxPct)}</span>
+                </span>
+              </span>
+              <span class="wo-checklist-actions">
+                <span class="wo-selection-tag">${ingredient.builtIn ? "Built-in" : "Custom"}</span>
+                ${ingredient.builtIn ? "" : `<button class="btn ghost sm" type="button" data-remove-ingredient="${esc(ingredient.id)}">Delete</button>`}
+              </span>
+            </label>
+          `).join("")}
+        </div>
+      `).join("");
+
+      listEl.querySelectorAll("[data-ingredient-id]").forEach((input) => {
+        input.addEventListener("change", () => {
+          const id = input.getAttribute("data-ingredient-id");
+          if (input.checked) draftSelected.add(id); else draftSelected.delete(id);
+        });
+      });
+
+      listEl.querySelectorAll("[data-remove-ingredient]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const id = button.getAttribute("data-remove-ingredient");
+          draftSelected.delete(id);
+          draftCustom = draftCustom.filter((ingredient) => ingredient.id !== id);
+          renderList();
+        });
+      });
+    }
+
+    body.querySelector("#prefAddCustomIngredient").addEventListener("click", () => {
+      const name = body.querySelector("#prefCustomIngredientName").value.trim();
+      if (!name) return;
+      const ingredient = {
+        id: slug(`custom_ingredient_${name}`),
+        name,
+        category: body.querySelector("#prefCustomIngredientCategory").value.trim() || "Custom",
+        defaultPct: Number(body.querySelector("#prefCustomIngredientDefault").value || 0),
+        minPct: Number(body.querySelector("#prefCustomIngredientMin").value || 0),
+        maxPct: Number(body.querySelector("#prefCustomIngredientMax").value || 0)
+      };
+      draftCustom = [...draftCustom.filter((item) => item.id !== ingredient.id), ingredient];
+      draftSelected.add(ingredient.id);
+      ["#prefCustomIngredientName", "#prefCustomIngredientCategory", "#prefCustomIngredientDefault", "#prefCustomIngredientMin", "#prefCustomIngredientMax"].forEach((selector) => {
+        body.querySelector(selector).value = "";
+      });
+      renderList();
+    });
+
+    renderList();
+
+    showModal({
+      title: "Optional Ingredients",
+      bodyEl: body,
+      actions: [{
+        label: "Save Ingredients",
+        primary: true,
+        onClick: ({ close }) => {
+          commit({
+            ...prefs,
+            ingredients: {
+              ...prefs.ingredients,
+              selectedIds: Array.from(draftSelected).sort(),
+              custom: draftCustom
+            }
+          });
+          close();
+        }
+      }]
+    });
+  }
+
+  ui.weightUnit.addEventListener("change", () => commit({
+    ...prefs,
+    general: { ...prefs.general, weightUnit: ui.weightUnit.value }
+  }));
+
+  ui.sizeUnit.addEventListener("change", () => commit({
+    ...prefs,
+    general: { ...prefs.general, sizeUnit: ui.sizeUnit.value }
+  }));
+
+  ui.calcMethod.querySelectorAll("input[name='prefCalcSystem']").forEach((input) => {
+    input.addEventListener("change", () => commit({
+      ...prefs,
+      general: { ...prefs.general, calculationMethod: input.value }
+    }));
   });
 
-  ui.weightUnit.addEventListener("change", () => commit({ ...prefs, general: { ...prefs.general, weightUnit: ui.weightUnit.value } }));
-  ui.sizeUnit.addEventListener("change", () => commit({ ...prefs, general: { ...prefs.general, sizeUnit: ui.sizeUnit.value } }));
-  ui.calcMethod.addEventListener("change", () => commit({ ...prefs, general: { ...prefs.general, calculationMethod: ui.calcMethod.value } }));
-  ui.ballWeight.addEventListener("input", () => commit({ ...prefs, general: { ...prefs.general, defaultDoughBallWeight: Number(ui.ballWeight.value || prefs.general.defaultDoughBallWeight) } }));
-  ui.tf.addEventListener("input", () => commit({ ...prefs, general: { ...prefs.general, defaultThicknessFactor: Number(ui.tf.value || prefs.general.defaultThicknessFactor) } }));
-  ui.warnings.addEventListener("change", () => commit({ ...prefs, general: { ...prefs.general, showWarnings: ui.warnings.checked } }));
-  ui.analysis.addEventListener("change", () => commit({ ...prefs, general: { ...prefs.general, enableDoughAnalysis: ui.analysis.checked } }));
+  ui.ballWeight.addEventListener("input", () => commit({
+    ...prefs,
+    general: { ...prefs.general, defaultDoughBallWeight: Number(ui.ballWeight.value || prefs.general.defaultDoughBallWeight) }
+  }));
 
-  ui.addOven.addEventListener("click", () => {
-    const name = ui.ovenName.value.trim();
-    if (!name) return;
-    commit({ ...prefs, ovens: { ...prefs.ovens, custom: [...(prefs.ovens.custom || []), { id: slug(`custom_oven_${name}`), name, type: ui.ovenType.value.trim() || "custom", minTemperature: Number(ui.ovenMin.value || 0) || null, maxTemperature: Number(ui.ovenMax.value || 0) || null, notes: ui.ovenNotes.value.trim() }] } });
-    [ui.ovenName, ui.ovenType, ui.ovenMin, ui.ovenMax, ui.ovenNotes].forEach((el) => { el.value = ""; });
-  });
+  ui.thicknessFactor.addEventListener("input", () => commit({
+    ...prefs,
+    general: { ...prefs.general, defaultThicknessFactor: Number(ui.thicknessFactor.value || prefs.general.defaultThicknessFactor) }
+  }));
 
-  ui.chooseFavorites.addEventListener("click", async () => {
+  ui.startupWorkflow.addEventListener("change", () => commit({
+    ...prefs,
+    general: { ...prefs.general, startupWorkflow: ui.startupWorkflow.value }
+  }));
+
+  ui.selectOvens.addEventListener("click", openOvenChecklist);
+
+  ui.openFlourBrowser.addEventListener("click", async () => {
     await openFlourPickerModal(store, {
       initialSelectedIds: getFavoriteFlourIds(prefs),
       onUse: (picked) => {
-        const favoriteIds = (picked || []).map((flour) => flour.id);
-        const defaultBlend = (prefs.flours.defaultBlend || []).filter((row) => favoriteIds.includes(row.id));
-        commit({ ...prefs, flours: { ...prefs.flours, favoriteIds, defaultBlend: defaultBlend.length ? defaultBlend : getDefaultBlend({ ...prefs, flours: { ...prefs.flours, favoriteIds } }) } });
+        commit({
+          ...prefs,
+          flours: {
+            ...prefs.flours,
+            favoriteIds: (picked || []).map((flour) => flour.id)
+          }
+        });
       }
     });
   });
 
-  ui.evenSplit.addEventListener("click", () => commit({ ...prefs, flours: { ...prefs.flours, defaultBlend: evenSplit(prefs.flours.defaultBlend || []) } }));
-  ui.addFlour.addEventListener("click", () => {
-    const name = ui.flourName.value.trim();
-    if (!name) return;
-    const custom = [...(prefs.flours.custom || []), { id: slug(`custom_flour_${name}`), name, brand: ui.flourBrand.value.trim() || "Custom", type: ui.flourType.value, proteinPct: Number(ui.flourProtein.value || 0) || null, absorption: { minPct: Number(ui.flourAbsMin.value || 0) || null, maxPct: Number(ui.flourAbsMax.value || 0) || null, basis: "bakers_pct" }, malted: ui.flourMalted.checked, specs: { w: ui.flourW.value ? { min: Number(ui.flourW.value), max: Number(ui.flourW.value) } : null, pl: ui.flourPL.value ? { min: Number(ui.flourPL.value), max: Number(ui.flourPL.value) } : null }, notes: ui.flourNotes.value.trim() }];
-    const favoriteIds = Array.from(new Set([...(prefs.flours.favoriteIds || []), custom[custom.length - 1].id]));
-    commit({ ...prefs, flours: { ...prefs.flours, custom, favoriteIds } });
-    [ui.flourName, ui.flourBrand, ui.flourProtein, ui.flourAbsMin, ui.flourAbsMax, ui.flourW, ui.flourPL, ui.flourNotes].forEach((el) => { el.value = ""; });
-    ui.flourType.value = "00";
-    ui.flourMalted.checked = false;
+  ui.selectIngredients.addEventListener("click", openIngredientChecklist);
+
+  ui.exportBtn.addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(prefs, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "prodoughtype.preferences.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
   });
 
-  ui.ingredientSearch.addEventListener("input", () => {
-    ingredientQuery = ui.ingredientSearch.value.trim();
-    renderIngredients();
+  ui.resetBtn.addEventListener("click", () => {
+    if (!window.confirm("Reset all local preferences and clear the saved calculator session?")) return;
+    const clean = normalizePrefs({});
+    prefs = clean;
+    savePrefs(clean);
+    store.set("prefs", clean);
+    store.del?.("recipeSession");
+    store.del?.("currentRecipe");
+    render();
   });
-
-  ui.ingredientClear.addEventListener("click", () => {
-    ingredientQuery = "";
-    ui.ingredientSearch.value = "";
-    renderIngredients();
-  });
-
-  ui.saveIngredient.addEventListener("click", () => {
-    const name = ui.ingredientName.value.trim();
-    if (!name) return;
-    const payload = {
-      id: editingIngredientId || slug(`custom_ingredient_${name}`),
-      name,
-      category: ui.ingredientCategory.value.trim() || "Custom",
-      defaultPct: Number(ui.ingredientDefaultPct.value || 0),
-      minPct: Number(ui.ingredientMinPct.value || 0),
-      maxPct: Number(ui.ingredientMaxPct.value || 0)
-    };
-    const custom = editingIngredientId
-      ? (prefs.ingredients.custom || []).map((item) => item.id === editingIngredientId ? payload : item)
-      : [...(prefs.ingredients.custom || []), payload];
-    const favoriteIds = Array.from(new Set([...(prefs.ingredients.favoriteIds || []), payload.id]));
-    commit({ ...prefs, ingredients: { ...prefs.ingredients, custom, favoriteIds } });
-    resetIngredientForm();
-  });
-
-  ui.cancelIngredient.addEventListener("click", resetIngredientForm);
 
   loadFloursForBrowser(store)
-    .then((flours) => { flourById = new Map(flours.map((flour) => [flour.id, flour])); render(); })
+    .then((flours) => {
+      flourById = new Map(flours.map((flour) => [flour.id, flour]));
+      render();
+    })
     .catch((error) => console.warn(error));
 
   render();
   return root;
 }
 
-function evenSplit(rows) { const list = (rows || []).filter((row) => row?.id); if (!list.length) return []; const base = Math.floor(100 / list.length); let remainder = 100 - base * list.length; return list.map((row) => ({ ...row, pct: base + (remainder-- > 0 ? 1 : 0) })); }
-function findPct(rows, id) { return (rows || []).find((row) => row.id === id)?.pct || 0; }
-function fmtPct(value) { return `${Number(value || 0).toFixed(2)}%`; }
-function flourName(flour, fallback) { return [flour?.brand, flour?.name].filter(Boolean).join(" ").trim() || fallback || "Flour"; }
-function map(root, selectors) { return Object.fromEntries(Object.entries(selectors).map(([key, selector]) => [key, root.querySelector(selector)])); }
-function wrap(html) { const el = document.createElement("div"); el.innerHTML = html.trim(); return el.firstElementChild; }
-function slug(value) { return String(value || "item").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "item"; }
-function esc(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;"); }
+async function loadOvenCatalog(store) {
+  const items = store?.get?.("indexes", {})?.databases?.items || [];
+  const entry = items.find((item) => item && item.id === "ovens" && item.type === "dataset" && item.file);
+  if (!entry) return BUILTIN_OVENS.slice();
+
+  try {
+    const response = await fetch(entry.file, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Failed ${entry.file}: ${response.status}`);
+    const payload = await response.json();
+    const rows = Array.isArray(payload) ? payload : (Array.isArray(payload.items) ? payload.items : []);
+    return rows.length ? rows : BUILTIN_OVENS.slice();
+  } catch (error) {
+    console.warn(error);
+    return BUILTIN_OVENS.slice();
+  }
+}
+
+function groupIngredients(list) {
+  const groups = new Map();
+  list.forEach((ingredient) => {
+    const key = ingredient.category || "Custom";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(ingredient);
+  });
+
+  return [...groups.entries()]
+    .sort((a, b) => categorySort(a[0]) - categorySort(b[0]) || a[0].localeCompare(b[0]))
+    .map(([category, rows]) => [category, rows.sort((a, b) => a.name.localeCompare(b.name))]);
+}
+
+function categorySort(category) {
+  const index = INGREDIENT_CATEGORY_ORDER.indexOf(category);
+  return index === -1 ? INGREDIENT_CATEGORY_ORDER.length : index;
+}
+
+function numberOrNull(value) {
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? num : null;
+}
+
+function formatTempBand(oven) {
+  const min = oven?.minTemperature != null ? `${Number(oven.minTemperature)} F` : "-";
+  const max = oven?.maxTemperature != null ? `${Number(oven.maxTemperature)} F` : "-";
+  return `${min} to ${max}`;
+}
+
+function fmtPct(value) {
+  return `${Number(value || 0).toFixed(2)}%`;
+}
+
+function flourName(flour, fallback) {
+  return [flour?.brand, flour?.name].filter(Boolean).join(" ").trim() || fallback || "Flour";
+}
+
+function map(root, selectors) {
+  return Object.fromEntries(Object.entries(selectors).map(([key, selector]) => [key, root.querySelector(selector)]));
+}
+
+function wrap(html) {
+  const el = document.createElement("div");
+  el.innerHTML = html.trim();
+  return el.firstElementChild;
+}
+
+function slug(value) {
+  return String(value || "item").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "item";
+}
+
+function esc(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}

@@ -8,6 +8,13 @@
       "file": "./data/flours_v1_unified.json"
     },
     {
+      "id": "ovens",
+      "name": "Oven Database",
+      "summary": "Popular pizza ovens and temperature ranges.",
+      "type": "dataset",
+      "file": "./data/ovens_v1.json"
+    },
+    {
       "id": "yeasts",
       "name": "Yeast Database",
       "summary": "IDY/ADY/CY characteristics."

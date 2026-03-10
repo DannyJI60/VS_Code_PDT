@@ -89,49 +89,7 @@ export const TEMPLATE_LIBRARY = Object.freeze([
 ]);
 
 export function createRecipeSession(prefs, existingSession = null) {
-  const base = {
-    version: 1,
-    startMode: "custom",
-    templateId: null,
-    weightUnit: prefs?.general?.weightUnit || "grams",
-    sizeUnit: prefs?.general?.sizeUnit || "inches",
-    calcMethod: prefs?.general?.calculationMethod || "DBW",
-    doughBallWeight: Number(prefs?.general?.defaultDoughBallWeight || 280),
-    thicknessFactor: Number(prefs?.general?.defaultThicknessFactor || 0.1),
-    hydrationPct: 62,
-    doughCount: 2,
-    shape: "round",
-    diameterIn: 12,
-    widthIn: 10,
-    lengthIn: 14,
-    surfaceType: "deck",
-    ovenId: getDefaultOvenId(prefs),
-    warningsEnabled: Boolean(prefs?.general?.showWarnings),
-    analysisEnabled: Boolean(prefs?.general?.enableDoughAnalysis),
-    workflow: {
-      preferments: Boolean(prefs?.workflow?.preferments),
-      toppings: Boolean(prefs?.workflow?.toppings),
-      sauce: Boolean(prefs?.workflow?.sauce),
-      doughAnalysis: Boolean(prefs?.workflow?.doughAnalysis)
-    },
-    flourBlend: getDefaultBlend(prefs),
-    fermentation: {
-      durationHours: 24,
-      coldFermentHours: 0,
-      roomTempF: 70,
-      doughTempF: 70,
-      yeastModel: prefs?.general?.defaultFermentationModelId || "txcraig_v1",
-      prefermentEnabled: false,
-      prefermentType: "poolish",
-      prefermentHydration: 100,
-      prefermentPercent: 20
-    },
-    optional: {
-      toppingsNotes: "",
-      sauceNotes: ""
-    }
-  };
-
+  const base = createRecipeSessionShell(prefs);
   const merged = mergeDeep(base, existingSession && typeof existingSession === "object" ? existingSession : {});
   return normalizeSession(merged, prefs);
 }
@@ -139,6 +97,7 @@ export function createRecipeSession(prefs, existingSession = null) {
 export function normalizeSession(session, prefs) {
   const next = mergeDeep(createRecipeSessionShell(prefs), session || {});
 
+  next.version = Math.max(2, Number(next.version || 2));
   next.startMode = ["custom", "template", "import"].includes(next.startMode) ? next.startMode : "custom";
   next.templateId = String(next.templateId || "").trim() || null;
   next.weightUnit = next.weightUnit === "ounces" ? "ounces" : "grams";
@@ -153,7 +112,9 @@ export function normalizeSession(session, prefs) {
   next.widthIn = clamp(next.widthIn, 6, 30, 10);
   next.lengthIn = clamp(next.lengthIn, 6, 40, 14);
   next.surfaceType = next.surfaceType === "pan" ? "pan" : "deck";
-  next.ovenId = String(next.ovenId || getDefaultOvenId(prefs) || "").trim() || getDefaultOvenId(prefs);
+  const validOvenIds = new Set(getAllOvens(prefs).map((oven) => oven.id));
+  const requestedOvenId = String(next.ovenId || getDefaultOvenId(prefs) || "").trim();
+  next.ovenId = validOvenIds.has(requestedOvenId) ? requestedOvenId : (getDefaultOvenId(prefs) || null);
   next.warningsEnabled = Boolean(next.warningsEnabled);
   next.analysisEnabled = Boolean(next.analysisEnabled);
   next.workflow = {
@@ -169,15 +130,19 @@ export function normalizeSession(session, prefs) {
     roomTempF: clamp(next.fermentation?.roomTempF, 45, 100, 70),
     doughTempF: clamp(next.fermentation?.doughTempF, 45, 100, 70),
     yeastModel: String(next.fermentation?.yeastModel || prefs?.general?.defaultFermentationModelId || "txcraig_v1"),
+    yeastMode: next.fermentation?.yeastMode === "manual" ? "manual" : "auto",
+    manualYeastPct: clamp(next.fermentation?.manualYeastPct, 0, 5, 0.12),
     prefermentEnabled: Boolean(next.fermentation?.prefermentEnabled),
     prefermentType: ["poolish", "biga"].includes(next.fermentation?.prefermentType) ? next.fermentation.prefermentType : "poolish",
     prefermentHydration: clamp(next.fermentation?.prefermentHydration, 45, 120, 100),
     prefermentPercent: clamp(next.fermentation?.prefermentPercent, 5, 60, 20)
   };
+  next.formula = normalizeFormula(next.formula);
   next.optional = {
     toppingsNotes: String(next.optional?.toppingsNotes || ""),
     sauceNotes: String(next.optional?.sauceNotes || "")
   };
+  next.notes = String(next.notes || "");
 
   return next;
 }
@@ -212,20 +177,59 @@ export function computeRecipe(session, prefs, flourCatalog = []) {
     : totalAreaIn2 * normalized.thicknessFactor * GRAMS_PER_OUNCE;
   const doughBallWeightG = totalDoughG / normalized.doughCount;
 
+  const saltPct = Number(normalized.formula.saltPct || DEFAULT_SALT_PCT);
+  const oilPct = Number(normalized.formula.oilPct || 0);
   const yeastPct = estimateYeastPct(normalized, blendStats);
-  const flourG = totalDoughG / (1 + normalized.hydrationPct / 100 + DEFAULT_SALT_PCT / 100 + yeastPct / 100);
+  const extras = normalized.formula.extras.filter((row) => Number(row.pct || 0) > 0);
+  const extraPct = extras.reduce((sum, row) => sum + Number(row.pct || 0), 0);
+
+  const flourG = totalDoughG / (1 + (normalized.hydrationPct + saltPct + yeastPct + oilPct + extraPct) / 100);
   const waterG = flourG * (normalized.hydrationPct / 100);
-  const saltG = flourG * (DEFAULT_SALT_PCT / 100);
+  const saltG = flourG * (saltPct / 100);
   const yeastG = flourG * (yeastPct / 100);
+  const oilG = flourG * (oilPct / 100);
+  const extraRows = extras.map((row) => ({
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    pct: Number(row.pct || 0),
+    weightG: flourG * (Number(row.pct || 0) / 100)
+  }));
 
   const preferment = normalized.fermentation.prefermentEnabled
-    ? buildPreferment(normalized, flourG)
+    ? buildPreferment(normalized, flourG, yeastG)
     : null;
+
+  const netIngredients = buildNetIngredients({
+    hydrationPct: normalized.hydrationPct,
+    flourG,
+    waterG,
+    saltG,
+    saltPct,
+    yeastG,
+    yeastPct,
+    oilG,
+    oilPct,
+    extraRows
+  });
+
+  const finalDough = buildFinalDoughIngredients({
+    hydrationPct: normalized.hydrationPct,
+    flourG,
+    waterG,
+    saltG,
+    saltPct,
+    oilG,
+    oilPct,
+    extraRows,
+    preferment
+  });
 
   const fermentationTimeline = buildTimeline(normalized);
   const analysis = buildAnalysis(normalized, blendStats, oven, resolvedBlend);
   const warnings = normalized.warningsEnabled ? buildWarnings(normalized, analysis, oven) : [];
   const complete = Number.isFinite(totalDoughG) && totalDoughG > 0 && normalized.hydrationPct > 0;
+  const template = TEMPLATE_LIBRARY.find((item) => item.id === normalized.templateId) || null;
 
   const recipe = {
     complete,
@@ -233,6 +237,14 @@ export function computeRecipe(session, prefs, flourCatalog = []) {
     oven,
     blend: resolvedBlend,
     blendStats,
+    preferment,
+    analysis,
+    warnings,
+    tables: {
+      preferment: preferment?.rows || [],
+      finalDough,
+      netIngredients
+    },
     totals: {
       totalAreaIn2,
       totalDoughG,
@@ -240,23 +252,25 @@ export function computeRecipe(session, prefs, flourCatalog = []) {
       flourG,
       waterG,
       saltG,
-      yeastG
+      yeastG,
+      oilG
     },
     percentages: {
       hydrationPct: normalized.hydrationPct,
-      saltPct: DEFAULT_SALT_PCT,
-      yeastPct
+      saltPct,
+      yeastPct,
+      oilPct,
+      extrasPct: extraPct
     },
     fermentationTimeline,
-    preferment,
-    analysis,
-    warnings,
+    masterFormulaTitle: template ? `${template.name} Pizza Dough` : "Custom Pizza Dough",
     labels: {
       size: normalized.shape === "round"
         ? `${formatLength(normalized.diameterIn, normalized.sizeUnit)} round`
         : `${formatLength(normalized.widthIn, normalized.sizeUnit)} x ${formatLength(normalized.lengthIn, normalized.sizeUnit)} pan`,
       ballWeight: formatWeight(doughBallWeightG, normalized.weightUnit),
       totalDough: formatWeight(totalDoughG, normalized.weightUnit),
+      totalFlour: formatWeight(flourG, normalized.weightUnit),
       surface: normalized.surfaceType === "pan" ? "Pan" : "Deck",
       oven: oven?.name || "No oven selected",
       calculation: normalized.calcMethod === "DBW" ? "Dough Ball Weight" : "Thickness Factor"
@@ -272,7 +286,7 @@ export function buildRecipeExport(session, recipe) {
   const cleanBlend = (recipe?.blend || []).map((row) => ({ id: row.id, pct: row.pct }));
   return {
     kind: "prodoughtype.recipe",
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     session: {
       ...session,
@@ -281,6 +295,7 @@ export function buildRecipeExport(session, recipe) {
     recipe: {
       totals: roundObject(recipe?.totals),
       percentages: roundObject(recipe?.percentages),
+      tables: roundObject(recipe?.tables),
       timeline: recipe?.fermentationTimeline || [],
       analysis: recipe?.analysis || null,
       warnings: recipe?.warnings || []
@@ -328,7 +343,7 @@ export function fromDisplayLength(value, unit) {
 
 function createRecipeSessionShell(prefs) {
   return {
-    version: 1,
+    version: 2,
     startMode: "custom",
     templateId: null,
     weightUnit: prefs?.general?.weightUnit || "grams",
@@ -359,15 +374,23 @@ function createRecipeSessionShell(prefs) {
       roomTempF: 70,
       doughTempF: 70,
       yeastModel: prefs?.general?.defaultFermentationModelId || "txcraig_v1",
+      yeastMode: "auto",
+      manualYeastPct: 0.12,
       prefermentEnabled: false,
       prefermentType: "poolish",
       prefermentHydration: 100,
       prefermentPercent: 20
     },
+    formula: {
+      saltPct: DEFAULT_SALT_PCT,
+      oilPct: 0,
+      extras: []
+    },
     optional: {
       toppingsNotes: "",
       sauceNotes: ""
-    }
+    },
+    notes: ""
   };
 }
 
@@ -392,7 +415,47 @@ function normalizeBlend(rows) {
   return normalized;
 }
 
+function normalizeFormula(formula) {
+  const extras = Array.isArray(formula?.extras) ? formula.extras : [];
+  const normalizedExtras = [];
+  const seen = new Set();
+
+  extras.forEach((row) => {
+    const id = String(row?.id || "").trim();
+    if (!id || seen.has(id)) return;
+    seen.add(id);
+    normalizedExtras.push({
+      id,
+      name: String(row?.name || row?.id || "Ingredient").trim() || "Ingredient",
+      category: String(row?.category || "Custom").trim() || "Custom",
+      pct: clamp(row?.pct, 0, 100, Number(row?.defaultPct || 0)),
+      builtIn: Boolean(row?.builtIn)
+    });
+  });
+
+  const legacySugarPct = clamp(formula?.sugarPct, 0, 20, 0);
+  if (legacySugarPct > 0 && !seen.has("sugar")) {
+    normalizedExtras.unshift({
+      id: "sugar",
+      name: "Sugar",
+      category: "Sweeteners",
+      pct: legacySugarPct,
+      builtIn: true
+    });
+  }
+
+  return {
+    saltPct: clamp(formula?.saltPct, 0, 10, DEFAULT_SALT_PCT),
+    oilPct: clamp(formula?.oilPct, 0, 20, 0),
+    extras: normalizedExtras
+  };
+}
+
 function estimateYeastPct(session, blendStats) {
+  if (session.fermentation.yeastMode === "manual") {
+    return round(clamp(session.fermentation.manualYeastPct, 0, 5, 0.12), 3);
+  }
+
   const duration = Math.max(Number(session.fermentation.durationHours || 24), 4);
   const roomTemp = Math.max(Number(session.fermentation.roomTempF || 70), 45);
   const coldHours = Math.max(Number(session.fermentation.coldFermentHours || 0), 0);
@@ -408,26 +471,82 @@ function estimateYeastPct(session, blendStats) {
   return round(Math.max(0.03, Math.min(0.8, pct)), 3);
 }
 
-function buildPreferment(session, totalFlourG) {
-  const pct = session.fermentation.prefermentPercent / 100;
-  const flourG = totalFlourG * pct;
-  const waterG = flourG * (session.fermentation.prefermentHydration / 100);
+function buildPreferment(session, totalFlourG, totalYeastG) {
+  const flourPct = session.fermentation.prefermentPercent;
+  const flourG = totalFlourG * (flourPct / 100);
+  const waterPct = flourPct * (session.fermentation.prefermentHydration / 100);
+  const waterG = totalFlourG * (waterPct / 100);
+  const yeastPct = totalFlourG > 0 ? (totalYeastG / totalFlourG) * 100 : 0;
+  const rows = [
+    { name: "Flour", weightG: flourG, pct: flourPct },
+    { name: "Water", weightG: waterG, pct: waterPct }
+  ];
+
+  if (totalYeastG > 0) {
+    rows.push({ name: "Yeast", weightG: totalYeastG, pct: yeastPct });
+  }
+
   return {
+    name: capitalize(session.fermentation.prefermentType),
     type: session.fermentation.prefermentType,
-    percent: session.fermentation.prefermentPercent,
+    percent: flourPct,
     hydration: session.fermentation.prefermentHydration,
     flourG,
-    waterG
+    waterG,
+    yeastG: totalYeastG,
+    totalG: rows.reduce((sum, row) => sum + row.weightG, 0),
+    totalPct: rows.reduce((sum, row) => sum + row.pct, 0),
+    rows
   };
+}
+
+function buildNetIngredients({ hydrationPct, flourG, waterG, saltG, saltPct, yeastG, yeastPct, oilG, oilPct, extraRows }) {
+  const rows = [
+    { name: "Flour", weightG: flourG, pct: 100 },
+    { name: "Water", weightG: waterG, pct: hydrationPct },
+    { name: "Salt", weightG: saltG, pct: saltPct },
+    { name: "Yeast", weightG: yeastG, pct: yeastPct }
+  ];
+
+  if (oilPct > 0) {
+    rows.push({ name: "Olive Oil", weightG: oilG, pct: oilPct });
+  }
+
+  extraRows.forEach((row) => rows.push({ name: row.name, weightG: row.weightG, pct: row.pct }));
+  return rows.filter((row) => row.weightG > 0 || row.name === "Yeast");
+}
+
+function buildFinalDoughIngredients({ hydrationPct, flourG, waterG, saltG, saltPct, oilG, oilPct, extraRows, preferment }) {
+  if (!preferment) {
+    const rows = [
+      { name: "Flour", weightG: flourG, pct: 100 },
+      { name: "Water", weightG: waterG, pct: hydrationPct },
+      { name: "Salt", weightG: saltG, pct: saltPct }
+    ];
+    if (oilPct > 0) rows.push({ name: "Olive Oil", weightG: oilG, pct: oilPct });
+    extraRows.forEach((row) => rows.push({ name: row.name, weightG: row.weightG, pct: row.pct }));
+    return rows;
+  }
+
+  const prefermentFlourPct = preferment.percent;
+  const prefermentWaterPct = preferment.rows.find((row) => row.name === "Water")?.pct || 0;
+  const finalRows = [
+    { name: "Flour", weightG: flourG - preferment.flourG, pct: Math.max(0, 100 - prefermentFlourPct) },
+    { name: "Water", weightG: waterG - preferment.waterG, pct: Math.max(0, hydrationPct - prefermentWaterPct) },
+    { name: "Salt", weightG: saltG, pct: saltPct }
+  ];
+
+  if (oilPct > 0) finalRows.push({ name: "Olive Oil", weightG: oilG, pct: oilPct });
+  extraRows.forEach((row) => finalRows.push({ name: row.name, weightG: row.weightG, pct: row.pct }));
+  finalRows.push({ name: preferment.name, weightG: preferment.totalG, pct: preferment.totalPct });
+  return finalRows.filter((row) => row.weightG > 0.0001 || row.name === "Salt");
 }
 
 function buildTimeline(session) {
   const total = Number(session.fermentation.durationHours || 24);
   const cold = Math.min(Number(session.fermentation.coldFermentHours || 0), total);
   const room = Math.max(total - cold, 0);
-  const stages = [
-    { label: "Mix", detail: "Combine ingredients and rest the dough." }
-  ];
+  const stages = [{ label: "Mix", detail: "Combine ingredients and rest the dough." }];
 
   if (session.fermentation.prefermentEnabled) {
     stages.push({
@@ -482,7 +601,7 @@ function buildAnalysis(session, blendStats, oven, blendRows = []) {
       fermentationText = `A ${round(duration, 0)} h fermentation may need a stronger flour blend.`;
     } else {
       fermentationSignal = "green";
-      fermentationText = `Fermentation length is reasonable for the current flour strength.`;
+      fermentationText = "Fermentation length is reasonable for the current flour strength.";
     }
   }
 
@@ -528,38 +647,51 @@ function buildWarnings(session, analysis, oven) {
 
 function buildRecipeMarkdown(recipe) {
   const lines = [
-    `# ProDoughType Recipe`,
-    ``,
-    `- Size: ${recipe.labels.size}`,
-    `- Dough balls: ${recipe.session.doughCount}`,
-    `- Dough ball weight: ${recipe.labels.ballWeight}`,
-    `- Total dough: ${recipe.labels.totalDough}`,
-    `- Oven: ${recipe.labels.oven}`,
-    ``,
-    `## Ingredients`,
-    `- Flour: ${formatWeight(recipe.totals.flourG, recipe.session.weightUnit)}`,
-    `- Water: ${formatWeight(recipe.totals.waterG, recipe.session.weightUnit)}`,
-    `- Salt: ${formatWeight(recipe.totals.saltG, recipe.session.weightUnit)}`,
-    `- Yeast: ${formatWeight(recipe.totals.yeastG, recipe.session.weightUnit)}`,
-    ``,
-    `## Percentages`,
-    `- Hydration: ${round(recipe.percentages.hydrationPct, 1)}%`,
-    `- Salt: ${round(recipe.percentages.saltPct, 1)}%`,
-    `- Yeast: ${round(recipe.percentages.yeastPct, 3)}%`,
-    ``,
-    `## Timeline`,
-    ...recipe.fermentationTimeline.map((step) => `- ${step.label}: ${step.detail}`)
+    "MASTER FORMULA",
+    recipe.masterFormulaTitle,
+    "",
+    `Total Dough: ${recipe.labels.totalDough}`,
+    `Dough Balls: ${recipe.session.doughCount}`,
+    `Ball Weight: ${recipe.labels.ballWeight}`,
+    `Total Flour: ${recipe.labels.totalFlour}`,
+    ""
   ];
 
   if (recipe.preferment) {
-    lines.push(``, `## Preferment`, `- Type: ${capitalize(recipe.preferment.type)}`, `- Flour: ${formatWeight(recipe.preferment.flourG, recipe.session.weightUnit)}`, `- Water: ${formatWeight(recipe.preferment.waterG, recipe.session.weightUnit)}`);
+    lines.push(`PREFERMENT (${recipe.preferment.name})`, "");
+    lines.push(...markdownTable(recipe.tables.preferment, recipe.session.weightUnit));
+    lines.push("", `Preferment Total: ${formatWeight(recipe.preferment.totalG, recipe.session.weightUnit)}`, "");
+  }
+
+  lines.push("FINAL DOUGH", "");
+  lines.push(...markdownTable(recipe.tables.finalDough, recipe.session.weightUnit));
+  lines.push("", "NET INGREDIENTS", "");
+  lines.push(...markdownTable(recipe.tables.netIngredients, recipe.session.weightUnit));
+
+  if (recipe.session.notes) {
+    lines.push("", "NOTES", recipe.session.notes);
   }
 
   if (recipe.warnings.length) {
-    lines.push(``, `## Warnings`, ...recipe.warnings.map((warning) => `- ${warning}`));
+    lines.push("", "WARNINGS", ...recipe.warnings.map((warning) => `- ${warning}`));
   }
 
   return lines.join("\n");
+}
+
+function markdownTable(rows, unit) {
+  return [
+    "Ingredient | Weight | Baker's %",
+    "--- | ---: | ---:",
+    ...rows.map((row) => `${row.name} | ${formatWeight(row.weightG, unit)} | ${formatPercent(row.pct)}%`)
+  ];
+}
+
+function formatPercent(value) {
+  const num = Number(value || 0);
+  if (Math.abs(num - Math.round(num)) < 0.001) return String(Math.round(num));
+  if (Math.abs(num * 10 - Math.round(num * 10)) < 0.001) return num.toFixed(1);
+  return num.toFixed(2);
 }
 
 function roundObject(value) {

@@ -19,6 +19,7 @@ const dom = {
   routeMount: document.getElementById("routeMount"),
   routeTitle: document.getElementById("routeTitle"),
   routeSub: document.getElementById("routeSub"),
+  rightPanel: document.querySelector(".rightpanel"),
   previewCard: document.getElementById("previewCard"),
   previewBody: document.getElementById("previewBody"),
   btnPreviewQR: document.getElementById("btnPreviewQR"),
@@ -41,6 +42,7 @@ const prefs = initPrefs();
   store.set("indexes", indexes);
   store.set("prefs", prefs);
   window.__PDT_STORE__ = store;
+  window.__PDT_FORCE_STARTUP__ = true;
 
   initAuth();
   refreshAuthUI(dom);
@@ -65,6 +67,8 @@ function render(route) {
   const meta = routeMeta(route);
   dom.routeTitle.textContent = meta.title;
   dom.routeSub.textContent = meta.sub;
+  dom.rightPanel?.classList.toggle("hidden", route === "preferences");
+  if (route !== "dough" && window.PDT) delete window.PDT.updatePreviewNotes;
 
   renderRoute({
     route,
@@ -90,10 +94,10 @@ function highlightRoute(route) {
 function routeMeta(route) {
   const map = {
     dough: { title: "Calculator", sub: "Foundation, fermentation, analysis, and export in one workflow." },
-    templates: { title: "Gallery", sub: "Gallery placeholder content and future saved builds live here." },
+    templates: { title: "Template Browser", sub: "Load a starting workflow from the gallery or from the calculator." },
     databases: { title: "Databases", sub: "Flours, salts, yeast types, ovens, and reference data." },
     fermentation: { title: "Fermentation", sub: "Choose a model. Time, temperature, and yeast math." },
-    preferences: { title: "Preferences", sub: "Local defaults, favorite ovens, workflow modules, and flours." },
+    preferences: { title: "Preferences", sub: "Calculator defaults, startup behavior, ovens, flours, optional ingredients, and data tools." },
     guides: { title: "Guides", sub: "Product walkthroughs and future onboarding content." },
     glossary: { title: "Glossary", sub: "Definitions, terms, and process notes." },
     troubleshooting: { title: "Troubleshooting", sub: "Symptoms, likely causes, and fixes." },
@@ -145,6 +149,12 @@ function wireUI() {
   dom.btnExport?.addEventListener("click", () => openRecipeExportModal());
   dom.btnPreviewQR?.addEventListener("click", () => openRecipeQrModal());
   dom.btnReminderQR?.addEventListener("click", () => openRecipeQrModal());
+
+  dom.previewBody?.addEventListener("input", (event) => {
+    const notesField = event.target.closest("[data-preview-notes]");
+    if (!notesField) return;
+    window.PDT?.updatePreviewNotes?.(notesField.value || "");
+  });
 
   dom.previewBody?.addEventListener("click", (event) => {
     const action = event.target.closest("[data-preview-action]")?.dataset.previewAction;

@@ -1539,3 +1539,307 @@ body[data-uimode="focus"] .layout{
     justify-content: flex-start;
   }
 }
+
+#btnReminderQR {
+  color: #161109;
+  font-weight: 700;
+}
+
+#btnReminderQR span {
+  color: inherit;
+}
+
+.wo-pref-stack {
+  gap: 16px;
+}
+
+.wo-pref-section {
+  min-height: 100%;
+}
+
+.wo-radio-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.wo-radio-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255,255,255,.02);
+}
+
+.wo-radio-card input {
+  accent-color: var(--accent);
+}
+
+.wo-pref-status {
+  line-height: 1.5;
+}
+
+.wo-selection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wo-selection-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wo-selection-grouphead,
+.wo-sheet-sectionhead,
+.wo-sheet-kicker {
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.wo-selection-grouphead {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.wo-selection-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.wo-selection-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.wo-selection-title {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.wo-selection-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(245,158,11,.22);
+  background: rgba(245,158,11,.08);
+  color: var(--accent-strong);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.wo-modal-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 48vh;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.wo-checklist-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wo-checklist-grouphead {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.wo-checklist-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255,255,255,.02);
+}
+
+.wo-checklist-main {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.wo-checklist-main input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+
+.wo-checklist-main strong,
+.wo-checklist-main .muted {
+  display: block;
+}
+
+.wo-checklist-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.wo-modal-form {
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.wo-modal-formhead {
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.wo-template-browser {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.wo-formula-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 0 6px;
+}
+
+.wo-sheet-kicker {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.wo-sheet-title {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.wo-sheet-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  padding-bottom: 2px;
+}
+
+.wo-sheet-meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  font-variant-numeric: tabular-nums;
+}
+
+.wo-sheet-meta-row span {
+  color: var(--muted);
+}
+
+.wo-sheet-meta-row strong {
+  text-align: right;
+}
+
+.wo-sheet-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wo-sheet-sectionhead {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.wo-sheet-divider {
+  height: 1px;
+  background: rgba(255,255,255,.12);
+}
+
+.wo-formula-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+
+.wo-formula-table thead th {
+  padding: 0 0 8px;
+  border-bottom: 1px solid rgba(255,255,255,.14);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.wo-formula-table tbody td {
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.wo-formula-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.wo-formula-table th:nth-child(1),
+.wo-formula-table td:nth-child(1) {
+  text-align: left;
+}
+
+.wo-formula-table th:nth-child(2),
+.wo-formula-table td:nth-child(2),
+.wo-formula-table th:nth-child(3),
+.wo-formula-table td:nth-child(3) {
+  width: 88px;
+  text-align: right;
+}
+
+.wo-sheet-total {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.wo-preview-notes {
+  min-height: 120px;
+  resize: vertical;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 980px) {
+  .wo-radio-row,
+  .wo-sheet-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .wo-selection-row,
+  .wo-checklist-row,
+  .wo-checklist-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .wo-formula-table th:nth-child(2),
+  .wo-formula-table td:nth-child(2),
+  .wo-formula-table th:nth-child(3),
+  .wo-formula-table td:nth-child(3) {
+    width: 76px;
+  }
+}

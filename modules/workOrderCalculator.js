@@ -3,9 +3,7 @@ import { loadFloursForBrowser } from "./floursDb.js";
 import {
   getAllIngredients,
   getAllOvens,
-  getDefaultBlend,
   getFavoriteFlourIds,
-  getFavoriteOvens,
   loadPrefs,
   normalizePrefs,
   savePrefs
@@ -27,12 +25,22 @@ import { showModal } from "./modal.js";
 
 const STEP_ORDER = ["foundation", "flour", "formula", "fermentation", "optional", "analysis", "preview"];
 const BASE_SALT_PCT = 2.8;
+const TEMPLATE_LOADING_MESSAGE = "Template loading will be enabled in a future update.";
 
 export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
   let prefs = loadPrefs();
-  let session = store.get("recipeSession", null);
+  const shouldForceStartup = window.__PDT_FORCE_STARTUP__ === true;
+  let session = shouldForceStartup ? null : store.get("recipeSession", null);
   session = session?.version ? normalizeCalculatorSession(session, prefs) : createSessionFromPrefs(prefs);
+  if (shouldForceStartup) window.__PDT_FORCE_STARTUP__ = false;
 
+  const pendingTemplateId = store.get("pendingTemplateId", null);
+  if (pendingTemplateId) {
+    store.del?.("pendingTemplateId");
+    if (TEMPLATE_LIBRARY.some((template) => template.id === pendingTemplateId)) {
+      session = normalizeCalculatorSession(applyTemplateToSession(session, pendingTemplateId, prefs), prefs);
+    }
+  }
   let flourCatalog = [];
   let flourById = new Map();
   let openStep = "foundation";
@@ -54,7 +62,7 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
           </div>
           <div class="wo-stephead-actions">
             <div class="wo-actionbar">
-              <button class="btn ghost sm" id="woTemplates" type="button">Templates</button>
+              <button class="btn ghost sm" id="woTemplates" type="button">Load Template</button>
               <button class="btn ghost sm" id="woImport" type="button">Import</button>
               <button class="btn ghost sm" id="woCustom" type="button">Custom</button>
               <button class="btn ghost sm" id="woHelp" type="button">Help</button>
@@ -160,7 +168,6 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
             <div class="wo-inline-actions" style="margin-top:12px;">
               <button class="btn" id="woBrowseFlours" type="button">Browse All Flours</button>
               <button class="btn ghost" id="woEvenSplitBlend" type="button">Even Split</button>
-              <button class="btn ghost" id="woDefaultBlend" type="button">Use Default Blend</button>
               <button class="btn ghost" id="woClearBlend" type="button">Clear Blend</button>
             </div>
             <div class="wo-blend-editor" id="woBlendEditor"></div>
@@ -173,7 +180,7 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
       <div class="step wo-step" id="woStepFormula" data-step-root="formula">
         <div class="stephead wo-stephead">
           <div class="wo-stephead-copy">
-            <div><div class="steptitle">Step 3 - Dough Formula</div><div class="stepsub">Compact baker's percentage inputs for salt, oil, sugar, and added ingredients.</div></div>
+            <div><div class="steptitle">Step 3 - Dough Formula</div><div class="stepsub">Compact baker's percentage inputs for salt, olive oil, and the optional ingredients selected in Preferences.</div></div>
             <div class="muted wo-step-mini" id="woFormulaStepMeta"></div>
           </div>
           <div class="wo-stephead-actions"><button class="btn ghost sm" data-step-open="formula" id="woOpenFormula" type="button">Open</button></div>
@@ -336,7 +343,6 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
     addFavoriteFlour: "#woAddFavoriteFlour",
     browseFlours: "#woBrowseFlours",
     evenSplitBlend: "#woEvenSplitBlend",
-    defaultBlend: "#woDefaultBlend",
     clearBlend: "#woClearBlend",
     blendEditor: "#woBlendEditor",
     blendStats: "#woBlendStats",
@@ -374,6 +380,15 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
   });
 
   const stepNodes = Object.fromEntries(STEP_ORDER.map((step) => [step, root.querySelector(`[data-step-root="${step}"]`)]));
+
+  if (window.PDT) {
+    window.PDT.updatePreviewNotes = (value) => {
+      session.notes = String(value || "");
+      session = normalizeCalculatorSession(session, prefs);
+      store.set("recipeSession", session);
+      store.set("currentRecipe", computeRecipe(session, prefs, flourCatalog));
+    };
+  }
 
   function refresh() {
     prefs = loadPrefs();
@@ -526,10 +541,10 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
   function renderFormula() {
     const rows = formulaRows(session, prefs);
     const customRows = rows.filter((row) => row.kind === "extra");
-    const noteParts = ["All values here remain baker's percentages."];
-    if (session.fermentation.yeastMode === "manual") noteParts.push("Manual yeast is stored here, but the current preview still uses the built-in auto yeast engine.");
-    if (Number(session.formula.saltPct) !== BASE_SALT_PCT || Number(session.formula.oilPct) > 0 || Number(session.formula.sugarPct) > 0 || customRows.length) {
-      noteParts.push("These formula rows are stored in the calculator session without changing the existing dough mass engine.");
+    const noteParts = ["All values here remain baker's percentages and now feed the live formula sheet."];
+    if (session.fermentation.yeastMode === "manual") noteParts.push(`Manual yeast is active at ${Number(session.fermentation.manualYeastPct).toFixed(2)}%.`);
+    if (Number(session.formula.saltPct) !== BASE_SALT_PCT || Number(session.formula.oilPct) > 0 || customRows.length) {
+      noteParts.push("Optional rows are folded directly into the recipe math and preview tables.");
     }
     ui.formulaNote.innerHTML = `<div class="muted">${esc(noteParts.join(" "))}</div>`;
     ui.formulaList.innerHTML = rows.map((row) => formulaRowHtml(row)).join("");
@@ -625,92 +640,116 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
 
   function renderPreviewStep(recipe) {
     const formulaSummary = formulaRows(session, prefs)
-      .filter((row) => row.kind === "extra" || row.key !== "saltPct" || Number(row.pct) !== BASE_SALT_PCT || row.key === "oilPct" || row.key === "sugarPct")
+      .filter((row) => row.kind === "extra" || row.key !== "saltPct" || Number(row.pct) !== BASE_SALT_PCT || row.key === "oilPct")
       .filter((row) => row.kind === "extra" || Number(row.pct) > 0 || row.key === "saltPct")
       .map((row) => `${row.name} ${Number(row.pct).toFixed(2)}%`)
       .join(", ");
 
     ui.previewSummary.innerHTML = `
       <h4>Live Preview Status</h4>
-      <p class="muted">The right panel is always the export surface. Copy recipe, export file, and QR generation stay there.</p>
+      <p class="muted">The right panel now renders a bakery-style formula sheet with aligned tables, notes, export, and QR tools.</p>
       <div class="wo-summary-grid">
         <div><span class="muted">Total Dough</span><strong>${esc(recipe.labels.totalDough)}</strong></div>
         <div><span class="muted">Ball Weight</span><strong>${esc(recipe.labels.ballWeight)}</strong></div>
-        <div><span class="muted">Blend</span><strong>${esc(recipe.blend.length ? `${recipe.blend.length} flour` : "No blend")}</strong></div>
-        <div><span class="muted">Analysis</span><strong>${session.analysisEnabled && session.workflow.doughAnalysis ? "Active" : "Disabled"}</strong></div>
+        <div><span class="muted">Total Flour</span><strong>${esc(recipe.labels.totalFlour)}</strong></div>
+        <div><span class="muted">Preview</span><strong>${recipe.complete ? "Ready" : "Incomplete"}</strong></div>
       </div>
-      <p class="muted" style="margin-top:12px;">${esc(formulaSummary || "Core flour, water, salt, and yeast preview is live.")}</p>
+      <p class="muted" style="margin-top:12px;">${esc(formulaSummary || "Core flour, water, salt, and yeast are ready for review.")}</p>
     `;
   }
 
   function previewHtml(recipe) {
-    const warnings = recipe.warnings.length
-      ? `<div class="item" style="margin-top:12px;"><h4>Warnings</h4><ul class="wo-list">${recipe.warnings.map((warning) => `<li>${esc(warning)}</li>`).join("")}</ul></div>`
-      : "";
-    const preferment = recipe.preferment
-      ? `<div class="item" style="margin-top:12px;"><h4>Preferment</h4><p class="muted">${esc(recipe.preferment.type)} at ${recipe.preferment.hydration}% hydration using ${recipe.preferment.percent}% of total flour.</p><div class="wo-summary-grid"><div><span class="muted">Preferment Flour</span><strong>${esc(formatWeight(recipe.preferment.flourG, recipe.session.weightUnit))}</strong></div><div><span class="muted">Preferment Water</span><strong>${esc(formatWeight(recipe.preferment.waterG, recipe.session.weightUnit))}</strong></div></div></div>`
-      : "";
-    const formulaInfo = formulaPlanningHtml(session, prefs);
-
     return `
       <div class="wo-preview-actions">
         <button class="btn primary" type="button" data-preview-action="copy">Copy Recipe</button>
         <button class="btn ghost" type="button" data-preview-action="download">Export File</button>
         <button class="btn ghost" type="button" data-preview-action="qr">Generate QR</button>
       </div>
-      <div class="item" style="margin-top:12px;">
-        <h4>Recipe Card</h4>
-        <p class="muted">${esc(recipe.labels.size)} | ${esc(recipe.labels.oven)} | ${esc(recipe.labels.surface)}</p>
-        <div class="wo-summary-grid">
-          <div><span class="muted">Total Dough</span><strong>${esc(recipe.labels.totalDough)}</strong></div>
-          <div><span class="muted">Ball Weight</span><strong>${esc(recipe.labels.ballWeight)}</strong></div>
-          <div><span class="muted">Hydration</span><strong>${Number(recipe.percentages.hydrationPct).toFixed(1)}%</strong></div>
-          <div><span class="muted">Yeast</span><strong>${Number(recipe.percentages.yeastPct).toFixed(3)}%</strong></div>
+      <article class="wo-formula-sheet" style="margin-top:12px;">
+        <div class="wo-sheet-kicker">MASTER FORMULA</div>
+        <h3 class="wo-sheet-title">${esc(recipe.masterFormulaTitle)}</h3>
+        <div class="wo-sheet-meta">
+          ${previewStat("Total Dough", recipe.labels.totalDough)}
+          ${previewStat("Dough Balls", String(recipe.session.doughCount))}
+          ${previewStat("Ball Weight", recipe.labels.ballWeight)}
+          ${previewStat("Total Flour", recipe.labels.totalFlour)}
         </div>
-      </div>
-      <div class="item" style="margin-top:12px;">
-        <h4>Ingredient Weights</h4>
-        <div class="wo-summary-grid">
-          <div><span class="muted">Flour</span><strong>${esc(formatWeight(recipe.totals.flourG, recipe.session.weightUnit))}</strong></div>
-          <div><span class="muted">Water</span><strong>${esc(formatWeight(recipe.totals.waterG, recipe.session.weightUnit))}</strong></div>
-          <div><span class="muted">Salt</span><strong>${esc(formatWeight(recipe.totals.saltG, recipe.session.weightUnit))}</strong></div>
-          <div><span class="muted">Yeast</span><strong>${esc(formatWeight(recipe.totals.yeastG, recipe.session.weightUnit))}</strong></div>
-        </div>
-      </div>
-      <div class="item" style="margin-top:12px;">
-        <h4>Blend</h4>
-        <p class="muted">${esc(recipe.blend.map((row) => `${flourName(row.flour, row.id)} (${row.pct}%)`).join(", ") || "No blend selected")}</p>
-      </div>
-      ${formulaInfo}
-      ${preferment}
-      <div class="item" style="margin-top:12px;">
-        <h4>Fermentation Timeline</h4>
-        <ul class="wo-list">${recipe.fermentationTimeline.map((step) => `<li><strong>${esc(step.label)}:</strong> ${esc(step.detail)}</li>`).join("")}</ul>
-      </div>
-      ${warnings}
+        ${recipe.preferment ? `
+          <section class="wo-sheet-section">
+            <div class="wo-sheet-sectionhead">PREFERMENT (${esc(recipe.preferment.name)})</div>
+            ${previewTable(recipe.tables.preferment, recipe.session.weightUnit)}
+            <div class="wo-sheet-total">Preferment Total: ${esc(formatWeight(recipe.preferment.totalG, recipe.session.weightUnit))}</div>
+          </section>
+        ` : ""}
+        <section class="wo-sheet-section">
+          <div class="wo-sheet-sectionhead">FINAL DOUGH</div>
+          ${previewTable(recipe.tables.finalDough, recipe.session.weightUnit)}
+        </section>
+        <div class="wo-sheet-divider"></div>
+        <section class="wo-sheet-section">
+          <div class="wo-sheet-sectionhead">NET INGREDIENTS</div>
+          ${previewTable(recipe.tables.netIngredients, recipe.session.weightUnit)}
+        </section>
+        <div class="wo-sheet-divider"></div>
+        <section class="wo-sheet-section">
+          <label class="lbl" for="woPreviewNotes">Notes</label>
+          <textarea class="input wo-preview-notes" id="woPreviewNotes" data-preview-notes placeholder="Add baking temperature, fermentation schedule, or handling notes...">${esc(recipe.session.notes || "")}</textarea>
+        </section>
+        ${recipe.warnings.length ? `
+          <section class="wo-sheet-section">
+            <div class="wo-sheet-sectionhead">WARNINGS</div>
+            <ul class="wo-list">${recipe.warnings.map((warning) => `<li>${esc(warning)}</li>`).join("")}</ul>
+          </section>
+        ` : ""}
+      </article>
     `;
   }
 
+  function previewStat(label, value) {
+    return `<div class="wo-sheet-meta-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
+  }
+
+  function previewTable(rows, weightUnit) {
+    return `
+      <table class="wo-formula-table">
+        <thead>
+          <tr>
+            <th>Ingredient</th>
+            <th>Weight</th>
+            <th>Baker's %</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((row) => `
+            <tr>
+              <td>${esc(row.name)}</td>
+              <td>${esc(formatWeight(row.weightG, weightUnit))}</td>
+              <td>${esc(formatPct(row.pct))}%</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function formatPct(value) {
+    const num = Number(value || 0);
+    if (Math.abs(num - Math.round(num)) < 0.001) return String(Math.round(num));
+    if (Math.abs(num * 10 - Math.round(num * 10)) < 0.001) return num.toFixed(1);
+    return num.toFixed(2);
+  }
+
   function openTemplates() {
-    const body = document.createElement("div");
-    body.className = "wo-modal-grid";
-
-    let modal = null;
-    TEMPLATE_LIBRARY.forEach((template) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "wo-template-option";
-      button.innerHTML = `<strong>${esc(template.name)}</strong><span>${esc(template.summary)}</span>`;
-      button.addEventListener("click", () => {
-        session = normalizeCalculatorSession(applyTemplateToSession(session, template.id, prefs), prefs);
-        openStep = "foundation";
-        refresh();
-        modal?.close();
+    if (!TEMPLATE_LIBRARY.length) {
+      showModal({
+        title: "Template Browser",
+        bodyEl: wrap(`<div class="muted" style="line-height:1.5;">${TEMPLATE_LOADING_MESSAGE}</div>`)
       });
-      body.appendChild(button);
-    });
+      return;
+    }
 
-    modal = showModal({ title: "Templates", bodyEl: body });
+    window.PDT?.setRoute?.("templates");
+    if (!window.PDT?.setRoute) window.location.hash = "#/templates";
   }
 
   function openHelp() {
@@ -723,16 +762,15 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
     const body = document.createElement("div");
     body.innerHTML = `
       <div class="wo-modal-grid">
-        <div class="muted">Quick Setup defines the defaults the calculator should start from. Applying this resets the current calculator session to those defaults.</div>
+        <div class="muted">Quick Setup updates the same defaults managed in Preferences, then starts a fresh calculator session from those settings.</div>
         <div class="wo-grid2">
-          <div><label class="lbl">Weight unit</label><select class="input" id="qsWeight"><option value="grams">Grams</option><option value="ounces">Ounces</option></select></div>
-          <div><label class="lbl">Size unit</label><select class="input" id="qsSize"><option value="inches">Inches</option><option value="centimeters">Centimeters</option></select></div>
-          <div><label class="lbl">Calculation method</label><select class="input" id="qsCalc"><option value="DBW">DBW</option><option value="TF">TF</option></select></div>
-          <div><label class="lbl">Default oven</label><select class="input" id="qsOven"></select></div>
-          <div><label class="lbl">Shape type</label><select class="input" id="qsShape"><option value="round">Round</option><option value="rectangular">Rectangular</option></select></div>
-          <div><label class="lbl">Surface type</label><select class="input" id="qsSurface"><option value="deck">Deck</option><option value="pan">Pan</option></select></div>
-          <div><label class="lbl">Default template</label><select class="input" id="qsTemplate"></select></div>
-          <div><label class="lbl">Fermentation model</label><select class="input" id="qsYeastModel"></select></div>
+          <div><label class="lbl">Weight Units</label><select class="input" id="qsWeight"><option value="grams">grams</option><option value="ounces">ounces</option></select></div>
+          <div><label class="lbl">Size Units</label><select class="input" id="qsSize"><option value="inches">inches</option><option value="centimeters">centimeters</option></select></div>
+          <div><label class="lbl">Calculation System</label><select class="input" id="qsCalc"><option value="DBW">Dough Ball Weight (DBW)</option><option value="TF">Thickness Factor (TF)</option></select></div>
+          <div><label class="lbl">Startup Workflow</label><select class="input" id="qsStartup"><option value="blank">Blank Calculator</option>${TEMPLATE_LIBRARY.map((template) => `<option value="${esc(template.id)}">${esc(template.name)}</option>`).join("")}</select></div>
+          <div><label class="lbl">Default Dough Ball Weight</label><input class="input" id="qsBallWeight" type="number" min="50" max="2000" step="1" /></div>
+          <div><label class="lbl">Default Thickness Factor</label><input class="input" id="qsThicknessFactor" type="number" min="0.05" max="0.2" step="0.001" /></div>
+          <div><label class="lbl">Fermentation Model</label><select class="input" id="qsYeastModel"></select></div>
         </div>
       </div>
     `;
@@ -751,14 +789,10 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
               weightUnit: body.querySelector("#qsWeight").value,
               sizeUnit: body.querySelector("#qsSize").value,
               calculationMethod: body.querySelector("#qsCalc").value,
-              defaultShape: body.querySelector("#qsShape").value,
-              defaultSurfaceType: body.querySelector("#qsSurface").value,
-              defaultTemplateId: body.querySelector("#qsTemplate").value || null,
+              startupWorkflow: body.querySelector("#qsStartup").value,
+              defaultDoughBallWeight: Number(body.querySelector("#qsBallWeight").value || prefs.general.defaultDoughBallWeight),
+              defaultThicknessFactor: Number(body.querySelector("#qsThicknessFactor").value || prefs.general.defaultThicknessFactor),
               defaultFermentationModelId: body.querySelector("#qsYeastModel").value || prefs.general.defaultFermentationModelId
-            },
-            ovens: {
-              ...prefs.ovens,
-              defaultOvenId: body.querySelector("#qsOven").value || prefs.ovens.defaultOvenId
             }
           });
 
@@ -778,19 +812,28 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
     body.querySelector("#qsWeight").value = prefs.general.weightUnit;
     body.querySelector("#qsSize").value = prefs.general.sizeUnit;
     body.querySelector("#qsCalc").value = prefs.general.calculationMethod;
-    body.querySelector("#qsShape").value = prefs.general.defaultShape || "round";
-    body.querySelector("#qsSurface").value = prefs.general.defaultSurfaceType || "deck";
-    fillOvens(body.querySelector("#qsOven"), prefs, prefs.ovens.defaultOvenId);
-    fillTemplateOptions(body.querySelector("#qsTemplate"), prefs.general.defaultTemplateId);
+    body.querySelector("#qsStartup").value = prefs.general.startupWorkflow || "blank";
+    body.querySelector("#qsBallWeight").value = String(prefs.general.defaultDoughBallWeight || 280);
+    body.querySelector("#qsThicknessFactor").value = String(prefs.general.defaultThicknessFactor || 0.1);
     fillYeastModels(body.querySelector("#qsYeastModel"), store, prefs.general.defaultFermentationModelId);
   }
 
   function openIngredientPicker() {
     const allIngredients = getAllIngredients(prefs)
+      .filter((ingredient) => ingredient.selected)
       .slice()
-      .sort((a, b) => Number(b.bookmarked) - Number(a.bookmarked) || a.name.localeCompare(b.name));
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    if (!allIngredients.length) {
+      showModal({
+        title: "Optional Ingredients",
+        bodyEl: wrap('<div class="muted" style="line-height:1.5;">Select optional ingredients in Preferences to make them available here.</div>')
+      });
+      return;
+    }
+
     const body = document.createElement("div");
-    body.innerHTML = `<div class="wo-modal-grid"><input class="input" id="woIngredientSearch" placeholder="Search ingredients" /><div id="woIngredientList" class="wo-library-list"></div></div>`;
+    body.innerHTML = `<div class="wo-modal-grid"><input class="input" id="woIngredientSearch" placeholder="Search optional ingredients" /><div id="woIngredientList" class="wo-library-list"></div></div>`;
 
     const listEl = body.querySelector("#woIngredientList");
     const searchEl = body.querySelector("#woIngredientSearch");
@@ -836,7 +879,7 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
 
     bind(searchEl, "input", renderList);
     renderList();
-    modal = showModal({ title: "Ingredient Library", bodyEl: body });
+    modal = showModal({ title: "Optional Ingredients", bodyEl: body });
   }
 
   async function hydrateFlours() {
@@ -860,7 +903,7 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
   bind(ui.templates, "click", openTemplates);
   bind(ui.importBtn, "click", () => ui.importFile.click());
   bind(ui.custom, "click", () => {
-    session = createSessionFromPrefs(prefs);
+    session = createBlankSessionFromPrefs(prefs);
     foundationAdvancedOpen = false;
     fermentationAdvancedOpen = false;
     openStep = "foundation";
@@ -935,7 +978,6 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
     });
   });
   bind(ui.evenSplitBlend, "click", () => { session.flourBlend = evenSplit(session.flourBlend); refresh(); });
-  bind(ui.defaultBlend, "click", () => { session.flourBlend = getDefaultBlend(prefs); refresh(); });
   bind(ui.clearBlend, "click", () => { session.flourBlend = []; refresh(); });
 
   bind(ui.duration, "input", () => { session.fermentation.durationHours = Number(ui.duration.value || 24); refresh(); });
@@ -962,54 +1004,34 @@ export function renderWorkOrderCalculator({ store, onPreview, onOpenKB }) {
   return root;
 }
 
-function createSessionFromPrefs(prefs) {
-  let base = createRecipeSession(prefs);
-  if (prefs?.general?.defaultTemplateId) {
-    base = applyTemplateToSession(base, prefs.general.defaultTemplateId, prefs);
-  } else {
-    base.shape = prefs?.general?.defaultShape === "rectangular" ? "rectangular" : "round";
-    base.surfaceType = prefs?.general?.defaultSurfaceType === "pan" ? "pan" : "deck";
-  }
+function createBlankSessionFromPrefs(prefs) {
+  const base = createRecipeSession(prefs);
+  base.shape = prefs?.general?.defaultShape === "rectangular" ? "rectangular" : "round";
+  base.surfaceType = prefs?.general?.defaultSurfaceType === "pan" ? "pan" : "deck";
+  base.templateId = null;
+  base.startMode = "custom";
   base.fermentation.yeastModel = prefs?.general?.defaultFermentationModelId || base.fermentation.yeastModel;
   return normalizeCalculatorSession(base, prefs);
 }
 
+function createSessionFromPrefs(prefs) {
+  let base = createBlankSessionFromPrefs(prefs);
+  const startupWorkflow = prefs?.general?.startupWorkflow || "blank";
+  if (startupWorkflow !== "blank" && TEMPLATE_LIBRARY.some((template) => template.id === startupWorkflow)) {
+    base = applyTemplateToSession(base, startupWorkflow, prefs);
+  }
+  return normalizeCalculatorSession(base, prefs);
+}
+
 function normalizeCalculatorSession(input, prefs) {
-  const base = normalizeSession(input, prefs);
-  const formula = input?.formula || {};
-  const extras = Array.isArray(formula.extras) ? formula.extras : [];
-
-  base.version = Math.max(2, Number(base.version || 2));
-  base.formula = {
-    saltPct: clampNumber(formula.saltPct, 0, 10, BASE_SALT_PCT),
-    oilPct: clampNumber(formula.oilPct, 0, 20, 0),
-    sugarPct: clampNumber(formula.sugarPct, 0, 20, 0),
-    extras: extras
-      .map((row) => ({
-        id: String(row?.id || "").trim(),
-        name: String(row?.name || row?.id || "Ingredient").trim() || "Ingredient",
-        category: String(row?.category || "Custom").trim() || "Custom",
-        pct: clampNumber(row?.pct, 0, 100, Number(row?.defaultPct || 0)),
-        builtIn: Boolean(row?.builtIn)
-      }))
-      .filter((row) => row.id)
-  };
-
-  base.fermentation = {
-    ...base.fermentation,
-    yeastMode: input?.fermentation?.yeastMode === "manual" ? "manual" : "auto",
-    manualYeastPct: clampNumber(input?.fermentation?.manualYeastPct, 0, 5, 0.12)
-  };
-
-  return base;
+  return normalizeSession(input, prefs);
 }
 
 function formulaRows(session, prefs) {
   const ingredientLookup = new Map(getAllIngredients(prefs).map((ingredient) => [ingredient.id, ingredient]));
   const rows = [
     { kind: "base", key: "saltPct", name: "Salt", subtitle: "Baker's percentage", pct: Number(session.formula.saltPct || 0), step: 0.05 },
-    { kind: "base", key: "oilPct", name: "Oil", subtitle: "Baker's percentage", pct: Number(session.formula.oilPct || 0), step: 0.1 },
-    { kind: "base", key: "sugarPct", name: "Sugar", subtitle: "Baker's percentage", pct: Number(session.formula.sugarPct || 0), step: 0.1 }
+    { kind: "base", key: "oilPct", name: "Olive Oil", subtitle: "Baker's percentage", pct: Number(session.formula.oilPct || 0), step: 0.1 }
   ];
 
   session.formula.extras.forEach((row) => {
@@ -1047,7 +1069,7 @@ function formulaInputId(row) {
 
 function formulaMetaText(session) {
   const extraCount = session.formula.extras.length;
-  return `${extraCount} added ingredient${extraCount === 1 ? "" : "s"} | Salt ${Number(session.formula.saltPct).toFixed(2)}%`;
+  return `${extraCount} optional ingredient${extraCount === 1 ? "" : "s"} | Salt ${Number(session.formula.saltPct).toFixed(2)}%`;
 }
 
 function optionalMetaText(session) {
@@ -1059,13 +1081,12 @@ function optionalMetaText(session) {
 
 function formulaPlanningHtml(session, prefs) {
   const rows = formulaRows(session, prefs)
-    .filter((row) => row.kind === "extra" || row.key !== "saltPct" || Number(row.pct) !== BASE_SALT_PCT || Number(session.formula.oilPct) > 0 || Number(session.formula.sugarPct) > 0)
+    .filter((row) => row.kind === "extra" || row.key !== "saltPct" || Number(row.pct) !== BASE_SALT_PCT || Number(session.formula.oilPct) > 0)
     .filter((row) => row.kind === "extra" || Number(row.pct) > 0 || row.key === "saltPct");
   if (!rows.length && session.fermentation.yeastMode !== "manual") return "";
 
-  const notes = ["Formula percentages are stored in the calculator UI."];
-  if (session.fermentation.yeastMode === "manual") notes.push(`Manual yeast is set to ${Number(session.fermentation.manualYeastPct).toFixed(2)}%, but the current preview still uses the existing auto yeast engine.`);
-  notes.push("Core dough mass math remains unchanged.");
+  const notes = ["Formula percentages are stored directly in the calculator session."];
+  if (session.fermentation.yeastMode === "manual") notes.push(`Manual yeast is set to ${Number(session.fermentation.manualYeastPct).toFixed(2)}%.`);
 
   return `
     <div class="item" style="margin-top:12px;">
@@ -1077,10 +1098,9 @@ function formulaPlanningHtml(session, prefs) {
 }
 
 function fillOvens(selectEl, prefs, selectedId) {
-  const favorites = getFavoriteOvens(prefs);
-  const list = favorites.length ? favorites : getAllOvens(prefs);
-  selectEl.innerHTML = list.map((oven) => `<option value="${esc(oven.id)}">${esc(oven.name)}</option>`).join("");
-  if (list.some((oven) => oven.id === selectedId)) selectEl.value = selectedId;
+  const list = getAllOvens(prefs).filter((oven) => oven.selected);
+  selectEl.innerHTML = `<option value="">No oven selected</option>${list.map((oven) => `<option value="${esc(oven.id)}">${esc(oven.name)}</option>`).join("")}`;
+  selectEl.value = list.some((oven) => oven.id === selectedId) ? selectedId : "";
 }
 
 function fillTemplateOptions(selectEl, selectedId) {
@@ -1219,4 +1239,3 @@ function esc(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 }
-

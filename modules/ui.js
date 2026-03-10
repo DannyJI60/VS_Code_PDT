@@ -31,6 +31,7 @@ import {
 
 import { renderWorkOrderCalculator } from "./workOrderCalculator.js";
 import { renderWorkOrderPreferences } from "./workOrderPreferences.js";
+import { TEMPLATE_LIBRARY } from "./workOrderRecipe.js";
 
 /* 2a) Toast helper (prevents "toast is not defined") */
 const toast = (msg, ms = 1600) => {
@@ -807,310 +808,40 @@ function clamp(v, a, b) {
    ========================================================= */
 
 function templatesPanel(store) {
-    // T1) Minimal template catalog (Styles V1)
-    // NOTE: paths match your folder: assets/templates/*.svg
-    const STYLE_TEMPLATES = [{
-            id: "ny_round",
-            name: "NY Round",
-            cat: "ny",
-            img: "./assets/templates/ny_round.svg",
-            desc: "Large foldable slice"
-        },
-        {
-            id: "neapolitan",
-            name: "Neapolitan",
-            cat: "neo",
-            img: "./assets/templates/neapolitan.svg",
-            desc: "Soft center, airy rim"
-        },
-        {
-            id: "detroit",
-            name: "Detroit",
-            cat: "pan",
-            img: "./assets/templates/detroit.svg",
-            desc: "Square pan, caramelized edge"
-        },
-        {
-            id: "sicilian",
-            name: "Sicilian",
-            cat: "pan",
-            img: "./assets/templates/sicilian.svg",
-            desc: "Thick square pan"
-        },
-        {
-            id: "bar_pie",
-            name: "Bar Pie",
-            cat: "thin",
-            img: "./assets/templates/bar_pie.svg",
-            desc: "Thin tavern-style"
-        },
-        {
-            id: "tomato_pie",
-            name: "Tomato Pie",
-            cat: "regional",
-            img: "./assets/templates/tomato_pie.svg",
-            desc: "Sauce-forward square"
-        },
-        {
-            id: "deep_dish",
-            name: "Deep Dish",
-            cat: "chicago",
-            img: "./assets/templates/deep_dish.svg",
-            desc: "Thick, layered pie"
-        },
-        {
-            id: "teglia_romana",
-            name: "Teglia Romana",
-            cat: "roman",
-            img: "./assets/templates/teglia_romana.svg",
-            desc: "Crispy bottom, airy crumb"
-        },
-    ];
-
-    // T2) Tribute (empty for now; architecture in place)
-    const TRIBUTE_TEMPLATES = [
-        // Example later:
-        // { id:"joes", name:"Joe's NY Slice", cat:"ny", img:"./assets/tributes/joes.svg", desc:"Community tribute" }
-    ];
-
-    // T3) Categories (left rail)
-    const CATS = [{
-            id: "all",
-            label: "All"
-        },
-        {
-            id: "ny",
-            label: "NY Style"
-        },
-        {
-            id: "neo",
-            label: "Neapolitan"
-        },
-        {
-            id: "pan",
-            label: "Pan Pizza"
-        },
-        {
-            id: "thin",
-            label: "Thin / Tavern"
-        },
-        {
-            id: "roman",
-            label: "Roman"
-        },
-        {
-            id: "chicago",
-            label: "Chicago"
-        },
-        {
-            id: "regional",
-            label: "Regional"
-        },
-    ];
-
-    // T4) State
-    const state = {
-        mode: "styles", // "styles" | "tribute"
-        cat: "all",
-        q: "",
-        sort: "name", // "name" | "cat"
-        selectedId: null,
-    };
-
-    // T5) UI
     const root = div(`
-    <div class="flourPage templatePage">
-      <div class="flourTop">
-        <div>
-          <div class="steptitle">Templates</div>
-          <div class="stepsub">Pick a style preset. Advanced users can change everything.</div>
-        </div>
-
-        <div class="flourControls">
-          <!-- T5a) Styles | Tribute switch -->
-          <div class="seg" role="tablist" aria-label="Template mode">
-            <button class="btn ghost segbtn" id="btnModeStyles" type="button" aria-selected="true">Styles</button>
-            <button class="btn ghost segbtn" id="btnModeTribute" type="button" aria-selected="false">Tribute</button>
-          </div>
-
-          <!-- T5b) Search -->
-          <div class="flourSearch">
-            <input class="input" id="tplSearch" placeholder="Search templates..." />
-          </div>
-
-          <!-- T5c) Sort -->
-          <div class="flourSort">
-            <select class="input" id="tplSort" title="Sort">
-              <option value="name">Sort: Name</option>
-              <option value="cat">Sort: Category</option>
-            </select>
-          </div>
-        </div>
+    <div class="prefStack">
+      <div class="item">
+        <h4>Template Browser</h4>
+        <p class="muted">Open this browser from the Gallery or from Calculator -> Load Template. Selecting a template sends it straight back into the calculator workflow.</p>
       </div>
-
-      <!-- T6) Layout: left categories + grid -->
-      <div class="tplLayout">
-        <div class="tplRail">
-          <div class="tplRailHead muted">Categories</div>
-          <div class="tplCats" id="tplCats"></div>
-
-          <!-- T6a) Disclaimer (shown only in Tribute mode) -->
-          <div class="tplDisclaimer hidden" id="tplDisclaimer">
-            <div class="muted" style="font-size:12px; line-height:1.35;">
-              Tribute recipes are community interpretations, not official formulas, and not affiliated with restaurants referenced.
-            </div>
-          </div>
-        </div>
-
-        <div class="tplMain">
-          <div class="flourGrid" id="tplGrid"></div>
-          <div class="muted" style="font-size:12px; margin-top:10px;" id="tplEmpty"></div>
-        </div>
-      </div>
+      <div class="wo-template-browser" id="tplBrowser"></div>
     </div>
   `);
 
-    const $ = (sel) => root.querySelector(sel);
+    const browser = root.querySelector("#tplBrowser");
+    if (!TEMPLATE_LIBRARY.length) {
+        browser.innerHTML = `<div class="item"><p class="muted">Template loading will be enabled in a future update.</p></div>`;
+        return root;
+    }
 
-    // T7) Render categories
-    function renderCats() {
-        const wrap = $("#tplCats");
-        wrap.innerHTML = "";
-        CATS.forEach(c => {
-            const b = document.createElement("button");
-            b.type = "button";
-            b.className = "btn ghost tplCat";
-            b.textContent = c.label;
-            b.dataset.cat = c.id;
-            if (state.cat === c.id) b.classList.add("active");
-            b.addEventListener("click", () => {
-                state.cat = c.id;
-                renderCats();
-                renderGrid();
-            });
-            wrap.appendChild(b);
+    browser.innerHTML = TEMPLATE_LIBRARY.map((template) => `
+      <button class="wo-template-option" type="button" data-template-id="${esc(template.id)}">
+        <strong>${esc(template.name)}</strong>
+        <span>${esc(template.summary)}</span>
+      </button>
+    `).join("");
+
+    browser.querySelectorAll("[data-template-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const templateId = button.getAttribute("data-template-id");
+            store?.set?.("pendingTemplateId", templateId);
+            window.PDT?.setRoute?.("dough");
+            if (!window.PDT?.setRoute) window.location.hash = "#/dough";
         });
-    }
-
-    // T8) Data source
-    function currentList() {
-        return state.mode === "tribute" ? TRIBUTE_TEMPLATES : STYLE_TEMPLATES;
-    }
-
-    // T9) Card (Comfy style: image tile + caption below)
-    function cardTpl(t) {
-        const wrap = document.createElement("div");
-        wrap.className = "tplCardWrap";
-
-        const tile = document.createElement("button");
-        tile.type = "button";
-        tile.className = "tplTile";
-        tile.dataset.id = t.id;
-        tile.innerHTML = `
-      <div class="tplTileInner">
-        <img src="${t.img}" alt="" />
-      </div>
-      <div class="tplTileMark ${state.selectedId === t.id ? "on" : ""}"></div>
-    `;
-
-        // simple hover tooltip using title (V1)
-        tile.title = `${t.name} - ${t.desc || ""}`.trim();
-
-        tile.addEventListener("click", () => {
-            state.selectedId = t.id;
-            renderGrid();
-
-            // T9a) V1 behavior: show selection + (optional) push into session if store supports it
-            try {
-                const session = store?.get ? (store.get("recipeSession") || {}) : {};
-                // store a minimal template selection; you'll wire real defaults later
-                const next = {
-                    ...session,
-                    templateId: t.id,
-                    templateName: t.name
-                };
-                if (store?.set) store.set("recipeSession", next);
-            } catch (_) {}
-
-            // Visible confirmation without being bossy
-            toast(`${t.name} selected`);
-        });
-
-        const cap = document.createElement("div");
-        cap.className = "tplCap";
-        cap.innerHTML = `
-      <div class="tplName">${esc(t.name)}</div>
-      <div class="tplSub muted">${esc(t.desc || "")}</div>
-    `;
-
-        wrap.appendChild(tile);
-        wrap.appendChild(cap);
-        return wrap;
-    }
-
-    // T10) Render grid
-    function renderGrid() {
-        const list = currentList().slice();
-
-        // Tribute disclaimer visibility
-        $("#tplDisclaimer").classList.toggle("hidden", state.mode !== "tribute");
-
-        const q = (state.q || "").trim().toLowerCase();
-
-        let out = list.filter(t => {
-            if (state.cat !== "all" && t.cat !== state.cat) return false;
-            if (!q) return true;
-            return `${t.name} ${t.desc || ""}`.toLowerCase().includes(q);
-        });
-
-        if (state.sort === "name") out.sort((a, b) => a.name.localeCompare(b.name));
-        if (state.sort === "cat") out.sort((a, b) => (a.cat || "").localeCompare(b.cat || "") || a.name.localeCompare(b.name));
-
-        const grid = $("#tplGrid");
-        grid.innerHTML = "";
-        out.forEach(t => grid.appendChild(cardTpl(t)));
-
-        const empty = $("#tplEmpty");
-        if (!out.length) {
-            empty.textContent = state.mode === "tribute" ?
-                "No tribute templates yet. (Architecture is ready.)" :
-                "No templates match your search.";
-        } else {
-            empty.textContent = "";
-        }
-    }
-
-    // T11) Controls
-    $("#tplSearch").addEventListener("input", (e) => {
-        state.q = e.target.value || "";
-        renderGrid();
     });
 
-    $("#tplSort").addEventListener("change", (e) => {
-        state.sort = e.target.value || "name";
-        renderGrid();
-    });
-
-    $("#btnModeStyles").addEventListener("click", () => {
-        state.mode = "styles";
-        $("#btnModeStyles").setAttribute("aria-selected", "true");
-        $("#btnModeTribute").setAttribute("aria-selected", "false");
-        renderGrid();
-    });
-
-    $("#btnModeTribute").addEventListener("click", () => {
-        state.mode = "tribute";
-        $("#btnModeStyles").setAttribute("aria-selected", "false");
-        $("#btnModeTribute").setAttribute("aria-selected", "true");
-        renderGrid();
-    });
-
-    // T12) Boot
-    renderCats();
-    renderGrid();
     return root;
 }
-
 function fermentationPanel(store, onPreview) {
     const idx = store.get("indexes", {});
     const models = idx.fermentationModels?.items || [];
