@@ -1,9 +1,9 @@
 import { store } from "./modules/store.js";
 import { initAuth, openAuthModal, openProfileModal, refreshAuthUI } from "./modules/auth.js";
 import { initPrefs } from "./modules/prefs.js";
-import { initRouter, setRoute } from "./modules/router.js";
+import { getRoute, initRouter, setRoute } from "./modules/router.js";
 import { loadIndexes } from "./modules/loaders.js";
-import { renderRoute } from "./modules/ui.js";
+import * as uiModule from "./modules/ui.js";
 import { initKB } from "./modules/kb.js";
 import { ensureQrLib, encodePayloadToText, renderQr } from "./modules/qr.js";
 import { showModal } from "./modules/modal.js";
@@ -26,6 +26,10 @@ const dom = {
   kbCard: document.getElementById("kbCard"),
   btnSwapToKB: document.getElementById("btnSwapToKB"),
   btnBackToPreview: document.getElementById("btnBackToPreview"),
+  sideCard: document.getElementById("sideCard"),
+  sideCardTitle: document.getElementById("sideCardTitle"),
+  sideCardBody: document.getElementById("sideCardBody"),
+  btnBackToRecipe: document.getElementById("btnBackToRecipe"),
   btnAuth: document.getElementById("btnAuth"),
   authLabel: document.getElementById("authLabel"),
   authAvatar: document.getElementById("authAvatar"),
@@ -37,6 +41,7 @@ const prefs = initPrefs();
 (async function boot() {
   const uiMode = store.get("uiMode", "standard");
   document.body.dataset.uimode = uiMode;
+  document.body.dataset.hideWorkflowModule = "true";
 
   const indexes = await loadIndexes();
   store.set("indexes", indexes);
@@ -69,8 +74,9 @@ function render(route) {
   dom.routeSub.textContent = meta.sub;
   dom.rightPanel?.classList.toggle("hidden", route === "preferences");
   if (route !== "dough" && window.PDT) delete window.PDT.updatePreviewNotes;
+  if (route !== "dough") closeSidePanel();
 
-  renderRoute({
+  uiModule.renderRoute({
     route,
     mount: dom.routeMount,
     store,
@@ -109,7 +115,35 @@ function routeMeta(route) {
 function swapToKB(open) {
   dom.previewCard.classList.toggle("hidden", open);
   dom.kbCard.classList.toggle("hidden", !open);
+  dom.sideCard.classList.add("hidden");
   dom.btnOpenKB?.classList.toggle("active", open);
+}
+
+function openSidePanel({ title = "Workspace", bodyEl }) {
+  dom.sideCardTitle.textContent = title;
+  dom.sideCardBody.innerHTML = "";
+  if (bodyEl) dom.sideCardBody.appendChild(bodyEl);
+  dom.previewCard.classList.add("hidden");
+  dom.kbCard.classList.add("hidden");
+  dom.sideCard.classList.remove("hidden");
+  dom.btnOpenKB?.classList.remove("active");
+}
+
+function closeSidePanel() {
+  dom.sideCard.classList.add("hidden");
+  dom.kbCard.classList.add("hidden");
+  dom.previewCard.classList.remove("hidden");
+  dom.btnOpenKB?.classList.remove("active");
+}
+
+function openSideRoute(route, title) {
+  const bodyEl = uiModule.renderSidePanelRoute?.({
+    route,
+    store,
+    onPreview: setPreview,
+    onOpenKB: () => swapToKB(true)
+  }) || document.createElement("div");
+  openSidePanel({ title: title || routeMeta(route).title || "Workspace", bodyEl });
 }
 
 function wireUI() {
@@ -131,8 +165,13 @@ function wireUI() {
 
   dom.btnSwapToKB?.addEventListener("click", () => swapToKB(true));
   dom.btnBackToPreview?.addEventListener("click", () => swapToKB(false));
+  dom.btnBackToRecipe?.addEventListener("click", () => closeSidePanel());
   dom.btnOpenKB?.addEventListener("click", () => swapToKB(true));
   dom.btnPreferences?.addEventListener("click", () => {
+    if (getRoute() === "dough") {
+      openSideRoute("preferences", "Preferences");
+      return;
+    }
     swapToKB(false);
     setRoute("preferences");
   });
@@ -287,4 +326,4 @@ function refreshPreviewButtons() {
   if (dom.btnExport) dom.btnExport.title = ready ? "Export current recipe" : "Complete recipe to enable export";
 }
 
-window.PDT = { store, setRoute };
+window.PDT = { store, setRoute, openSidePanel, closeSidePanel, openSideRoute };

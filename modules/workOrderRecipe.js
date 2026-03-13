@@ -133,7 +133,7 @@ export function normalizeSession(session, prefs) {
     yeastMode: next.fermentation?.yeastMode === "manual" ? "manual" : "auto",
     manualYeastPct: clamp(next.fermentation?.manualYeastPct, 0, 5, 0.12),
     prefermentEnabled: Boolean(next.fermentation?.prefermentEnabled),
-    prefermentType: ["poolish", "biga"].includes(next.fermentation?.prefermentType) ? next.fermentation.prefermentType : "poolish",
+    prefermentType: ["poolish", "biga", "sourdough"].includes(next.fermentation?.prefermentType) ? next.fermentation.prefermentType : "poolish",
     prefermentHydration: clamp(next.fermentation?.prefermentHydration, 45, 120, 100),
     prefermentPercent: clamp(next.fermentation?.prefermentPercent, 5, 60, 20)
   };

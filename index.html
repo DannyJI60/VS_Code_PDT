@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ProDoughType vNext</title>
+  <link rel="icon" type="image/png" href="./favicon.png" />
   <link rel="stylesheet" href="./app.css" />
 </head>
 
@@ -101,6 +102,16 @@
             <input id="kbQuery" class="input" placeholder="Search (sticky dough, slack, gummy, overproofed...)" />
             <div class="list" id="kbResults"></div>
           </div>
+        </div>
+
+        <div class="card hidden" id="sideCard">
+          <div class="cardhead">
+            <div class="cardtitle" id="sideCardTitle">Workspace</div>
+            <button class="btn ghost sm" id="btnBackToRecipe" type="button">
+              <span>Return to Recipe</span>
+            </button>
+          </div>
+          <div class="cardbody sidecardbody" id="sideCardBody"></div>
         </div>
       </aside>
     </div>

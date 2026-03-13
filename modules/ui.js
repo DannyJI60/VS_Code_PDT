@@ -129,6 +129,22 @@ export function renderRoute({
     mount.innerHTML = `<div class="muted">Route not implemented yet.</div>`;
 }
 
+export function renderSidePanelRoute({
+    route,
+    store,
+    onPreview,
+    onOpenKB
+}) {
+    if (route === "templates") return templatesPanel(store, onPreview);
+    if (route === "preferences") return renderWorkOrderPreferences({ store });
+    if (route === "guides") return guidesPanel(store, onOpenKB);
+    if (route === "glossary") return glossaryPanel(store, onOpenKB);
+    if (route === "troubleshooting") return troubleshootingPanel(store, onOpenKB);
+    if (route === "fermentation") return fermentationPanel(store, onPreview);
+    if (route === "databases") return databasesPanel(store);
+    return div(`<div class="item"><p class="muted">This workspace is not available yet.</p></div>`);
+}
+
 /* 3a) Panels (numbered, replaceable blocks) */
 
 /* =========================================================
